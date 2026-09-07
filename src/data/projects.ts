@@ -9,9 +9,10 @@ export const projects: Project[] = [
       'A complete e-commerce solution built from the ground up. Features a responsive storefront, product management, shopping cart, and a RESTful API backend. Designed to feel clean and editorial while remaining fully functional.',
     image:       '/images/projects/island-child.webp',
     technologies: ['React', 'TypeScript', 'Node.js', 'Express', 'Prisma', 'PostgreSQL', 'Styled Components'],
-    github:      'https://github.com/Thabisomaqhawengwenya', // Update with actual repo
+    github:      'https://github.com/Thabisomaqhawengwenya',
     featured:    true,
     status:      'live',
+    category:    'Full-Stack',
   },
   {
     id:          'toyota-zimbabwe',
@@ -21,9 +22,10 @@ export const projects: Project[] = [
       'A collaborative rebuild of the Toyota Zimbabwe web presence. Focused on responsive design, performance optimisation, and delivering a polished, on-brand user experience across all device sizes.',
     image:       '/images/projects/toyota.webp',
     technologies: ['React', 'JavaScript', 'HTML', 'CSS', 'Git'],
-    github:      'https://github.com/Thabisomaqhawengwenya', // Update with actual repo
+    github:      'https://github.com/Thabisomaqhawengwenya',
     featured:    true,
     status:      'live',
+    category:    'Frontend',
   },
   {
     id:          'portfolio',
@@ -35,5 +37,6 @@ export const projects: Project[] = [
     github:      'https://github.com/Thabisomaqhawengwenya',
     featured:    false,
     status:      'live',
+    category:    'Full-Stack',
   },
 ]

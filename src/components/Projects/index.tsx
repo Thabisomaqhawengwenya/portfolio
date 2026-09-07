@@ -1,6 +1,6 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import styled, { css } from 'styled-components'
-import { motion, useInView } from 'framer-motion'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiArrowRight } from 'react-icons/fi'
 import {
   Container, Section, SectionHeader,
@@ -20,9 +20,52 @@ const getInitials = (title: string) =>
   title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
 /* ──────────────────────────────────────────────
+   FILTER BAR — centered, matches Skills tab style
+────────────────────────────────────────────── */
+const FilterWrap = styled(motion.div)`
+  display: flex;
+  justify-content: center;
+  margin-bottom: ${({ theme }) => theme.spacing['10']};
+`
+
+const FilterBar = styled.div`
+  display: flex;
+  align-items: stretch;
+  border: 3px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadows.md};
+  width: fit-content;
+  /* no gap — tabs share borders */
+`
+
+const FilterTab = styled(motion.button)<{ $active: boolean; $activeBg: string; $activeFg: string }>`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: ${({ theme }) => theme.typography.weights.bold};
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.55rem 1.25rem;
+  border: none;
+  border-right: 3px solid ${({ theme }) => theme.colors.border};
+  background: ${({ $active, $activeBg, theme }) =>
+    $active ? $activeBg : theme.colors.background};
+  color: ${({ $active, $activeFg, theme }) =>
+    $active ? $activeFg : theme.colors.text};
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  white-space: nowrap;
+
+  &:last-child { border-right: none; }
+
+  &:hover:not([data-active="true"]) {
+    background: ${({ theme }) => theme.colors.text};
+    color: ${({ theme }) => theme.colors.background};
+  }
+`
+
+/* ──────────────────────────────────────────────
    LAYOUT — stacked rows
 ────────────────────────────────────────────── */
-const RowList = styled.div`
+const RowList = styled(motion.div)`
   display: flex;
   flex-direction: column;
   border: 3px solid ${({ theme }) => theme.colors.border};
@@ -450,6 +493,31 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
 export default function Projects() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true })
+  const { isMonoTheme, accent } = useAccent()
+
+  type Filter = 'All' | Project['category']
+  const [active, setActive] = useState<Filter>('All')
+
+  /* Derive unique categories from data */
+  const categories: Filter[] = [
+    'All',
+    ...Array.from(new Set(projects.map(p => p.category))) as Project['category'][],
+  ]
+
+  const filtered = active === 'All'
+    ? projects
+    : projects.filter(p => p.category === active)
+
+  /* Tab active colours cycle through the accent palette */
+  const TAB_COLORS = isMonoTheme
+    ? categories.map(() => ({ bg: accent.primary, fg: accent.textColor }))
+    : [
+        { bg: '#FFE500', fg: '#000' },
+        { bg: '#FF3C2F', fg: '#fff' },
+        { bg: '#0047FF', fg: '#fff' },
+        { bg: '#00C853', fg: '#000' },
+        { bg: '#FFE500', fg: '#000' },
+      ]
 
   return (
     <Section id="projects">
@@ -465,11 +533,40 @@ export default function Projects() {
           </SectionHeader>
         </motion.div>
 
-        <RowList>
-          {projects.map((p, i) => (
-            <ProjectRow key={p.id} project={p} index={i} />
-          ))}
-        </RowList>
+        {/* ── Centered filter tab bar ── */}
+        <FilterWrap
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ delay: 0.15 }}>
+          <FilterBar role="group" aria-label="Filter projects by category">
+            {categories.map((cat, i) => {
+              const { bg, fg } = TAB_COLORS[i % TAB_COLORS.length]
+              return (
+                <FilterTab
+                  key={cat}
+                  $active={active === cat}
+                  $activeBg={bg}
+                  $activeFg={fg}
+                  data-active={active === cat ? 'true' : 'false'}
+                  onClick={() => setActive(cat)}
+                  whileHover={{ scale: 1.05, y: -3 }}
+                  whileTap={{ scale: 0.94 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}>
+                  {cat}
+                </FilterTab>
+              )
+            })}
+          </FilterBar>
+        </FilterWrap>
+
+        {/* ── Project rows ── */}
+        <AnimatePresence mode="wait">
+          <RowList key={active}>
+            {filtered.map((p, i) => (
+              <ProjectRow key={p.id} project={p} index={i} />
+            ))}
+          </RowList>
+        </AnimatePresence>
       </Container>
     </Section>
   )

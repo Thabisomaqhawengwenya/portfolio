@@ -10,6 +10,7 @@ export interface Project {
   liveUrl?:    string
   featured?:   boolean
   status:      'live' | 'wip' | 'archived'
+  category:    'Full-Stack' | 'Frontend' | 'Backend' | 'Other'
 }
 
 /* ─── Experience / Journey ─── */

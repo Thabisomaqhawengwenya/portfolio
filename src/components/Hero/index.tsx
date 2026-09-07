@@ -5,7 +5,7 @@ import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
 import ColorPicker from '../ColorPicker'
 import { useAccent } from '../../styles/ThemeContext'
-import { useAdmin }  from '../../admin/context/AdminContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 
 /* ─── Styled ─── */
 const HeroSection = styled.section`
@@ -338,7 +338,7 @@ export default function Hero() {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
 
   const { isMonoTheme, accent } = useAccent()
-  const { heroContent, settings } = useAdmin()
+  const { heroContent, settings } = usePublicData()
 
   /* Use admin-managed content with sensible fallbacks */
   const greeting  = heroContent.greeting  || 'Hello, World'

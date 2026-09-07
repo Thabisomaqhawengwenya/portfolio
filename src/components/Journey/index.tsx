@@ -4,8 +4,8 @@ import { motion, useInView } from 'framer-motion'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, Tag } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
 import { experience as staticExperience } from '../../data/experience'
-import { useAccent }  from '../../styles/ThemeContext'
-import { useAdmin }   from '../../admin/context/AdminContext'
+import { useAccent }     from '../../styles/ThemeContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 import type { ExperienceItem } from '../../types'
 
 /* Per-type accent colours used in non-mono themes */
@@ -147,7 +147,7 @@ const TechRow = styled.div`
 export default function Journey() {
   const headerRef  = useRef(null)
   const headerView = useInView(headerRef, { once: true })
-  const { journey: adminJourney } = useAdmin()
+  const { journey: adminJourney } = usePublicData()
   const experience = adminJourney.length ? adminJourney : staticExperience
 
   return (

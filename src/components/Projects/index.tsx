@@ -9,8 +9,8 @@ import {
 } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
 import { projects as staticProjects } from '../../data/projects'
-import { useAccent } from '../../styles/ThemeContext'
-import { useAdmin }  from '../../admin/context/AdminContext'
+import { useAccent }     from '../../styles/ThemeContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 import type { Project } from '../../types'
 
 /* Multi-colour palette for non-mono themes */
@@ -495,8 +495,8 @@ export default function Projects() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true })
   const { isMonoTheme, accent } = useAccent()
-  /* Use admin-managed projects when available, fall back to static */
-  const { projects: adminProjects } = useAdmin()
+  /* Use public Firestore data when available, fall back to static */
+  const { projects: adminProjects } = usePublicData()
   const projects = adminProjects.length ? adminProjects : staticProjects
 
   type Filter = 'All' | Project['category']

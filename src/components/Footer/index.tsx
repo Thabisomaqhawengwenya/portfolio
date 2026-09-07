@@ -3,7 +3,7 @@ import { popSpring } from '../UI'
 import { motion } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiArrowUp, FiLock } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
-import { useAdmin } from '../../admin/context/AdminContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 
 /* ─── Styled ─── */
 const FooterEl = styled.footer`
@@ -191,7 +191,7 @@ const scrollTo = (id: string) =>
 
 /* ─── Component ─── */
 export default function Footer() {
-  const { settings } = useAdmin()
+  const { settings } = usePublicData()
   return (
     <FooterEl>
       <FooterTop>

@@ -4,8 +4,8 @@ import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, popSpring } from '../UI'
 import { fadeUp } from '../../styles/animations'
 import { skillGroups as staticSkills } from '../../data/skills'
-import { useAccent } from '../../styles/ThemeContext'
-import { useAdmin }  from '../../admin/context/AdminContext'
+import { useAccent }     from '../../styles/ThemeContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 import type { SkillCategory } from '../../types'
 
 /* Category colour palette for non-mono themes */
@@ -128,7 +128,7 @@ export default function Skills() {
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const [active, setActive] = useState<Filter>(ALL)
   const { isMonoTheme, accent } = useAccent()
-  const { skillGroups: adminSkills } = useAdmin()
+  const { skillGroups: adminSkills } = usePublicData()
   const skillGroups = adminSkills.length ? adminSkills : staticSkills
 
   const categories: Filter[] = [ALL, ...skillGroups.map(g => g.category)]

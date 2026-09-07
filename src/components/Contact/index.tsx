@@ -5,7 +5,8 @@ import { FiGithub, FiLinkedin, FiMail, FiArrowRight, FiDownload } from 'react-ic
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle } from '../UI'
 import { popSpring } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
-import { useAdmin } from '../../admin/context/AdminContext'
+import { useAdmin }      from '../../admin/context/AdminContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 
 /* ─── Styled ─── */
 const ContactWrap = styled.div`
@@ -235,7 +236,8 @@ const SocialHandle = styled.span`
 export default function Contact() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
-  const { addMessage, settings } = useAdmin()
+  const { addMessage } = useAdmin()
+  const { settings } = usePublicData()
   const [form,    setForm]    = useState({ name: '', email: '', message: '' })
   const [sending, setSending] = useState(false)
   const [sent,    setSent]    = useState(false)
@@ -244,12 +246,10 @@ export default function Contact() {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSending(true)
-    /* Save to admin store */
-    addMessage({ name: form.name, email: form.email, message: form.message })
-    /* mailto fallback */
+    await addMessage({ name: form.name, email: form.email, message: form.message })
     const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
     const body    = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
     window.location.href = `mailto:${settings.email}?subject=${subject}&body=${body}`

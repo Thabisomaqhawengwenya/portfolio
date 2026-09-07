@@ -146,8 +146,8 @@ export default function AdminSettings() {
       <Notice>
         <FiAlertTriangle />
         <span>
-          Settings are saved to your browser's localStorage. To apply changes to the live portfolio,
-          update the corresponding files in <code>src/data/</code> and redeploy.
+          Settings are saved to Firestore and applied to the live portfolio immediately on next page load.
+          No redeploy needed.
         </span>
       </Notice>
 

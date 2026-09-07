@@ -1,7 +1,8 @@
 import styled from 'styled-components'
 import { popSpring } from '../UI'
 import { motion } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiArrowUp } from 'react-icons/fi'
+import { FiGithub, FiLinkedin, FiArrowUp, FiLock } from 'react-icons/fi'
+import { Link } from 'react-router-dom'
 
 /* ─── Styled ─── */
 const FooterEl = styled.footer`
@@ -158,6 +159,31 @@ const BackTop = styled(motion.button)`
   }
 `
 
+const AdminBtn = styled(motion(Link))`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: ${({ theme }) => theme.typography.weights.bold};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #444;
+  text-decoration: none;
+  padding: 0.4rem 0.875rem;
+  border: 2px solid #2a2a2a;
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+
+  svg { opacity: 0.6; }
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary};
+    border-color: #444;
+    box-shadow: 3px 3px 0 #333;
+    svg { opacity: 1; }
+  }
+`
+
 const LINKS = ['Home','About','Journey','Skills','Projects','Contact']
 const scrollTo = (id: string) =>
   document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })
@@ -211,12 +237,20 @@ export default function Footer() {
         <Copyright>
           © {new Date().getFullYear()} Maqhawe Ngwenya. All rights reserved.
         </Copyright>
-        <BackTop onClick={() => scrollTo('home')} aria-label="Back to top"
-          whileHover={{ scale: 1.08, y: -5 }}
-          whileTap={{ scale: 0.92 }}
-          transition={popSpring}>
-          <FiArrowUp /> Back to top
-        </BackTop>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <AdminBtn to="/admin"
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            transition={popSpring}>
+            <FiLock /> Admin
+          </AdminBtn>
+          <BackTop onClick={() => scrollTo('home')} aria-label="Back to top"
+            whileHover={{ scale: 1.08, y: -5 }}
+            whileTap={{ scale: 0.92 }}
+            transition={popSpring}>
+            <FiArrowUp /> Back to top
+          </BackTop>
+        </div>
       </FooterBottom>
     </FooterEl>
   )

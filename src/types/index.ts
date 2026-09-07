@@ -73,3 +73,14 @@ export interface NavItem {
   label:  string
   href:   string
 }
+
+/* ─── Hero editable content ─── */
+export interface HeroContent {
+  greeting:     string   // "Hello, World" label
+  role:         string   // subtitle line
+  available:    boolean  // show "Open" dot
+  sticker1:     string
+  sticker2:     string
+  sticker3:     string
+  cvUrl:        string   // public URL to the CV PDF
+}

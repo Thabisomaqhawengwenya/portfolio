@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { motion, useInView } from 'framer-motion'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle } from '../UI'
 import { fadeUp, staggerContainer, staggerItem } from '../../styles/animations'
+import { useAdmin } from '../../admin/context/AdminContext'
 
 const AboutGrid = styled.div`
   display: grid;
@@ -106,16 +107,18 @@ const Quote = styled.blockquote`
   letter-spacing: -0.01em;
 `
 
-const STATS = [
-  { value: '2+',      label: 'Projects'  },
-  { value: 'Zimbabwe',label: 'Location'  },
-  { value: '∞',       label: 'Commits'   },
-  { value: '2026',    label: 'Started'   },
-]
-
 export default function About() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
+  const { settings } = useAdmin()
+  const userLocation = settings.location || 'Zimbabwe'
+
+  const STATS = [
+    { value: '2+',        label: 'Projects'  },
+    { value: userLocation,label: 'Location'  },
+    { value: '∞',         label: 'Commits'   },
+    { value: '2026',      label: 'Started'   },
+  ]
 
   return (
     <Section id="about">

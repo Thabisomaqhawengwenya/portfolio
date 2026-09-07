@@ -5,6 +5,7 @@ import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
 import ColorPicker from '../ColorPicker'
 import { useAccent } from '../../styles/ThemeContext'
+import { useAdmin }  from '../../admin/context/AdminContext'
 
 /* ─── Styled ─── */
 const HeroSection = styled.section`
@@ -337,6 +338,16 @@ export default function Hero() {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
 
   const { isMonoTheme, accent } = useAccent()
+  const { heroContent, settings } = useAdmin()
+
+  /* Use admin-managed content with sensible fallbacks */
+  const greeting  = heroContent.greeting  || 'Hello, World'
+  const role      = heroContent.role      || 'Junior Full-Stack Software Developer. Building modern, useful, and engaging digital experiences — from Zimbabwe to the world.'
+  const cvUrl     = heroContent.cvUrl     || '/Maqhawe-Ngwenya-CV.pdf'
+  const available = heroContent.available !== false
+  const stick1    = heroContent.sticker1  || 'React + TS'
+  const stick2    = heroContent.sticker2  || 'Node.js'
+  const stick3    = heroContent.sticker3  || 'Full-Stack'
 
   /* Sticker colours: vivid in normal themes, mono in Black */
   const s1 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
@@ -352,7 +363,7 @@ export default function Hero() {
         {/* Content */}
         <HeroContent variants={heroContainer} initial="hidden" animate="visible">
           <Greeting variants={heroItem}>
-            👋 Hello, World
+            👋 {greeting}
           </Greeting>
 
           <HeroTitle variants={heroItem}>
@@ -361,7 +372,7 @@ export default function Hero() {
           </HeroTitle>
 
           <HeroSubtitle variants={heroItem}>
-            Junior Full-Stack Software Developer. Building modern, useful, and engaging digital experiences — from Zimbabwe to the world.
+            {role}
           </HeroSubtitle>
 
           <HeroActions variants={heroItem}>
@@ -383,7 +394,7 @@ export default function Hero() {
             </SecondaryBtn>
             <SecondaryBtn
               as="a"
-              href="/Maqhawe-Ngwenya-CV.pdf"
+              href={cvUrl}
               download="Maqhawe-Ngwenya-CV.pdf"
               whileHover={{ scale: 1.06, y: -4 }}
               whileTap={{ scale: 0.94 }}
@@ -412,7 +423,7 @@ export default function Hero() {
               transition={popSpring}>
               <FiLinkedin />
             </SocialLink>
-            <SocialNote>Zimbabwe</SocialNote>
+            <SocialNote>{settings.location || 'Zimbabwe'}</SocialNote>
           </SocialRow>
 
           {/* ── Accent colour picker ── */}
@@ -434,10 +445,12 @@ export default function Hero() {
             </AvatarBody>
             <AvatarFooter>
               <AvatarNameText>Maqhawe Ngwenya</AvatarNameText>
-              <AvailableDot>
-                <span />
-                Open
-              </AvailableDot>
+              {available && (
+                <AvailableDot>
+                  <span />
+                  Open
+                </AvailableDot>
+              )}
             </AvatarFooter>
           </AvatarCard>
 
@@ -446,19 +459,19 @@ export default function Hero() {
             style={{ top: -16, right: -16, transform: 'rotate(4deg)', background: s1.bg, color: s1.fg }}
             animate={{ y: [0, -5, 0] }}
             transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}>
-            React + TS
+            {stick1}
           </Sticker>
           <Sticker
             style={{ bottom: 60, left: -20, transform: 'rotate(-3deg)', background: s2.bg, color: s2.fg }}
             animate={{ y: [0, 5, 0] }}
             transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 1 }}>
-            Node.js
+            {stick2}
           </Sticker>
           <Sticker
             style={{ bottom: -16, right: 20, transform: 'rotate(2deg)', background: s3.bg, color: s3.fg }}
             animate={{ y: [0, -4, 0] }}
             transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut', delay: 0.5 }}>
-            Full-Stack
+            {stick3}
           </Sticker>
         </HeroVisual>
       </HeroInner>

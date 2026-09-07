@@ -8,8 +8,9 @@ import {
   popSpring,
 } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
-import { projects } from '../../data/projects'
+import { projects as staticProjects } from '../../data/projects'
 import { useAccent } from '../../styles/ThemeContext'
+import { useAdmin }  from '../../admin/context/AdminContext'
 import type { Project } from '../../types'
 
 /* Multi-colour palette for non-mono themes */
@@ -494,6 +495,9 @@ export default function Projects() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true })
   const { isMonoTheme, accent } = useAccent()
+  /* Use admin-managed projects when available, fall back to static */
+  const { projects: adminProjects } = useAdmin()
+  const projects = adminProjects.length ? adminProjects : staticProjects
 
   type Filter = 'All' | Project['category']
   const [active, setActive] = useState<Filter>('All')

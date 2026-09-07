@@ -3,6 +3,7 @@ import { popSpring } from '../UI'
 import { motion } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiArrowUp, FiLock } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
+import { useAdmin } from '../../admin/context/AdminContext'
 
 /* ─── Styled ─── */
 const FooterEl = styled.footer`
@@ -190,6 +191,7 @@ const scrollTo = (id: string) =>
 
 /* ─── Component ─── */
 export default function Footer() {
+  const { settings } = useAdmin()
   return (
     <FooterEl>
       <FooterTop>
@@ -215,14 +217,14 @@ export default function Footer() {
         <FooterCell>
           <CellLabel>Connect</CellLabel>
           <SocialLinks>
-            <SocialBtn href="https://github.com/Thabisomaqhawengwenya" target="_blank"
+            <SocialBtn href={settings.githubUrl} target="_blank"
               rel="noopener noreferrer" aria-label="GitHub"
               whileHover={{ scale: 1.1, y: -5 }}
               whileTap={{ scale: 0.92 }}
               transition={popSpring}>
               <FiGithub /> GitHub
             </SocialBtn>
-            <SocialBtn href="https://www.linkedin.com/in/maqhawe-ngwenya/" target="_blank"
+            <SocialBtn href={settings.linkedinUrl} target="_blank"
               rel="noopener noreferrer" aria-label="LinkedIn"
               whileHover={{ scale: 1.1, y: -5 }}
               whileTap={{ scale: 0.92 }}

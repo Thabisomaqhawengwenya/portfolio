@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import {
   FiGrid, FiFolder, FiCode, FiMail, FiSettings,
-  FiLogOut, FiExternalLink, FiMenu, FiX,
+  FiLogOut, FiExternalLink, FiMenu, FiX, FiActivity, FiLayout,
 } from 'react-icons/fi'
 import { useState } from 'react'
 import { useAdmin } from '../context/AdminContext'
@@ -220,11 +220,13 @@ const Overlay = styled.div<{ $visible: boolean }>`
 
 /* ─── Nav items config ─── */
 const NAV = [
-  { to: '/admin',          label: 'Overview',  icon: <FiGrid />    },
-  { to: '/admin/projects', label: 'Projects',  icon: <FiFolder />  },
-  { to: '/admin/skills',   label: 'Skills',    icon: <FiCode />    },
-  { to: '/admin/messages', label: 'Messages',  icon: <FiMail />    },
-  { to: '/admin/settings', label: 'Settings',  icon: <FiSettings /> },
+  { to: '/admin',          label: 'Overview',     icon: <FiGrid />     },
+  { to: '/admin/projects', label: 'Projects',     icon: <FiFolder />   },
+  { to: '/admin/journey',  label: 'Journey',      icon: <FiActivity /> },
+  { to: '/admin/skills',   label: 'Skills',       icon: <FiCode />     },
+  { to: '/admin/messages', label: 'Messages',     icon: <FiMail />     },
+  { to: '/admin/hero',     label: 'Hero Content', icon: <FiLayout />   },
+  { to: '/admin/settings', label: 'Settings',     icon: <FiSettings /> },
 ]
 
 /* ─── Page label from path ─── */
@@ -232,8 +234,10 @@ const pageLabel = (pathname: string) => {
   const map: Record<string, string> = {
     '/admin':          'Overview',
     '/admin/projects': 'Projects',
+    '/admin/journey':  'Journey',
     '/admin/skills':   'Skills',
     '/admin/messages': 'Messages',
+    '/admin/hero':     'Hero Content',
     '/admin/settings': 'Settings',
   }
   return map[pathname] ?? 'Dashboard'

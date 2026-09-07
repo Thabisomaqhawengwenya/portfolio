@@ -235,7 +235,7 @@ const SocialHandle = styled.span`
 export default function Contact() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
-  const { addMessage } = useAdmin()
+  const { addMessage, settings } = useAdmin()
   const [form,    setForm]    = useState({ name: '', email: '', message: '' })
   const [sending, setSending] = useState(false)
   const [sent,    setSent]    = useState(false)
@@ -252,7 +252,7 @@ export default function Contact() {
     /* mailto fallback */
     const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
     const body    = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
-    window.location.href = `mailto:thabisomaqhawengwenya@gmail.com?subject=${subject}&body=${body}`
+    window.location.href = `mailto:${settings.email}?subject=${subject}&body=${body}`
     setTimeout(() => { setSending(false); setSent(true); setForm({ name:'', email:'', message:'' }) }, 800)
   }
 
@@ -312,20 +312,20 @@ export default function Contact() {
                 <InfoText>
                   Junior roles, freelance projects, interesting collaborations. Let's talk.
                 </InfoText>
-                <EmailLink href="mailto:thabisomaqhawengwenya@gmail.com"
+                <EmailLink href={`mailto:${settings.email}`}
                   whileHover={{ scale: 1.04, x: 3 }}
                   whileTap={{ scale: 0.96 }}
                   transition={popSpring}>
-                  thabisomaqhawengwenya@gmail.com
+                  {settings.email}
                   <FiArrowRight />
                 </EmailLink>
               </InfoTop>
               <SocialList>
                 {[
-                  { icon: <FiGithub />,   label: 'GitHub',   handle: 'github.com/Thabisomaqhawengwenya',  href: 'https://github.com/Thabisomaqhawengwenya' },
-                  { icon: <FiLinkedin />, label: 'LinkedIn', handle: 'linkedin.com/in/maqhawe-ngwenya',   href: 'https://www.linkedin.com/in/maqhawe-ngwenya/' },
-                  { icon: <FiMail />,     label: 'Email',    handle: 'thabisomaqhawengwenya@gmail.com',   href: 'mailto:thabisomaqhawengwenya@gmail.com' },
-                  { icon: <FiDownload />, label: 'Download CV', handle: 'Maqhawe-Ngwenya-CV.pdf',        href: '/Maqhawe-Ngwenya-CV.pdf', download: true },
+                  { icon: <FiGithub />,   label: 'GitHub',     handle: settings.githubUrl.replace('https://',''),  href: settings.githubUrl },
+                  { icon: <FiLinkedin />, label: 'LinkedIn',   handle: settings.linkedinUrl.replace('https://',''), href: settings.linkedinUrl },
+                  { icon: <FiMail />,     label: 'Email',      handle: settings.email,                             href: `mailto:${settings.email}` },
+                  { icon: <FiDownload />, label: 'Download CV', handle: 'Maqhawe-Ngwenya-CV.pdf',                  href: '/Maqhawe-Ngwenya-CV.pdf', download: true },
                 ].map(s => (
                   <SocialItem key={s.label}>
                     <SocialLink href={s.href}

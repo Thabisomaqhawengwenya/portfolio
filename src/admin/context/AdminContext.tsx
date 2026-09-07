@@ -1,139 +1,167 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import {
+  createContext, useContext, useState,
+  useEffect, useCallback,
+} from 'react'
 import type { ReactNode } from 'react'
+
+/* Firebase */
+import { loginWithEmail, logout as fbLogout, onAuthChange } from '../../firebase/authService'
+import {
+  fsGetMessages, fsAddMessage, fsMarkMessageRead, fsDeleteMessage,
+  fsGetProjects, fsAddProject, fsUpdateProject, fsDeleteProject,
+  fsGetSkills, fsSaveSkillGroups,
+  fsGetSettings, fsSaveSettings,
+} from '../../firebase/firestoreService'
+
+/* Local defaults (shown before Firestore loads) */
 import { projects as defaultProjects } from '../../data/projects'
 import { skillGroups as defaultSkills } from '../../data/skills'
-import type { Project, SkillGroup } from '../../types'
+import type { Project, SkillGroup }    from '../../types'
 
 /* ─── Types ─── */
 export interface Message {
-  id:        string
-  name:      string
-  email:     string
-  message:   string
-  date:      string
-  read:      boolean
+  id:      string
+  name:    string
+  email:   string
+  message: string
+  date:    string
+  read:    boolean
 }
 
 export interface AdminSettings {
-  bio:        string
-  githubUrl:  string
-  linkedinUrl:string
-  email:      string
-  location:   string
+  bio:         string
+  githubUrl:   string
+  linkedinUrl: string
+  email:       string
+  location:    string
 }
 
 interface AdminCtx {
-  /* Auth */
-  isAuthed:    boolean
-  login:       (password: string) => boolean
-  logout:      () => void
-  /* Projects */
-  projects:    Project[]
-  addProject:  (p: Omit<Project, 'id'>) => void
-  updateProject:(p: Project) => void
-  deleteProject:(id: string) => void
-  /* Skills */
-  skillGroups: SkillGroup[]
-  updateSkillGroups:(groups: SkillGroup[]) => void
-  /* Messages */
-  messages:    Message[]
-  addMessage:  (m: Omit<Message, 'id' | 'date' | 'read'>) => void
-  markRead:    (id: string) => void
-  deleteMessage:(id: string) => void
-  /* Settings */
-  settings:    AdminSettings
-  updateSettings:(s: AdminSettings) => void
+  isAuthed:     boolean
+  authLoading:  boolean
+  login:        (email: string, password: string) => Promise<boolean>
+  logout:       () => Promise<void>
+
+  projects:     Project[]
+  addProject:   (p: Omit<Project, 'id'>) => Promise<void>
+  updateProject:(p: Project) => Promise<void>
+  deleteProject:(id: string) => Promise<void>
+
+  skillGroups:       SkillGroup[]
+  updateSkillGroups: (groups: SkillGroup[]) => Promise<void>
+
+  messages:     Message[]
+  addMessage:   (m: Omit<Message, 'id' | 'date' | 'read'>) => Promise<void>
+  markRead:     (id: string) => Promise<void>
+  deleteMessage:(id: string) => Promise<void>
+
+  settings:       AdminSettings
+  updateSettings: (s: AdminSettings) => Promise<void>
 }
 
-/* ─── Defaults ─── */
-const ADMIN_PASSWORD = 'admin2026'   // Change this
-
+/* ─── Default settings ─── */
 const DEFAULT_SETTINGS: AdminSettings = {
-  bio:         "Junior Full-Stack Software Developer from Zimbabwe, currently training at Uncommon.org.",
+  bio:         'Junior Full-Stack Software Developer from Zimbabwe, currently training at Uncommon.org.',
   githubUrl:   'https://github.com/Thabisomaqhawengwenya',
   linkedinUrl: 'https://www.linkedin.com/in/maqhawe-ngwenya/',
   email:       'thabisomaqhawengwenya@gmail.com',
   location:    'Zimbabwe',
 }
 
-/* ─── Helpers ─── */
-const ls = {
-  get: <T,>(key: string, fallback: T): T => {
-    try {
-      const v = localStorage.getItem(key)
-      return v ? JSON.parse(v) : fallback
-    } catch { return fallback }
-  },
-  set: (key: string, value: unknown) => {
-    try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* noop */ }
-  },
-}
-
 /* ─── Context ─── */
 const Ctx = createContext<AdminCtx>({} as AdminCtx)
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [isAuthed,    setAuthed]      = useState(() => ls.get('admin-auth', false))
-  const [projects,    setProjects]    = useState<Project[]>(() => ls.get('admin-projects', defaultProjects))
-  const [skillGroups, setSkillGroups] = useState<SkillGroup[]>(() => ls.get('admin-skills', defaultSkills))
-  const [messages,    setMessages]    = useState<Message[]>(() => ls.get('admin-messages', []))
-  const [settings,    setSettings]    = useState<AdminSettings>(() => ls.get('admin-settings', DEFAULT_SETTINGS))
+  const [isAuthed,    setAuthed]      = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
 
-  /* Persist on change */
-  useEffect(() => { ls.set('admin-projects',  projects)    }, [projects])
-  useEffect(() => { ls.set('admin-skills',    skillGroups) }, [skillGroups])
-  useEffect(() => { ls.set('admin-messages',  messages)    }, [messages])
-  useEffect(() => { ls.set('admin-settings',  settings)    }, [settings])
-  useEffect(() => { ls.set('admin-auth',      isAuthed)    }, [isAuthed])
+  const [projects,    setProjects]    = useState<Project[]>(defaultProjects)
+  const [skillGroups, setSkillGroups] = useState<SkillGroup[]>(defaultSkills)
+  const [messages,    setMessages]    = useState<Message[]>([])
+  const [settings,    setSettings]    = useState<AdminSettings>(DEFAULT_SETTINGS)
 
-  const login = useCallback((pw: string): boolean => {
-    if (pw === ADMIN_PASSWORD) { setAuthed(true); return true }
-    return false
+  /* ── Listen to Firebase auth state ── */
+  useEffect(() => {
+    const unsub = onAuthChange(user => {
+      setAuthed(!!user)
+      setAuthLoading(false)
+    })
+    return unsub
   }, [])
 
-  const logout = useCallback(() => {
-    setAuthed(false)
-    localStorage.removeItem('admin-auth')
+  /* ── Load Firestore data when authenticated ── */
+  useEffect(() => {
+    if (!isAuthed) return
+
+    fsGetProjects().then(p => { if (p.length) setProjects(p) }).catch(console.error)
+    fsGetSkills().then(s   => { if (s.length) setSkillGroups(s) }).catch(console.error)
+    fsGetMessages().then(m => setMessages(m)).catch(console.error)
+    fsGetSettings().then(s => { if (s) setSettings(s) }).catch(console.error)
+  }, [isAuthed])
+
+  /* ── Auth ── */
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    try {
+      await loginWithEmail(email, password)
+      return true
+    } catch {
+      return false
+    }
   }, [])
 
-  const addProject = useCallback((p: Omit<Project, 'id'>) => {
-    setProjects(prev => [...prev, { ...p, id: Date.now().toString() }])
+  const logout = useCallback(async () => {
+    await fbLogout()
   }, [])
 
-  const updateProject = useCallback((p: Project) => {
+  /* ── Projects ── */
+  const addProject = useCallback(async (p: Omit<Project, 'id'>) => {
+    const id = await fsAddProject(p)
+    setProjects(prev => [...prev, { ...p, id }])
+  }, [])
+
+  const updateProject = useCallback(async (p: Project) => {
+    await fsUpdateProject(p)
     setProjects(prev => prev.map(x => x.id === p.id ? p : x))
   }, [])
 
-  const deleteProject = useCallback((id: string) => {
+  const deleteProject = useCallback(async (id: string) => {
+    await fsDeleteProject(id)
     setProjects(prev => prev.filter(x => x.id !== id))
   }, [])
 
-  const updateSkillGroups = useCallback((groups: SkillGroup[]) => {
+  /* ── Skills ── */
+  const updateSkillGroups = useCallback(async (groups: SkillGroup[]) => {
+    await fsSaveSkillGroups(groups)
     setSkillGroups(groups)
   }, [])
 
-  const addMessage = useCallback((m: Omit<Message, 'id' | 'date' | 'read'>) => {
+  /* ── Messages ── */
+  const addMessage = useCallback(async (m: Omit<Message, 'id' | 'date' | 'read'>) => {
+    const id = await fsAddMessage(m)
     setMessages(prev => [{
-      ...m,
-      id:   Date.now().toString(),
-      date: new Date().toISOString(),
-      read: false,
+      ...m, id, date: new Date().toISOString(), read: false,
     }, ...prev])
   }, [])
 
-  const markRead = useCallback((id: string) => {
+  const markRead = useCallback(async (id: string) => {
+    await fsMarkMessageRead(id)
     setMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m))
   }, [])
 
-  const deleteMessage = useCallback((id: string) => {
+  const deleteMessage = useCallback(async (id: string) => {
+    await fsDeleteMessage(id)
     setMessages(prev => prev.filter(m => m.id !== id))
   }, [])
 
-  const updateSettings = useCallback((s: AdminSettings) => setSettings(s), [])
+  /* ── Settings ── */
+  const updateSettings = useCallback(async (s: AdminSettings) => {
+    await fsSaveSettings(s)
+    setSettings(s)
+  }, [])
 
   return (
     <Ctx.Provider value={{
-      isAuthed, login, logout,
+      isAuthed, authLoading, login, logout,
       projects, addProject, updateProject, deleteProject,
       skillGroups, updateSkillGroups,
       messages, addMessage, markRead, deleteMessage,

@@ -241,9 +241,19 @@ const pageLabel = (pathname: string) => {
 
 /* ─── Component ─── */
 export default function AdminLayout() {
-  const { isAuthed, logout, messages } = useAdmin()
+  const { isAuthed, authLoading, logout, messages } = useAdmin()
   const location = useLocation()
   const [sideOpen, setSideOpen] = useState(false)
+
+  if (authLoading) return (
+    <div style={{
+      minHeight: '100svh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: '#0d0d0d', fontFamily: 'Space Mono', fontSize: '0.75rem',
+      color: '#FFE500', textTransform: 'uppercase', letterSpacing: '0.1em',
+    }}>
+      Loading…
+    </div>
+  )
 
   if (!isAuthed) return <Navigate to="/admin/login" replace />
 
@@ -291,7 +301,7 @@ export default function AdminLayout() {
             style={{ textDecoration: 'none' }}>
             <FiExternalLink /> View Portfolio
           </FooterBtn>
-          <FooterBtn onClick={logout}>
+          <FooterBtn onClick={() => logout()}>
             <FiLogOut /> Sign Out
           </FooterBtn>
         </SidebarFooter>

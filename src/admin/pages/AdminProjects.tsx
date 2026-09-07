@@ -282,18 +282,16 @@ export default function AdminProjects() {
   const [isNew,   setIsNew]   = useState(false)
   const [form,    setForm]    = useState<Omit<Project,'id'>>(blank())
   const [saving,  setSaving]  = useState(false)
+  const [error,   setError]   = useState('')
 
-  const openNew = () => { setForm(blank()); setIsNew(true); setEditing(null) }
-  const openEdit = (p: Project) => {
-    setForm({ ...p })
-    setEditing(p)
-    setIsNew(false)
-  }
-  const close = () => { setEditing(null); setIsNew(false) }
+  const openNew  = () => { setForm(blank()); setIsNew(true); setEditing(null); setError('') }
+  const openEdit = (p: Project) => { setForm({ ...p }); setEditing(p); setIsNew(false); setError('') }
+  const close    = () => { setEditing(null); setIsNew(false); setError('') }
 
   const handleSave = async () => {
     if (!form.title.trim()) return
     setSaving(true)
+    setError('')
     const technologies = typeof form.technologies === 'string'
       ? (form.technologies as unknown as string).split(',').map((s: string) => s.trim()).filter(Boolean)
       : form.technologies
@@ -304,6 +302,13 @@ export default function AdminProjects() {
         await updateProject({ ...editing, ...form, technologies })
       }
       close()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('permission') || msg.includes('PERMISSION_DENIED')) {
+        setError('Permission denied — check Firestore security rules or make sure you are signed in as admin.')
+      } else {
+        setError(`Save failed: ${msg}`)
+      }
     } finally {
       setSaving(false)
     }
@@ -413,6 +418,16 @@ export default function AdminProjects() {
                   <FieldLabel htmlFor="featured" style={{ margin: 0, cursor: 'pointer' }}>Featured project</FieldLabel>
                 </Field>
 
+                {error && (
+                  <div style={{
+                    background: '#ff000015', border: '2px solid #FF3C2F',
+                    color: '#FF3C2F', padding: '0.6rem 0.875rem',
+                    fontFamily: 'Space Mono', fontSize: '0.75rem', fontWeight: 700,
+                    lineHeight: 1.5,
+                  }}>
+                    ⚠ {error}
+                  </div>
+                )}
                 <SaveBtn onClick={handleSave} disabled={saving} whileHover={{ scale: saving ? 1 : 1.02 }} whileTap={{ scale: 0.97 }}>
                   <FiCheck /> {saving ? 'Saving…' : isNew ? 'Add Project' : 'Save Changes'}
                 </SaveBtn>

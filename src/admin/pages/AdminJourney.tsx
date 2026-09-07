@@ -43,20 +43,35 @@ export default function AdminJourney() {
   const [editing, setEditing] = useState<ExperienceItem|null>(null)
   const [isNew,   setIsNew]   = useState(false)
   const [form,    setForm]    = useState<Omit<ExperienceItem,'id'>>(blank())
+  const [saving,  setSaving]  = useState(false)
+  const [error,   setError]   = useState('')
 
-  const openNew  = () => { setForm(blank()); setIsNew(true); setEditing(null) }
-  const openEdit = (i: ExperienceItem) => { setForm({...i}); setEditing(i); setIsNew(false) }
-  const close    = () => { setEditing(null); setIsNew(false) }
+  const openNew  = () => { setForm(blank()); setIsNew(true); setEditing(null); setError('') }
+  const openEdit = (i: ExperienceItem) => { setForm({...i}); setEditing(i); setIsNew(false); setError('') }
+  const close    = () => { setEditing(null); setIsNew(false); setError('') }
 
   const parse = (v: string | string[]) =>
     typeof v === 'string' ? v.split('\n').map(s=>s.trim()).filter(Boolean) : v
 
   const handleSave = async () => {
     if (!form.title.trim()) return
+    setSaving(true)
+    setError('')
     const item = { ...form, highlights: parse(form.highlights ?? []), technologies: parse(form.technologies ?? []) }
-    if (isNew) await addJourneyItem(item)
-    else if (editing) await updateJourneyItem({ ...editing, ...item })
-    close()
+    try {
+      if (isNew) await addJourneyItem(item)
+      else if (editing) await updateJourneyItem({ ...editing, ...item })
+      close()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('permission') || msg.includes('PERMISSION_DENIED')) {
+        setError('Permission denied — check Firestore security rules or confirm you are signed in.')
+      } else {
+        setError(`Save failed: ${msg}`)
+      }
+    } finally {
+      setSaving(false)
+    }
   }
 
   const set = (k: keyof typeof form, v: unknown) => setForm(f => ({ ...f, [k]: v }))
@@ -136,8 +151,15 @@ export default function AdminJourney() {
                     onChange={e=>set('technologies',e.target.value)} placeholder="React&#10;TypeScript"/></Field>
                 <Field><Label>URL (optional)</Label>
                   <Input value={form.url??''} onChange={e=>set('url',e.target.value)} placeholder="https://..."/></Field>
-                <SaveBtn onClick={handleSave} whileHover={{scale:1.02}} whileTap={{scale:0.97}}>
-                  <FiCheck/> {isNew?'Add Entry':'Save Changes'}
+                {error && (
+                  <div style={{
+                    background:'#ff000015',border:'2px solid #FF3C2F',
+                    color:'#FF3C2F',padding:'0.6rem 0.875rem',
+                    fontFamily:'Space Mono',fontSize:'0.75rem',fontWeight:700,lineHeight:1.5,
+                  }}>⚠ {error}</div>
+                )}
+                <SaveBtn onClick={handleSave} disabled={saving} whileHover={{scale:saving?1:1.02}} whileTap={{scale:0.97}}>
+                  <FiCheck/> {saving ? 'Saving…' : isNew ? 'Add Entry' : 'Save Changes'}
                 </SaveBtn>
               </ModalBody>
             </Modal>

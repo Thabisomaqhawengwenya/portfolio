@@ -189,14 +189,14 @@ export default function Footer() {
         <FooterCell>
           <CellLabel>Connect</CellLabel>
           <SocialLinks>
-            <SocialBtn href="https://github.com/Maqhawe" target="_blank"
+            <SocialBtn href="https://github.com/Thabisomaqhawengwenya" target="_blank"
               rel="noopener noreferrer" aria-label="GitHub"
               whileHover={{ scale: 1.1, y: -5 }}
               whileTap={{ scale: 0.92 }}
               transition={popSpring}>
               <FiGithub /> GitHub
             </SocialBtn>
-            <SocialBtn href="https://linkedin.com" target="_blank"
+            <SocialBtn href="https://www.linkedin.com/in/maqhawe-ngwenya/" target="_blank"
               rel="noopener noreferrer" aria-label="LinkedIn"
               whileHover={{ scale: 1.1, y: -5 }}
               whileTap={{ scale: 0.92 }}

@@ -385,7 +385,7 @@ export default function Hero() {
 
           <SocialRow variants={heroItem}>
             <SocialLink
-              href="https://github.com/Maqhawe"
+              href="https://github.com/Thabisomaqhawengwenya"
               target="_blank" rel="noopener noreferrer"
               aria-label="GitHub"
               whileHover={{ scale: 1.15, y: -5 }}
@@ -394,7 +394,7 @@ export default function Hero() {
               <FiGithub />
             </SocialLink>
             <SocialLink
-              href="https://linkedin.com"
+              href="https://www.linkedin.com/in/maqhawe-ngwenya/"
               target="_blank" rel="noopener noreferrer"
               aria-label="LinkedIn"
               whileHover={{ scale: 1.15, y: -5 }}

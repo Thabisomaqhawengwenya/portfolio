@@ -247,7 +247,7 @@ export default function Contact() {
     setSending(true)
     const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
     const body    = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
-    window.location.href = `mailto:maqhawe@example.com?subject=${subject}&body=${body}`
+    window.location.href = `mailto:thabisomaqhawengwenya@gmail.com?subject=${subject}&body=${body}`
     setTimeout(() => { setSending(false); setSent(true) }, 800)
   }
 
@@ -307,19 +307,19 @@ export default function Contact() {
                 <InfoText>
                   Junior roles, freelance projects, interesting collaborations. Let's talk.
                 </InfoText>
-                <EmailLink href="mailto:maqhawe@example.com"
+                <EmailLink href="mailto:thabisomaqhawengwenya@gmail.com"
                   whileHover={{ scale: 1.04, x: 3 }}
                   whileTap={{ scale: 0.96 }}
                   transition={popSpring}>
-                  maqhawe@example.com {/* TODO: real email */}
+                  thabisomaqhawengwenya@gmail.com
                   <FiArrowRight />
                 </EmailLink>
               </InfoTop>
               <SocialList>
                 {[
-                  { icon: <FiGithub />,   label: 'GitHub',   handle: 'github.com/Maqhawe',       href: 'https://github.com/Maqhawe' },
-                  { icon: <FiLinkedin />, label: 'LinkedIn', handle: 'linkedin.com/in/maqhawe',   href: 'https://linkedin.com' },
-                  { icon: <FiMail />,     label: 'Email',    handle: 'maqhawe@example.com',       href: 'mailto:maqhawe@example.com' },
+                  { icon: <FiGithub />,   label: 'GitHub',   handle: 'github.com/Thabisomaqhawengwenya',  href: 'https://github.com/Thabisomaqhawengwenya' },
+                  { icon: <FiLinkedin />, label: 'LinkedIn', handle: 'linkedin.com/in/maqhawe-ngwenya',   href: 'https://www.linkedin.com/in/maqhawe-ngwenya/' },
+                  { icon: <FiMail />,     label: 'Email',    handle: 'thabisomaqhawengwenya@gmail.com',   href: 'mailto:thabisomaqhawengwenya@gmail.com' },
                 ].map(s => (
                   <SocialItem key={s.label}>
                     <SocialLink href={s.href}

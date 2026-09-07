@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import styled from 'styled-components'
 import { motion, useInView } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiMail, FiArrowRight } from 'react-icons/fi'
+import { FiGithub, FiLinkedin, FiMail, FiArrowRight, FiDownload } from 'react-icons/fi'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle } from '../UI'
 import { popSpring } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
@@ -325,11 +325,13 @@ export default function Contact() {
                   { icon: <FiGithub />,   label: 'GitHub',   handle: 'github.com/Thabisomaqhawengwenya',  href: 'https://github.com/Thabisomaqhawengwenya' },
                   { icon: <FiLinkedin />, label: 'LinkedIn', handle: 'linkedin.com/in/maqhawe-ngwenya',   href: 'https://www.linkedin.com/in/maqhawe-ngwenya/' },
                   { icon: <FiMail />,     label: 'Email',    handle: 'thabisomaqhawengwenya@gmail.com',   href: 'mailto:thabisomaqhawengwenya@gmail.com' },
+                  { icon: <FiDownload />, label: 'Download CV', handle: 'Maqhawe-Ngwenya-CV.pdf',        href: '/Maqhawe-Ngwenya-CV.pdf', download: true },
                 ].map(s => (
                   <SocialItem key={s.label}>
                     <SocialLink href={s.href}
                       target={s.href.startsWith('http') ? '_blank' : undefined}
                       rel="noopener noreferrer"
+                      download={'download' in s && s.download ? s.handle : undefined}
                       whileHover={{ scale: 1.03, x: 5 }}
                       whileTap={{ scale: 0.96 }}
                       transition={popSpring}>

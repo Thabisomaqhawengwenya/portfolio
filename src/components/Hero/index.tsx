@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiArrowDown, FiArrowRight } from 'react-icons/fi'
+import { FiGithub, FiLinkedin, FiArrowDown, FiArrowRight, FiDownload } from 'react-icons/fi'
 import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
 import ColorPicker from '../ColorPicker'
@@ -380,6 +380,16 @@ export default function Hero() {
               whileTap={{ scale: 0.94 }}
               transition={popSpring}>
               View Projects <FiArrowDown />
+            </SecondaryBtn>
+            <SecondaryBtn
+              as="a"
+              href="/Maqhawe-Ngwenya-CV.pdf"
+              download="Maqhawe-Ngwenya-CV.pdf"
+              whileHover={{ scale: 1.06, y: -4 }}
+              whileTap={{ scale: 0.94 }}
+              transition={popSpring}
+              style={{ cursor: 'pointer' }}>
+              <FiDownload /> Download CV
             </SecondaryBtn>
           </HeroActions>
 

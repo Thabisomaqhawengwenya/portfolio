@@ -128,6 +128,7 @@ export default function App() {
       } />
 
       <Route path="/admin/login" element={
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         <ThemeProvider theme={adminTheme as any}>
           <GlobalStyles />
           <Login />

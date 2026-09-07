@@ -142,7 +142,7 @@ export default function AdminSkills() {
 
   const toggleOpen = (cat: string) => setOpen(prev => {
     const s = new Set(prev)
-    s.has(cat) ? s.delete(cat) : s.add(cat)
+    if (s.has(cat)) { s.delete(cat) } else { s.add(cat) }
     return s
   })
 

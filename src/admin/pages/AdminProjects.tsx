@@ -281,6 +281,7 @@ export default function AdminProjects() {
   const [editing, setEditing] = useState<Project | null>(null)
   const [isNew,   setIsNew]   = useState(false)
   const [form,    setForm]    = useState<Omit<Project,'id'>>(blank())
+  const [saving,  setSaving]  = useState(false)
 
   const openNew = () => { setForm(blank()); setIsNew(true); setEditing(null) }
   const openEdit = (p: Project) => {
@@ -290,25 +291,22 @@ export default function AdminProjects() {
   }
   const close = () => { setEditing(null); setIsNew(false) }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim()) return
-    if (isNew) {
-      addProject({
-        ...form,
-        technologies: typeof form.technologies === 'string'
-          ? (form.technologies as unknown as string).split(',').map((s:string) => s.trim()).filter(Boolean)
-          : form.technologies,
-      })
-    } else if (editing) {
-      updateProject({
-        ...editing,
-        ...form,
-        technologies: typeof form.technologies === 'string'
-          ? (form.technologies as unknown as string).split(',').map((s:string) => s.trim()).filter(Boolean)
-          : form.technologies,
-      })
+    setSaving(true)
+    const technologies = typeof form.technologies === 'string'
+      ? (form.technologies as unknown as string).split(',').map((s: string) => s.trim()).filter(Boolean)
+      : form.technologies
+    try {
+      if (isNew) {
+        await addProject({ ...form, technologies })
+      } else if (editing) {
+        await updateProject({ ...editing, ...form, technologies })
+      }
+      close()
+    } finally {
+      setSaving(false)
     }
-    close()
   }
 
   const set = (k: keyof typeof form, v: unknown) => setForm(f => ({ ...f, [k]: v }))
@@ -415,8 +413,8 @@ export default function AdminProjects() {
                   <FieldLabel htmlFor="featured" style={{ margin: 0, cursor: 'pointer' }}>Featured project</FieldLabel>
                 </Field>
 
-                <SaveBtn onClick={handleSave} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                  <FiCheck /> {isNew ? 'Add Project' : 'Save Changes'}
+                <SaveBtn onClick={handleSave} disabled={saving} whileHover={{ scale: saving ? 1 : 1.02 }} whileTap={{ scale: 0.97 }}>
+                  <FiCheck /> {saving ? 'Saving…' : isNew ? 'Add Project' : 'Save Changes'}
                 </SaveBtn>
               </ModalBody>
             </Modal>

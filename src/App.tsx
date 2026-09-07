@@ -1,8 +1,11 @@
 import { useEffect, useMemo } from 'react'
+import { Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 import Lenis from 'lenis'
+
+/* Portfolio */
 import { theme as baseTheme } from './styles/theme'
-import { GlobalStyles } from './styles/GlobalStyles'
+import { GlobalStyles }       from './styles/GlobalStyles'
 import { ThemeAccentProvider, useAccent } from './styles/ThemeContext'
 import Navbar   from './components/Navbar'
 import Hero     from './components/Hero'
@@ -13,24 +16,30 @@ import Projects from './components/Projects'
 import Contact  from './components/Contact'
 import Footer   from './components/Footer'
 
-/* Inner component so it can consume the accent context */
-function AppInner() {
+/* Admin */
+import { adminTheme }    from './admin/adminTheme'
+import AdminLayout       from './admin/components/AdminLayout'
+import Login             from './admin/pages/Login'
+import Overview          from './admin/pages/Overview'
+import AdminProjects     from './admin/pages/AdminProjects'
+import AdminSkills       from './admin/pages/AdminSkills'
+import AdminMessages     from './admin/pages/AdminMessages'
+import AdminSettings     from './admin/pages/AdminSettings'
+
+/* ─── Portfolio wrapper ─── */
+function PortfolioApp() {
   const { accent } = useAccent()
 
-  /* Build a patched theme whenever the accent changes */
   const activeTheme = useMemo(() => {
     const ov = accent.overrides ?? {}
     const shadowOv = ov.shadows ?? {}
-
     return {
       ...baseTheme,
       colors: {
         ...baseTheme.colors,
-        /* Always update accent colours */
-        primary:      accent.primary          as string,
-        primaryDim:   `${accent.primary}33`   as string,
-        primaryGlow:  `${accent.primary}15`   as string,
-        /* Surface / text overrides for mono themes */
+        primary:     accent.primary          as string,
+        primaryDim:  `${accent.primary}33`   as string,
+        primaryGlow: `${accent.primary}15`   as string,
         ...(ov.background   ? { background:   ov.background   } : {}),
         ...(ov.surface      ? { surface:      ov.surface      } : {}),
         ...(ov.surfaceAlt   ? { surfaceAlt:   ov.surfaceAlt   } : {}),
@@ -48,18 +57,16 @@ function AppInner() {
         ...(shadowOv.xl    ? { xl:    shadowOv.xl    } : {}),
         ...(shadowOv.hover ? { hover: shadowOv.hover } : {}),
       } as typeof baseTheme.shadows,
-      /* Extra tokens readable by navbar and other components */
       accentText: accent.textColor,
       navBg:      accent.navBg,
     }
   }, [accent])
 
-  /* Lenis smooth scroll */
   useEffect(() => {
     const lenis = new Lenis({
-      duration:     1.2,
-      easing:       (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      smoothWheel:  true,
+      duration: 1.2,
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
     })
     let raf: number
     const animate = (time: number) => { lenis.raf(time); raf = requestAnimationFrame(animate) }
@@ -70,8 +77,6 @@ function AppInner() {
   return (
     <ThemeProvider theme={activeTheme}>
       <GlobalStyles />
-
-      {/* Skip link */}
       <a href="#main-content"
         style={{
           position: 'absolute', top: -40, left: 8,
@@ -84,7 +89,6 @@ function AppInner() {
         onBlur={e   => { (e.target as HTMLElement).style.top = '-40px' }}>
         Skip to content
       </a>
-
       <Navbar />
       <main id="main-content">
         <Hero />
@@ -99,10 +103,39 @@ function AppInner() {
   )
 }
 
+/* ─── Root — portfolio lives at /, admin at /admin ─── */
 export default function App() {
   return (
-    <ThemeAccentProvider>
-      <AppInner />
-    </ThemeAccentProvider>
+    <Routes>
+      {/* Portfolio */}
+      <Route path="/" element={
+        <ThemeAccentProvider>
+          <PortfolioApp />
+        </ThemeAccentProvider>
+      } />
+
+      {/* Admin */}
+      <Route path="/admin/login" element={
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <ThemeProvider theme={adminTheme as any}>
+          <GlobalStyles />
+          <Login />
+        </ThemeProvider>
+      } />
+
+      <Route path="/admin" element={
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <ThemeProvider theme={adminTheme as any}>
+          <GlobalStyles />
+          <AdminLayout />
+        </ThemeProvider>
+      }>
+        <Route index       element={<Overview />}        />
+        <Route path="projects" element={<AdminProjects />} />
+        <Route path="skills"   element={<AdminSkills />}   />
+        <Route path="messages" element={<AdminMessages />} />
+        <Route path="settings" element={<AdminSettings />} />
+      </Route>
+    </Routes>
   )
 }

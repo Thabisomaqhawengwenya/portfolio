@@ -5,6 +5,7 @@ import { FiGithub, FiLinkedin, FiMail, FiArrowRight } from 'react-icons/fi'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle } from '../UI'
 import { popSpring } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
+import { useAdmin } from '../../admin/context/AdminContext'
 
 /* ─── Styled ─── */
 const ContactWrap = styled.div`
@@ -234,6 +235,7 @@ const SocialHandle = styled.span`
 export default function Contact() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
+  const { addMessage } = useAdmin()
   const [form,    setForm]    = useState({ name: '', email: '', message: '' })
   const [sending, setSending] = useState(false)
   const [sent,    setSent]    = useState(false)
@@ -245,10 +247,13 @@ export default function Contact() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setSending(true)
+    /* Save to admin store */
+    addMessage({ name: form.name, email: form.email, message: form.message })
+    /* mailto fallback */
     const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
     const body    = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
     window.location.href = `mailto:thabisomaqhawengwenya@gmail.com?subject=${subject}&body=${body}`
-    setTimeout(() => { setSending(false); setSent(true) }, 800)
+    setTimeout(() => { setSending(false); setSent(true); setForm({ name:'', email:'', message:'' }) }, 800)
   }
 
   return (

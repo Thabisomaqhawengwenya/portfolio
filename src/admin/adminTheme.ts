@@ -2,21 +2,28 @@
    matching the neo-brutalism language of the portfolio */
 export const adminTheme = {
   colors: {
-    background:   '#0d0d0d',
-    surface:      '#141414',
-    surfaceAlt:   '#1c1c1c',
-    border:       '#ffffff',
-    borderSubtle: '#2a2a2a',
-    text:         '#f0f0f0',
-    textMuted:    '#aaaaaa',
-    textFaint:    '#555555',
+    /* backgrounds */
+    background:   '#F8F6F2',   // milky white / warm cream
+    surface:      '#FFFFFF',   // pure white cards
+    surfaceAlt:   '#F0EDE8',   // slightly deeper cream
+
+    /* borders */
+    border:       '#000000',
+    borderSubtle: '#D0CCC4',
+
+    /* text */
+    text:         '#0a0a0a',
+    textMuted:    '#444444',
+    textFaint:    '#888888',
+
+    /* accents */
     primary:      '#FFE500',
     primaryDim:   '#FFE50022',
     primaryGlow:  '#FFE50010',
     accent1:      '#FF3C2F',
     accent2:      '#0047FF',
     accent3:      '#00C853',
-    accent:       '#ffffff',
+    accent:       '#000000',
     error:        '#FF3C2F',
     success:      '#00C853',
   },
@@ -49,11 +56,11 @@ export const adminTheme = {
   breakpoints: { xs:'320px', sm:'480px', md:'768px', lg:'1024px', xl:'1280px', '2xl':'1440px' },
   radii:       { sm:'0px', md:'0px', lg:'0px', xl:'0px', '2xl':'0px', full:'9999px' },
   shadows: {
-    sm:    '3px 3px 0px #ffffff',
-    md:    '5px 5px 0px #ffffff',
-    lg:    '7px 7px 0px #ffffff',
-    xl:    '10px 10px 0px #ffffff',
-    hover: '7px 7px 0px #ffffff',
+    sm:    '3px 3px 0px #000000',
+    md:    '5px 5px 0px #000000',
+    lg:    '7px 7px 0px #000000',
+    xl:    '10px 10px 0px #000000',
+    hover: '7px 7px 0px #000000',
     yellow:'5px 5px 0px #FFE500',
     red:   '5px 5px 0px #FF3C2F',
     blue:  '5px 5px 0px #0047FF',
@@ -66,7 +73,7 @@ export const adminTheme = {
   },
   zIndex: { base:0, raised:10, overlay:100, nav:200, modal:300 },
   accentText: '#000000',
-  navBg:      '#000000',
+  navBg:      '#FFE500',   // yellow navbar matches portfolio style
 } as const
 
 export type AdminTheme = typeof adminTheme

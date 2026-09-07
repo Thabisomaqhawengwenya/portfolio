@@ -272,7 +272,7 @@ const SaveBtn = styled(motion.button)`
 const blank = (): Omit<Project, 'id'> => ({
   title: '', description: '', longDescription: '', image: '',
   technologies: [], github: '', liveUrl: '', featured: false,
-  status: 'live', category: 'Full-Stack',
+  status: 'live', category: 'Business',
 })
 
 /* ─── Component ─── */
@@ -396,7 +396,7 @@ export default function AdminProjects() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <Field><FieldLabel>Category</FieldLabel>
                     <Select value={form.category} onChange={e => set('category', e.target.value)}>
-                      {['Full-Stack','Frontend','Backend','Other'].map(c => <option key={c}>{c}</option>)}
+                      {['Business','Mobile','Gift','Personal'].map(c => <option key={c}>{c}</option>)}
                     </Select></Field>
 
                   <Field><FieldLabel>Status</FieldLabel>

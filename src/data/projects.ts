@@ -12,7 +12,7 @@ export const projects: Project[] = [
     github:      'https://github.com/Thabisomaqhawengwenya',
     featured:    true,
     status:      'live',
-    category:    'Full-Stack',
+    category:    'Business',
   },
   {
     id:          'toyota-zimbabwe',
@@ -25,7 +25,7 @@ export const projects: Project[] = [
     github:      'https://github.com/Thabisomaqhawengwenya',
     featured:    true,
     status:      'live',
-    category:    'Frontend',
+    category:    'Business',
   },
   {
     id:          'portfolio',
@@ -37,6 +37,6 @@ export const projects: Project[] = [
     github:      'https://github.com/Thabisomaqhawengwenya',
     featured:    false,
     status:      'live',
-    category:    'Full-Stack',
+    category:    'Personal',
   },
 ]

@@ -1,10 +1,11 @@
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import styled from 'styled-components'
-import { motion, useInView } from 'framer-motion'
+import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle } from '../UI'
 import { fadeUp, staggerContainer, staggerItem } from '../../styles/animations'
-import { useAdmin } from '../../admin/context/AdminContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 
+/* ─── Styled ─── */
 const AboutGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -50,7 +51,6 @@ const Paragraph = styled(motion.p)`
   }
 `
 
-/* Stats — each cell gets a border */
 const StatsGrid = styled(motion.div)`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -91,7 +91,6 @@ const StatLabel = styled.p`
   letter-spacing: 0.1em;
 `
 
-/* Quote block */
 const QuoteBlock = styled(motion.div)`
   padding: ${({ theme }) => theme.spacing['8']};
   background: ${({ theme }) => theme.colors.primary};
@@ -107,18 +106,97 @@ const Quote = styled.blockquote`
   letter-spacing: -0.01em;
 `
 
+/* ─── Count-up hook ─── */
+function useCountUp(target: number, duration: number, active: boolean) {
+  const motionVal = useMotionValue(0)
+  const rounded   = useTransform(motionVal, v => Math.round(v))
+  const [display, setDisplay] = useState(0)
+
+  useEffect(() => {
+    if (!active) return
+    const controls = animate(motionVal, target, {
+      duration,
+      ease: [0.16, 1, 0.3, 1],
+    })
+    const unsub = rounded.on('change', v => setDisplay(v))
+    return () => { controls.stop(); unsub() }
+  }, [active, target, duration, motionVal, rounded])
+
+  return display
+}
+
+/* ─── Animated stat cell ─── */
+interface StatProps {
+  label:    string
+  value:    string | number   // string = static (location, ∞), number = animates
+  suffix?:  string
+  active:   boolean
+}
+
+function AnimatedStat({ label, value, suffix = '', active }: StatProps) {
+  const isNumber = typeof value === 'number'
+  const count = useCountUp(isNumber ? value : 0, 2, active && isNumber)
+
+  return (
+    <StatCell variants={staggerItem}>
+      <StatValue>
+        {isNumber ? `${count}${suffix}` : value}
+      </StatValue>
+      <StatLabel>{label}</StatLabel>
+    </StatCell>
+  )
+}
+
+/* ─── GitHub commits fetcher ─── */
+async function fetchTotalCommits(username: string): Promise<number> {
+  try {
+    // Get all repos first
+    const reposRes = await fetch(
+      `https://api.github.com/users/${username}/repos?per_page=100&type=owner`,
+      { headers: { Accept: 'application/vnd.github.v3+json' } }
+    )
+    if (!reposRes.ok) return 0
+    const repos: Array<{ full_name: string }> = await reposRes.json()
+
+    // Fetch commit count per repo using contributor stats
+    const counts = await Promise.all(
+      repos.map(async (repo) => {
+        try {
+          const res = await fetch(
+            `https://api.github.com/repos/${repo.full_name}/commits?author=${username}&per_page=1`,
+            { headers: { Accept: 'application/vnd.github.v3+json' } }
+          )
+          if (!res.ok) return 0
+          // GitHub returns total in Link header
+          const link = res.headers.get('Link') ?? ''
+          const match = link.match(/page=(\d+)>; rel="last"/)
+          if (match) return parseInt(match[1], 10)
+          // If no Link header, count the returned items
+          const data = await res.json()
+          return Array.isArray(data) ? data.length : 0
+        } catch { return 0 }
+      })
+    )
+    return counts.reduce((a, b) => a + b, 0)
+  } catch { return 0 }
+}
+
+/* ─── Component ─── */
 export default function About() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
-  const { settings } = useAdmin()
-  const userLocation = settings.location || 'Zimbabwe'
 
-  const STATS = [
-    { value: '2+',        label: 'Projects'  },
-    { value: userLocation,label: 'Location'  },
-    { value: '∞',         label: 'Commits'   },
-    { value: '2026',      label: 'Started'   },
-  ]
+  const { settings, projects } = usePublicData()
+  const userLocation = settings.location || 'Zimbabwe'
+  const projectCount = projects.length || 3  // fallback to 3
+
+  const [commitCount, setCommitCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetchTotalCommits('Thabisomaqhawengwenya').then(n => {
+      if (n > 0) setCommitCount(n)
+    })
+  }, [])
 
   return (
     <Section id="about">
@@ -132,7 +210,7 @@ export default function About() {
         </motion.div>
 
         <AboutGrid>
-          {/* Left: bio text */}
+          {/* Left: bio */}
           <AboutLeft>
             <motion.div variants={staggerContainer} initial="hidden"
               animate={inView ? 'visible' : 'hidden'}>
@@ -158,12 +236,36 @@ export default function About() {
           <AboutRight>
             <StatsGrid variants={staggerContainer} initial="hidden"
               animate={inView ? 'visible' : 'hidden'}>
-              {STATS.map(s => (
-                <StatCell key={s.label} variants={staggerItem}>
-                  <StatValue>{s.value}</StatValue>
-                  <StatLabel>{s.label}</StatLabel>
-                </StatCell>
-              ))}
+
+              {/* Projects — count up to real number */}
+              <AnimatedStat
+                label="Projects"
+                value={projectCount}
+                suffix="+"
+                active={inView}
+              />
+
+              {/* Location — static string */}
+              <AnimatedStat
+                label="Location"
+                value={userLocation}
+                active={inView}
+              />
+
+              {/* Commits — count up if fetched, else show ∞ */}
+              <AnimatedStat
+                label="Commits"
+                value={commitCount !== null ? commitCount : '∞'}
+                suffix={commitCount !== null ? '+' : ''}
+                active={inView}
+              />
+
+              {/* Started — count up to 2026 */}
+              <AnimatedStat
+                label="Started"
+                value={2026}
+                active={inView}
+              />
             </StatsGrid>
 
             <QuoteBlock variants={fadeUp} initial="hidden"

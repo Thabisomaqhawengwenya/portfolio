@@ -4,7 +4,28 @@ import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, popSpring } from '../UI'
 import { fadeUp } from '../../styles/animations'
 import { skillGroups } from '../../data/skills'
+import { useAccent } from '../../styles/ThemeContext'
 import type { SkillCategory } from '../../types'
+
+/* Category colour palette for non-mono themes */
+const CAT_COLORS: Record<string, string> = {
+  Frontend:     '#FFE500',
+  Backend:      '#FF3C2F',
+  Database:     '#0047FF',
+  Tools:        '#00C853',
+  Design:       '#FF6B9D',
+  Other:        '#FFE500',
+  All:          '#FFE500',
+}
+const CAT_TEXT: Record<string, string> = {
+  Frontend:     '#000000',
+  Backend:      '#ffffff',
+  Database:     '#ffffff',
+  Tools:        '#000000',
+  Design:       '#ffffff',
+  Other:        '#000000',
+  All:          '#000000',
+}
 
 /* ─── Styled ─── */
 const FilterRow = styled(motion.div)`
@@ -57,14 +78,14 @@ const GroupCard = styled(motion.div)`
   &:hover { background: ${({ theme }) => theme.colors.surfaceAlt}; }
 `
 
-const GroupLabel = styled.div`
+const GroupLabel = styled.div<{ $bg: string; $fg: string }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ $fg }) => $fg};
+  background: ${({ $bg }) => $bg};
   padding: 0.2rem 0.5rem;
   border: 2px solid ${({ theme }) => theme.colors.border};
   display: inline-block;
@@ -105,9 +126,14 @@ export default function Skills() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const [active, setActive] = useState<Filter>(ALL)
+  const { isMonoTheme, accent } = useAccent()
 
   const categories: Filter[] = [ALL, ...skillGroups.map(g => g.category)]
   const filtered = active === ALL ? skillGroups : skillGroups.filter(g => g.category === active)
+
+  /* Resolve label colour for a given category */
+  const labelBg = (cat: string) => isMonoTheme ? accent.primary    : (CAT_COLORS[cat] ?? accent.primary)
+  const labelFg = (cat: string) => isMonoTheme ? accent.textColor  : (CAT_TEXT[cat]   ?? accent.textColor)
 
   return (
     <Section id="skills">
@@ -133,6 +159,10 @@ export default function Skills() {
               onClick={() => setActive(cat)}
               whileHover={{ scale: 1.05, y: -3 }}
               whileTap={{ scale: 0.94 }}
+              style={active === cat ? {
+                background: labelBg(cat),
+                color: labelFg(cat),
+              } : {}}
               transition={popSpring}>
               {cat}
             </FilterBtn>
@@ -148,7 +178,9 @@ export default function Skills() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3, delay: gi * 0.05 }}>
-                <GroupLabel>{group.category}</GroupLabel>
+                <GroupLabel $bg={labelBg(group.category)} $fg={labelFg(group.category)}>
+                  {group.category}
+                </GroupLabel>
                 <SkillsWrap>
                   {group.skills.map((skill, si) => (
                     <SkillPill key={skill.name}

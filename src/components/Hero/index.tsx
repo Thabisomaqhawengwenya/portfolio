@@ -4,6 +4,7 @@ import { FiGithub, FiLinkedin, FiArrowDown, FiArrowRight } from 'react-icons/fi'
 import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
 import ColorPicker from '../ColorPicker'
+import { useAccent } from '../../styles/ThemeContext'
 
 /* ─── Styled ─── */
 const HeroSection = styled.section`
@@ -335,6 +336,16 @@ export default function Hero() {
   const scrollToContact = () =>
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
 
+  const { isMonoTheme, accent } = useAccent()
+
+  /* Sticker colours: vivid in normal themes, mono in Black */
+  const s1 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
+                         : { bg: '#FFE500', fg: '#000000' }
+  const s2 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
+                         : { bg: '#FF3C2F', fg: '#ffffff' }
+  const s3 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
+                         : { bg: '#0047FF', fg: '#ffffff' }
+
   return (
     <HeroSection id="home">
       <HeroInner>
@@ -420,21 +431,21 @@ export default function Hero() {
             </AvatarFooter>
           </AvatarCard>
 
-          {/* Sticker badges — all use theme tokens */}
+          {/* Sticker badges */}
           <Sticker
-            style={{ top: -16, right: -16, transform: 'rotate(4deg)' }}
+            style={{ top: -16, right: -16, transform: 'rotate(4deg)', background: s1.bg, color: s1.fg }}
             animate={{ y: [0, -5, 0] }}
             transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}>
             React + TS
           </Sticker>
           <Sticker
-            style={{ bottom: 60, left: -20, transform: 'rotate(-3deg)' }}
+            style={{ bottom: 60, left: -20, transform: 'rotate(-3deg)', background: s2.bg, color: s2.fg }}
             animate={{ y: [0, 5, 0] }}
             transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 1 }}>
             Node.js
           </Sticker>
           <Sticker
-            style={{ bottom: -16, right: 20, transform: 'rotate(2deg)' }}
+            style={{ bottom: -16, right: 20, transform: 'rotate(2deg)', background: s3.bg, color: s3.fg }}
             animate={{ y: [0, -4, 0] }}
             transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut', delay: 0.5 }}>
             Full-Stack

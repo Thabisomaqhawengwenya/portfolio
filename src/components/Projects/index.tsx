@@ -9,11 +9,13 @@ import {
 } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
 import { projects } from '../../data/projects'
+import { useAccent } from '../../styles/ThemeContext'
 import type { Project } from '../../types'
 
-/* ──────────────────────────────────────────────
-   All colours come from theme — no hardcoded hex
-────────────────────────────────────────────── */
+/* Multi-colour palette for non-mono themes */
+const ROW_ACCENTS   = ['#FFE500', '#FF3C2F', '#0047FF']
+const ROW_TEXT      = ['#000000', '#ffffff', '#ffffff']
+
 const getInitials = (title: string) =>
   title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
@@ -49,20 +51,20 @@ const Row = styled(motion.div)`
 `
 
 /* Left gutter — project number, always uses theme primary */
-const RowNumber = styled.div`
+const RowNumber = styled.div<{ $bg: string; $fg: string }>`
   border-right: 3px solid ${({ theme }) => theme.colors.border};
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding-top: ${({ theme }) => theme.spacing['6']};
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ $bg }) => $bg};
 
   span {
     font-family: ${({ theme }) => theme.typography.fontMono};
     font-size: ${({ theme }) => theme.typography.sizes.xs};
     font-weight: ${({ theme }) => theme.typography.weights.bold};
     letter-spacing: 0.12em;
-    color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+    color: ${({ $fg }) => $fg};
     text-transform: uppercase;
     writing-mode: vertical-rl;
     transform: rotate(180deg);
@@ -139,44 +141,44 @@ const bookSurface = css`
   transition: transform 0.45s ease, box-shadow 0.45s ease;
 `
 
-const BookCover = styled.div`
+const BookCover = styled.div<{ $bg: string }>`
   ${bookSurface}
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ $bg }) => $bg};
   box-shadow: ${({ theme }) => theme.shadows.md};
   z-index: 2;
   flex-direction: column;
   gap: 0.5rem;
 `
 
-const BookCoverInitials = styled.span`
+const BookCoverInitials = styled.span<{ $fg: string }>`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
   font-size: 3rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  color: ${({ $fg }) => $fg};
   letter-spacing: -0.04em;
   line-height: 1;
 `
 
-const BookCoverLabel = styled.span`
+const BookCoverLabel = styled.span<{ $fg: string }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: 0.55rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  color: ${({ $fg }) => $fg};
   opacity: 0.7;
   padding: 0 0.5rem;
   text-align: center;
 `
 
 /* Spine — left edge */
-const BookSpine = styled.div`
+const BookSpine = styled.div<{ $bg: string; $fg: string }>`
   position: absolute;
   top: 0;
   left: -14px;
   width: 14px;
   height: 100%;
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ $bg }) => $bg};
   border: 3px solid ${({ theme }) => theme.colors.border};
   border-right: none;
   display: flex;
@@ -188,7 +190,7 @@ const BookSpine = styled.div`
     font-family: ${({ theme }) => theme.typography.fontMono};
     font-size: 0.5rem;
     font-weight: 700;
-    color: ${({ theme }) => theme.colors.text};
+    color: ${({ $fg }) => $fg};
     writing-mode: vertical-rl;
     transform: rotate(180deg);
     letter-spacing: 0.1em;
@@ -339,7 +341,12 @@ const ActionBtn = styled(motion.a)<{ $primary?: boolean }>`
 function ProjectRow({ project, index }: { project: Project; index: number }) {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
+  const { isMonoTheme, accent } = useAccent()
   const num    = String(index + 1).padStart(2, '0')
+
+  /* Colour selection: multi-colour in normal themes, mono in Black */
+  const bg = isMonoTheme ? accent.primary           : ROW_ACCENTS[index % ROW_ACCENTS.length]
+  const fg = isMonoTheme ? accent.textColor         : ROW_TEXT[index % ROW_TEXT.length]
 
   return (
     <Row ref={ref}
@@ -348,21 +355,19 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
       animate={inView ? 'visible' : 'hidden'}
       transition={{ delay: index * 0.1 }}>
 
-      {/* Number gutter — uses theme primary */}
-      <RowNumber>
+      <RowNumber $bg={bg} $fg={fg}>
         <span>Project {num}</span>
       </RowNumber>
 
-      {/* 3-D book card */}
       <BookWrap>
         <Book className="book-host">
-          <BookSpine>
+          <BookSpine $bg={bg} $fg={fg}>
             <span>{project.title}</span>
           </BookSpine>
 
-          <BookCover className="book-cover">
-            <BookCoverInitials>{getInitials(project.title)}</BookCoverInitials>
-            <BookCoverLabel>{project.title}</BookCoverLabel>
+          <BookCover $bg={bg} className="book-cover">
+            <BookCoverInitials $fg={fg}>{getInitials(project.title)}</BookCoverInitials>
+            <BookCoverLabel $fg={fg}>{project.title}</BookCoverLabel>
           </BookCover>
 
           <BookInner className="book-inner">

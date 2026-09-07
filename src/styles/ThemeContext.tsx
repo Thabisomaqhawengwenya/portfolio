@@ -101,13 +101,15 @@ export const ACCENT_OPTIONS: AccentOption[] = [
 
 /* ─── Context ─── */
 interface ThemeCtx {
-  accent:    AccentOption
-  setAccent: (a: AccentOption) => void
+  accent:       AccentOption
+  setAccent:    (a: AccentOption) => void
+  isMonoTheme:  boolean   // true only for the Black theme
 }
 
 const Ctx = createContext<ThemeCtx>({
-  accent:    ACCENT_OPTIONS[0],
-  setAccent: () => undefined,
+  accent:      ACCENT_OPTIONS[0],
+  setAccent:   () => undefined,
+  isMonoTheme: false,
 })
 
 export function ThemeAccentProvider({ children }: { children: ReactNode }) {
@@ -127,7 +129,7 @@ export function ThemeAccentProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('portfolio-accent', a.label)
   }, [])
 
-  return <Ctx.Provider value={{ accent, setAccent }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ accent, setAccent, isMonoTheme: accent.label === 'Black' }}>{children}</Ctx.Provider>
 }
 
 export const useAccent = () => useContext(Ctx)

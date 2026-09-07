@@ -4,7 +4,22 @@ import { motion, useInView } from 'framer-motion'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, Tag } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
 import { experience } from '../../data/experience'
+import { useAccent } from '../../styles/ThemeContext'
 import type { ExperienceItem } from '../../types'
+
+/* Per-type accent colours used in non-mono themes */
+const TYPE_ACCENT: Record<ExperienceItem['type'], string> = {
+  education: '#FFE500',
+  project:   '#FF3C2F',
+  work:      '#0047FF',
+  milestone: '#00C853',
+}
+const TYPE_TEXT: Record<ExperienceItem['type'], string> = {
+  education: '#000000',
+  project:   '#ffffff',
+  work:      '#ffffff',
+  milestone: '#000000',
+}
 
 /* ─── Styled ─── */
 const TimelineWrapper = styled.div`
@@ -29,11 +44,10 @@ const Item = styled(motion.div)`
   }
 `
 
-/* Left side uses the theme's primary as the accent — always on-theme */
-const ItemSide = styled.div`
+const ItemSide = styled.div<{ $bg: string }>`
   padding: ${({ theme }) => theme.spacing['6']};
   border-right: 3px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ $bg }) => $bg};
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -45,16 +59,16 @@ const ItemSide = styled.div`
   }
 `
 
-const ItemDate = styled.span`
+const ItemDate = styled.span<{ $color: string }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  color: ${({ $color }) => $color};
   text-transform: uppercase;
   letter-spacing: 0.08em;
 `
 
-const TypePill = styled.span`
+const TypePill = styled.span<{ $textColor: string }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: 0.65rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
@@ -63,7 +77,7 @@ const TypePill = styled.span`
   padding: 0.2rem 0.5rem;
   border: 2px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.background};
+  color: ${({ $textColor }) => $textColor};
   width: fit-content;
 `
 
@@ -158,8 +172,17 @@ export default function Journey() {
 }
 
 function TimelineItem({ item, index }: { item: ExperienceItem; index: number }) {
-  const ref    = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
+  const ref          = useRef(null)
+  const inView       = useInView(ref, { once: true, margin: '-60px' })
+  const { isMonoTheme, accent } = useAccent()
+
+  /* In mono: use theme primary (white) + accentText (#000)
+     Otherwise: use the per-type colour palette */
+  const sideBg   = isMonoTheme ? accent.primary        : TYPE_ACCENT[item.type]
+  const dateColor = isMonoTheme ? accent.textColor      : TYPE_TEXT[item.type]
+  const pillBg   = isMonoTheme ? accent.textColor       : '#000'
+  const pillText = isMonoTheme ? accent.primary         : (TYPE_ACCENT[item.type] === '#FFE500' || TYPE_ACCENT[item.type] === '#00C853' ? '#000' : '#fff')
+
   const dateLabel = `${item.startDate}${!item.endDate ? ' – Present' : ''}`
 
   return (
@@ -168,13 +191,14 @@ function TimelineItem({ item, index }: { item: ExperienceItem; index: number }) 
       animate={inView ? 'visible' : 'hidden'}
       transition={{ delay: index * 0.06 }}>
 
-      {/* Left accent column — always theme primary, no hardcoded colours */}
-      <ItemSide>
-        <ItemDate>{dateLabel}</ItemDate>
+      <ItemSide $bg={sideBg}>
+        <ItemDate $color={dateColor}>{dateLabel}</ItemDate>
         <div>
-          <TypePill>{item.type}</TypePill>
+          <TypePill $textColor={pillText} style={{ background: pillBg, borderColor: pillBg === '#000' ? '#000' : sideBg }}>
+            {item.type}
+          </TypePill>
           {item.location && (
-            <ItemDate style={{ marginTop: '0.5rem', display: 'block', fontSize: '0.7rem' }}>
+            <ItemDate $color={dateColor} style={{ marginTop: '0.5rem', display: 'block', fontSize: '0.7rem' }}>
               📍 {item.location}
             </ItemDate>
           )}

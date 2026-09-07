@@ -20,6 +20,7 @@ import Footer   from './components/Footer'
 import { adminTheme }    from './admin/adminTheme'
 import AdminLayout       from './admin/components/AdminLayout'
 import Login             from './admin/pages/Login'
+import Setup             from './admin/pages/Setup'
 import Overview          from './admin/pages/Overview'
 import AdminProjects     from './admin/pages/AdminProjects'
 import AdminSkills       from './admin/pages/AdminSkills'
@@ -115,8 +116,16 @@ export default function App() {
       } />
 
       {/* Admin */}
-      <Route path="/admin/login" element={
+      {/* Admin setup — one-time user creation */}
+      <Route path="/admin/setup" element={
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        <ThemeProvider theme={adminTheme as any}>
+          <GlobalStyles />
+          <Setup />
+        </ThemeProvider>
+      } />
+
+      <Route path="/admin/login" element={
         <ThemeProvider theme={adminTheme as any}>
           <GlobalStyles />
           <Login />

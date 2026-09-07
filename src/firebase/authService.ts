@@ -1,10 +1,17 @@
 import {
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   type User,
 } from 'firebase/auth'
 import { auth } from './config'
+
+/** Create a new user with email + password (one-time setup only). */
+export async function createAdminUser(email: string, password: string): Promise<User> {
+  const credential = await createUserWithEmailAndPassword(auth, email, password)
+  return credential.user
+}
 
 /** Sign in with email + password. Returns the Firebase User on success. */
 export async function loginWithEmail(email: string, password: string): Promise<User> {

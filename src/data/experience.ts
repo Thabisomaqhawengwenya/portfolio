@@ -2,12 +2,12 @@ import type { ExperienceItem } from '../types'
 
 export const experience: ExperienceItem[] = [
   {
-    id:           'uncommon-2024',
+    id:           'uncommon-2025',
     type:         'education',
     title:        'Software Development Programme',
     organization: 'Uncommon.org',
     location:     'Zimbabwe',
-    startDate:    '2024',
+    startDate:    '2025',
     description:
       'Intensive full-stack software development training. Building real-world applications from scratch using modern web technologies, with a strong focus on JavaScript, React, Node.js, and professional engineering practices.',
     highlights: [

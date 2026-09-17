@@ -69,17 +69,20 @@ const ItemDate = styled.span<{ $color: string }>`
   letter-spacing: 0.08em;
 `
 
-const TypePill = styled.span<{ $textColor: string }>`
+const TypePill = styled.span<{ $isMono?: boolean }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: 0.65rem;
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
+  font-size: 0.6875rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  padding: 0.2rem 0.5rem;
+  padding: 0.25rem 0.6rem;
   border: 2px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ $textColor }) => $textColor};
+  background: ${({ $isMono }) => ($isMono ? '#ffffff' : '#000000')};
+  color: ${({ $isMono }) => ($isMono ? '#000000' : '#ffffff')} !important;
+  display: inline-block;
+  line-height: 1.2;
   width: fit-content;
+  box-shadow: 2px 2px 0px ${({ theme }) => theme.colors.border};
 `
 
 const ItemBody = styled.div`
@@ -181,11 +184,8 @@ function TimelineItem({ item, index }: { item: ExperienceItem; index: number }) 
 
   /* In mono: use theme primary (white) + accentText (#000)
      Otherwise: use the per-type colour palette */
-  const sideBg   = isMonoTheme ? accent.primary        : TYPE_ACCENT[item.type]
-  const dateColor = isMonoTheme ? accent.textColor      : TYPE_TEXT[item.type]
-  const pillBg   = isMonoTheme ? accent.textColor       : '#000'
-  const pillText = isMonoTheme ? accent.primary         : (TYPE_ACCENT[item.type] === '#FFE500' || TYPE_ACCENT[item.type] === '#00C853' ? '#000' : '#fff')
-
+  const sideBg    = isMonoTheme ? accent.primary   : TYPE_ACCENT[item.type]
+  const dateColor = isMonoTheme ? accent.textColor : TYPE_TEXT[item.type]
   const dateLabel = `${item.startDate}${!item.endDate ? ' – Present' : ''}`
 
   return (
@@ -197,7 +197,7 @@ function TimelineItem({ item, index }: { item: ExperienceItem; index: number }) 
       <ItemSide $bg={sideBg}>
         <ItemDate $color={dateColor}>{dateLabel}</ItemDate>
         <div>
-          <TypePill $textColor={pillText} style={{ background: pillBg, borderColor: pillBg === '#000' ? '#000' : sideBg }}>
+          <TypePill $isMono={isMonoTheme}>
             {item.type}
           </TypePill>
           {item.location && (

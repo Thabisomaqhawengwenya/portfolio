@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { FiGithub, FiLinkedin, FiArrowDown, FiArrowRight, FiDownload } from 'react-icons/fi'
 import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
-import ColorPicker from '../ColorPicker'
 import { useAccent } from '../../styles/ThemeContext'
 import { usePublicData } from '../../styles/PublicDataContext'
 
@@ -425,11 +424,6 @@ export default function Hero() {
             </SocialLink>
             <SocialNote>{settings.location || 'Zimbabwe'}</SocialNote>
           </SocialRow>
-
-          {/* ── Accent colour picker ── */}
-          <motion.div variants={heroItem}>
-            <ColorPicker />
-          </motion.div>
         </HeroContent>
 
         {/* Visual */}

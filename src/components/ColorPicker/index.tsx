@@ -1,185 +1,225 @@
+import { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FiChevronDown, FiCheck } from 'react-icons/fi'
 import { ACCENT_OPTIONS, useAccent } from '../../styles/ThemeContext'
 import type { AccentOption } from '../../styles/ThemeContext'
-import { popSpring } from '../UI'
 
 /* ──────────────────────────────────────────────
-   COLOUR PICKER
-   Comic-panel style, neo-brutalism adapted.
-   All structural colours come from theme.
+   NEO-BRUTALIST THEME DROPDOWN
+   Instant, crisp, high-contrast theme picker.
 ────────────────────────────────────────────── */
 
-const Panel = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 3px solid ${({ theme }) => theme.colors.border};
-  padding: 0.875rem 1rem;
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  display: inline-flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: fit-content;
-  transition: background 0.3s ease, border-color 0.3s ease;
-`
-
-const PanelLabel = styled.p`
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: ${({ theme }) => theme.colors.textFaint};
-`
-
-const SwatchRow = styled.div`
-  display: flex;
-  gap: 0;
-  transform-style: preserve-3d;
-  transform: perspective(1000px);
-`
-
-/* Each swatch — the ::after face and ::before tooltip use CSS vars
-   so they can respond to the current theme border colour */
-const SwatchBtn = styled(motion.button)<{ $color: string; $active: boolean }>`
+const DropdownWrapper = styled.div`
   position: relative;
-  width: 40px;
-  height: 48px;
-  background: transparent;
-  border: none;
-  outline: none;
-  margin: 0 -4px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 300ms ease-out;
-  z-index: ${({ $active }) => $active ? 10 : 1};
-
-  /* Coloured swatch face */
-  &::after {
-    content: '';
-    position: absolute;
-    top: 4px;
-    left: 0;
-    width: 36px;
-    height: 36px;
-    background: ${({ $color }) => $color};
-    /* Use a specific border so it's always visible regardless of theme */
-    border: 3px solid ${({ $active }) => $active ? '#888' : '#000'};
-    outline: ${({ $active }) => $active ? '2px solid currentColor' : 'none'};
-    outline-offset: 2px;
-    box-shadow: ${({ $active }) =>
-      $active ? '0 0 0 2px #000, 3px 3px 0 2px #000' : '3px 3px 0 0 #000'};
-    pointer-events: none;
-    transition: box-shadow 200ms ease, border-color 200ms ease;
-  }
-
-  /* Tooltip with colour name */
-  &::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 50%;
-    bottom: 56px;
-    font-family: 'Space Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 4px 8px;
-    /* Tooltip is always high-contrast regardless of theme */
-    background: #000;
-    color: #fff;
-    border: 2px solid #000;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transform-origin: bottom center;
-    transform: translateX(-50%) scale(0.5) translateY(8px);
-    transition:
-      opacity 200ms ease-out,
-      visibility 200ms ease-out,
-      transform 250ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    white-space: nowrap;
-    z-index: 99999;
-  }
-
-  &:hover {
-    transform: scale(1.5) translateY(-6px);
-    z-index: 99999;
-
-    &::before {
-      opacity: 1;
-      visibility: visible;
-      transform: translateX(-50%) scale(1) translateY(0);
-    }
-  }
-
-  &:active::after {
-    transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0 0 #000;
-  }
-
-  /* Neighbour ripple */
-  &:hover + * > & {
-    transform: scale(1.2) translateY(-3px);
-    z-index: 9999;
-  }
+  display: inline-block;
 `
 
-const ActiveIndicator = styled(motion.div)`
-  display: flex;
+const TriggerBtn = styled(motion.button)<{ $isOpen: boolean }>`
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding-top: 0.25rem;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.4rem 0.75rem;
+  border: 2.5px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ $isOpen, theme }) =>
+    $isOpen ? `1px 1px 0px ${theme.colors.border}` : `3px 3px 0px ${theme.colors.border}`};
+  transform: ${({ $isOpen }) => ($isOpen ? 'translate(2px, 2px)' : 'none')};
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s ease, color 0.1s ease, box-shadow 0.1s ease, transform 0.1s ease;
+
+  &:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0px ${({ theme }) => theme.colors.border};
+    background: ${({ theme }) => theme.colors.surfaceAlt};
+  }
+
+  &:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px ${({ theme }) => theme.colors.border};
+  }
 `
 
-const ActiveDot = styled.span<{ $color: string }>`
-  width: 10px;
-  height: 10px;
+const SwatchPreview = styled.span<{ $color: string }>`
+  width: 14px;
+  height: 14px;
+  background: ${({ $color }) => $color};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  flex-shrink: 0;
+  display: inline-block;
+`
+
+const ChevronIcon = styled(motion.span)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  margin-left: 0.15rem;
+`
+
+const DropdownMenu = styled(motion.div)`
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 170px;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 3px solid ${({ theme }) => theme.colors.border};
+  box-shadow: 5px 5px 0px ${({ theme }) => theme.colors.border};
+  z-index: 500;
+  padding: 0.35rem 0;
+  display: flex;
+  flex-direction: column;
+`
+
+const DropdownItem = styled(motion.button)<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  background: ${({ $active, theme }) =>
+    $active ? theme.colors.surfaceAlt : 'transparent'};
+  color: ${({ theme }) => theme.colors.text};
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: ${({ $active }) => ($active ? 700 : 600)};
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 0.08s ease, color 0.08s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  }
+`
+
+const ItemLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+`
+
+const ItemSwatch = styled.span<{ $color: string }>`
+  width: 14px;
+  height: 14px;
   background: ${({ $color }) => $color};
   border: 2px solid ${({ theme }) => theme.colors.border};
   flex-shrink: 0;
 `
 
-const ActiveLabel = styled.span`
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: 0.6rem;
+const CheckIcon = styled.span`
+  display: flex;
+  align-items: center;
+  font-size: 0.95rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: ${({ theme }) => theme.colors.textFaint};
 `
 
-export default function ColorPicker() {
+interface ColorPickerProps {
+  mobile?: boolean
+}
+
+export default function ColorPicker({ mobile = false }: ColorPickerProps) {
   const { accent, setAccent } = useAccent()
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('keydown', handleKeyDown)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen])
+
+  const handleSelect = (opt: AccentOption) => {
+    setAccent(opt)
+    setIsOpen(false)
+  }
+
+  const activeColor = accent.label === 'Black' ? '#111111' : accent.primary
 
   return (
-    <Panel role="group" aria-label="Choose accent colour">
-      <PanelLabel>Theme</PanelLabel>
+    <DropdownWrapper ref={dropdownRef}>
+      <TriggerBtn
+        type="button"
+        $isOpen={isOpen}
+        onClick={() => setIsOpen(v => !v)}
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+        aria-label={`Current Theme: ${accent.label}. Click to choose a theme.`}
+      >
+        <SwatchPreview $color={activeColor} />
+        <span>{accent.label}</span>
+        <ChevronIcon
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          <FiChevronDown />
+        </ChevronIcon>
+      </TriggerBtn>
 
-      <SwatchRow>
-        {ACCENT_OPTIONS.map((opt: AccentOption) => (
-          <SwatchBtn
-            key={opt.label}
-            $color={opt.primary}
-            $active={accent.label === opt.label}
-            data-label={opt.label}
-            aria-label={`Set theme to ${opt.label}`}
-            aria-pressed={accent.label === opt.label}
-            onClick={() => setAccent(opt)}
-            whileHover={{ scale: 1.5, y: -6 }}
-            whileTap={{ scale: 0.9 }}
-            transition={popSpring}
-          />
-        ))}
-      </SwatchRow>
+      <AnimatePresence>
+        {isOpen && (
+          <DropdownMenu
+            role="menu"
+            initial={{ opacity: 0, y: -4, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.96 }}
+            transition={{ duration: 0.1 }}
+            style={{ width: mobile ? '100%' : 'auto' }}
+          >
+            {ACCENT_OPTIONS.map((opt: AccentOption) => {
+              const isSelected = accent.label === opt.label
+              const itemColor = opt.label === 'Black' ? '#111111' : opt.primary
 
-      <ActiveIndicator
-        key={accent.label}
-        initial={{ opacity: 0, x: -4 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.2 }}>
-        <ActiveDot $color={accent.primary} />
-        <ActiveLabel>{accent.label}</ActiveLabel>
-      </ActiveIndicator>
-    </Panel>
+              return (
+                <DropdownItem
+                  key={opt.label}
+                  type="button"
+                  role="menuitem"
+                  $active={isSelected}
+                  onClick={() => handleSelect(opt)}
+                >
+                  <ItemLeft>
+                    <ItemSwatch $color={itemColor} />
+                    <span>{opt.label}</span>
+                  </ItemLeft>
+                  {isSelected && (
+                    <CheckIcon>
+                      <FiCheck />
+                    </CheckIcon>
+                  )}
+                </DropdownItem>
+              )
+            })}
+          </DropdownMenu>
+        )}
+      </AnimatePresence>
+    </DropdownWrapper>
   )
 }

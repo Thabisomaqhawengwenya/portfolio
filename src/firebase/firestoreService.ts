@@ -35,14 +35,17 @@ export async function fsDeleteMessage(id: string)     { await deleteDoc(doc(db, 
 /* ──────────────── PROJECTS ──────────────── */
 export async function fsGetProjects(): Promise<Project[]> {
   /* Try ordered first; fall back to unordered if index doesn't exist yet */
+  let list: Project[] = []
   try {
     const q    = query(collection(db, COL.projects), orderBy('order', 'asc'))
     const snap = await getDocs(q)
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
+    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
   } catch {
     const snap = await getDocs(collection(db, COL.projects))
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
+    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
   }
+  if (!list.length) return []
+  return list
 }
 export async function fsAddProject(p: Omit<Project,'id'>): Promise<string> {
   const ref = await addDoc(collection(db, COL.projects), { ...p, order: Date.now() })

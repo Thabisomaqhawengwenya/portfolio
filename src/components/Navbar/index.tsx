@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import { staggerContainer, mobileMenuItem } from '../../styles/animations'
 import { popSpring } from '../UI'
+import ColorPicker from '../ColorPicker'
 
 const NAV_ITEMS = [
   { label: 'Home',     href: '#home' },
@@ -25,7 +26,7 @@ const NavBar = styled.header`
   border-bottom: 3px solid ${({ theme }) => theme.colors.border};
   display: flex;
   align-items: center;
-  transition: background 0.3s ease;
+  transition: background 0.12s ease;
 `
 
 const NavInner = styled.div`
@@ -69,7 +70,7 @@ const DesktopNav = styled.nav`
   align-items: center;
   gap: 0;
 
-  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
+  @media (max-width: 1100px) {
     display: none;
   }
 `
@@ -82,8 +83,8 @@ const NavLink = styled(motion.button)<{ $active: boolean }>`
   color: ${({ $active, theme }) => $active ? (theme.accentText ?? theme.colors.text) : (theme.accentText ?? theme.colors.text)};
   border: none;
   cursor: pointer;
-  padding: 0.4rem 1rem;
-  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0.4rem 0.85rem;
+  transition: background 0.1s ease, color 0.1s ease;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   position: relative;
@@ -94,6 +95,21 @@ const NavLink = styled(motion.button)<{ $active: boolean }>`
   }
 `
 
+const NavRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`
+
+const DesktopPickerWrap = styled.div`
+  display: flex;
+  align-items: center;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`
+
 const ContactBtn = styled(motion.a)`
   font-family: ${({ theme }) => theme.typography.fontBody};
   font-size: ${({ theme }) => theme.typography.sizes.sm};
@@ -101,7 +117,7 @@ const ContactBtn = styled(motion.a)`
   /* Always high contrast: bg=primary, text=accentText */
   color: ${({ theme }) => theme.accentText ?? theme.colors.text};
   background: ${({ theme }) => theme.colors.primary};
-  padding: 0.45rem 1.25rem;
+  padding: 0.45rem 1.15rem;
   border: 3px solid ${({ theme }) => theme.colors.border};
   cursor: pointer;
   text-decoration: none;
@@ -113,6 +129,10 @@ const ContactBtn = styled(motion.a)`
   &:hover {
     transform: translate(-2px,-2px);
     box-shadow: ${({ theme }) => theme.shadows.md};
+  }
+
+  @media (max-width: 480px) {
+    display: none;
   }
 `
 
@@ -129,7 +149,7 @@ const MenuBtn = styled(motion.button)`
   cursor: pointer;
   padding: 0;
 
-  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
+  @media (max-width: 1100px) {
     display: flex;
   }
 `
@@ -152,13 +172,13 @@ const MobileOverlay = styled(motion.div)`
   display: flex;
   flex-direction: column;
   padding: ${({ theme }) => theme.spacing['8']};
-  padding-top: 100px;
-  overflow: hidden;
+  padding-top: 80px;
+  overflow-y: auto;
 `
 
 const MobileNavLink = styled(motion.button)`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: clamp(2.5rem, 10vw, 4rem);
+  font-size: clamp(2rem, 8vw, 3.5rem);
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   color: ${({ theme }) => theme.colors.text};
   background: none;
@@ -174,6 +194,24 @@ const MobileNavLink = styled(motion.button)`
 
   &:last-of-type { border-bottom: none; }
   &:hover { color: ${({ theme }) => theme.colors.background}; }
+`
+
+const MobileThemeSection = styled.div`
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 3px solid ${({ theme }) => theme.colors.border};
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`
+
+const MobileThemeTitle = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.colors.text};
 `
 
 const MobileClose = styled(motion.button)`
@@ -211,7 +249,7 @@ export default function Navbar() {
   }, [])
 
   useEffect(() => {
-    const onResize = () => { if (window.innerWidth > 1024) setMenuOpen(false) }
+    const onResize = () => { if (window.innerWidth > 1100) setMenuOpen(false) }
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
@@ -250,7 +288,12 @@ export default function Navbar() {
             ))}
           </DesktopNav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <NavRight>
+            {/* Desktop Theme Picker */}
+            <DesktopPickerWrap>
+              <ColorPicker />
+            </DesktopPickerWrap>
+
             <ContactBtn href="#contact"
               onClick={e => { e.preventDefault(); scrollTo('#contact') }}
               whileHover={{ scale: 1.06, y: -4 }}
@@ -273,7 +316,7 @@ export default function Navbar() {
                 animate={menuOpen ? { rotate: -45, y: -7.5, width: '60%' } : { rotate: 0, y: 0, width: '45%' }}
                 transition={{ duration: 0.2 }} style={{ width: '45%' }} />
             </MenuBtn>
-          </div>
+          </NavRight>
         </NavInner>
       </NavBar>
 
@@ -296,6 +339,11 @@ export default function Navbar() {
                   {item.label}
                 </MobileNavLink>
               ))}
+
+              <MobileThemeSection>
+                <MobileThemeTitle>Theme Accent</MobileThemeTitle>
+                <ColorPicker mobile />
+              </MobileThemeSection>
             </motion.div>
           </MobileOverlay>
         )}

@@ -6,7 +6,7 @@ export const education: EducationItem[] = [
     institution: 'Uncommon.org',
     program:     'Software Development',
     field:       'Full-Stack Web Development',
-    startDate:   '2024',
+    startDate:   '2025',
     description:
       'A rigorous, project-based software engineering programme. Covers the full web development stack from foundations to production deployment, with a focus on real-world application building and professional engineering practices.',
     highlights: [

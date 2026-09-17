@@ -32,16 +32,19 @@ async function tryFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 
 export async function publicGetProjects(): Promise<Project[]> {
   return tryFetch(async () => {
+    let list: Project[] = []
     try {
       const q    = query(collection(db, 'projects'), orderBy('order', 'asc'))
       const snap = await getDocs(q)
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
-      return list.length ? list : staticProjects
+      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
     } catch {
       const snap = await getDocs(collection(db, 'projects'))
-      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
-      return list.length ? list : staticProjects
+      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
     }
+    if (!list.length) return staticProjects
+    const existingIds = new Set(list.map(p => p.id))
+    const missingStatic = staticProjects.filter(p => !existingIds.has(p.id))
+    return [...list, ...missingStatic]
   }, staticProjects)
 }
 

@@ -22,8 +22,8 @@ export const GlobalStyles = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
-    /* Smooth cross-theme colour transitions */
-    transition: background-color 0.35s ease, color 0.35s ease;
+    /* Fast, snappy cross-theme colour transitions */
+    transition: background-color 0.12s ease, color 0.12s ease;
   }
 
   /* Bold scrollbar — on-brand, inverts with mono theme */

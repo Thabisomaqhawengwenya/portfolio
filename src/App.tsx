@@ -7,6 +7,7 @@ import Lenis from 'lenis'
 import { theme as baseTheme } from './styles/theme'
 import { GlobalStyles }       from './styles/GlobalStyles'
 import { ThemeAccentProvider, useAccent } from './styles/ThemeContext'
+import { PublicDataProvider } from './styles/PublicDataContext'
 import Navbar   from './components/Navbar'
 import Hero     from './components/Hero'
 import About    from './components/About'
@@ -112,9 +113,11 @@ export default function App() {
     <Routes>
       {/* Portfolio */}
       <Route path="/" element={
-        <ThemeAccentProvider>
-          <PortfolioApp />
-        </ThemeAccentProvider>
+        <PublicDataProvider>
+          <ThemeAccentProvider>
+            <PortfolioApp />
+          </ThemeAccentProvider>
+        </PublicDataProvider>
       } />
 
       {/* Admin */}

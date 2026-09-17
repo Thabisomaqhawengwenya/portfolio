@@ -3,12 +3,12 @@ import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiCheck, FiGithub, FiExternalLink,
-  FiChevronUp, FiChevronDown, FiSearch,
+  FiChevronUp, FiChevronDown, FiSearch, FiAlertTriangle, FiAlertCircle,
 } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { Project } from '../../types'
 
-/* ─── Styled ─── */
+/* ─── Styled Components ─── */
 const Header = styled.div`
   display: flex;
   align-items: center;
@@ -24,6 +24,21 @@ const PageTitle = styled.h1`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
   letter-spacing: -0.03em;
+`
+
+const Banner = styled(motion.div)<{ $type: 'success' | 'error' }>`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  border: 2px solid ${({ $type, theme }) => $type === 'success' ? theme.colors.accent3 : theme.colors.error};
+  background: ${({ $type }) => $type === 'success' ? '#00C85315' : '#FF3C2F15'};
+  color: ${({ $type, theme }) => $type === 'success' ? '#00C853' : theme.colors.error};
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  line-height: 1.4;
 `
 
 const Toolbar = styled.div`
@@ -385,6 +400,60 @@ const SaveBtn = styled(motion.button)`
   &:hover { box-shadow: ${({ theme }) => theme.shadows.md}; }
 `
 
+const DeleteModalBody = styled.div`
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+`
+
+const DeleteWarning = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  color: ${({ theme }) => theme.colors.text};
+  line-height: 1.6;
+`
+
+const DeleteActions = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+`
+
+const CancelBtn = styled.button`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.6rem 1rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+`
+
+const ConfirmDeleteBtn = styled.button`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.6rem 1.25rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.error};
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  &:hover {
+    background: #cc2020;
+  }
+`
+
 /* ─── Blank form ─── */
 const blank = (): Omit<Project, 'id'> => ({
   title: '', description: '', longDescription: '', image: '',
@@ -397,39 +466,103 @@ export default function AdminProjects() {
   const { projects, addProject, updateProject, deleteProject, reorderProjects } = useAdmin()
   const [editing, setEditing] = useState<Project | null>(null)
   const [isNew,   setIsNew]   = useState(false)
+  const [deletingProject, setDeletingProject] = useState<Project | null>(null)
   const [form,    setForm]    = useState<Omit<Project,'id'>>(blank())
   const [saving,  setSaving]  = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error,   setError]   = useState('')
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [search,  setSearch]  = useState('')
   const [catFilter, setCatFilter] = useState<'All' | 'Business' | 'Mobile' | 'Gift' | 'Personal'>('All')
 
+  const showStatus = (type: 'success' | 'error', text: string) => {
+    setStatusMsg({ type, text })
+    setTimeout(() => setStatusMsg(null), 4000)
+  }
+
   const openNew  = () => { setForm(blank()); setIsNew(true); setEditing(null); setError('') }
-  const openEdit = (p: Project) => { setForm({ ...p }); setEditing(p); setIsNew(false); setError('') }
-  const close    = () => { setEditing(null); setIsNew(false); setError('') }
+  const openEdit = (p: Project) => {
+    setForm({
+      title: p.title || '',
+      description: p.description || '',
+      longDescription: p.longDescription || '',
+      image: p.image || '',
+      technologies: p.technologies || [],
+      github: p.github || '',
+      liveUrl: p.liveUrl || '',
+      featured: !!p.featured,
+      status: p.status || 'live',
+      category: p.category || 'Business',
+    })
+    setEditing(p)
+    setIsNew(false)
+    setError('')
+  }
+  const close = () => { setEditing(null); setIsNew(false); setError('') }
 
   const handleSave = async () => {
-    if (!form.title.trim()) return
+    if (!form.title.trim()) {
+      setError('Please provide a project title.')
+      return
+    }
+    if (!form.description.trim()) {
+      setError('Please provide a short description.')
+      return
+    }
+
     setSaving(true)
     setError('')
+
     const technologies = typeof form.technologies === 'string'
       ? (form.technologies as unknown as string).split(',').map((s: string) => s.trim()).filter(Boolean)
-      : form.technologies
+      : (Array.isArray(form.technologies) ? form.technologies : [])
+
+    const payload: Omit<Project, 'id'> = {
+      title: form.title.trim(),
+      description: form.description.trim(),
+      longDescription: form.longDescription?.trim() || '',
+      image: form.image?.trim() || '',
+      technologies,
+      github: form.github?.trim() || '',
+      liveUrl: form.liveUrl?.trim() || '',
+      featured: Boolean(form.featured),
+      status: form.status,
+      category: form.category,
+    }
+
     try {
       if (isNew) {
-        await addProject({ ...form, technologies })
+        await addProject(payload)
+        showStatus('success', `✓ Successfully added "${payload.title}" to projects.`)
       } else if (editing) {
-        await updateProject({ ...editing, ...form, technologies })
+        await updateProject({ ...payload, id: editing.id })
+        showStatus('success', `✓ Successfully updated "${payload.title}".`)
       }
       close()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       if (msg.includes('permission') || msg.includes('PERMISSION_DENIED')) {
-        setError('Permission denied — check Firestore security rules or make sure you are signed in as admin.')
+        setError('Permission denied — verify Firestore security rules or sign-in status in Firebase.')
       } else {
         setError(`Save failed: ${msg}`)
       }
     } finally {
       setSaving(false)
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingProject) return
+    setDeleting(true)
+    try {
+      await deleteProject(deletingProject.id)
+      showStatus('success', `✓ Project "${deletingProject.title}" has been deleted.`)
+      setDeletingProject(null)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      showStatus('error', `Failed to delete project: ${msg}`)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -439,7 +572,13 @@ export default function AdminProjects() {
     const reordered = [...projects]
     const [moved] = reordered.splice(index, 1)
     reordered.splice(targetIndex, 0, moved)
-    await reorderProjects(reordered.map(p => p.id))
+    try {
+      await reorderProjects(reordered.map(p => p.id))
+      showStatus('success', '✓ Projects order updated.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      showStatus('error', `Failed to reorder: ${msg}`)
+    }
   }
 
   const set = (k: keyof typeof form, v: unknown) => setForm(f => ({ ...f, [k]: v }))
@@ -463,6 +602,17 @@ export default function AdminProjects() {
           <FiPlus /> Add Project
         </AddBtn>
       </Header>
+
+      {statusMsg && (
+        <Banner
+          $type={statusMsg.type}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}>
+          {statusMsg.type === 'success' ? <FiCheck size={16} /> : <FiAlertCircle size={16} />}
+          <span>{statusMsg.text}</span>
+        </Banner>
+      )}
 
       <Toolbar>
         <ToolbarLeft>
@@ -541,7 +691,7 @@ export default function AdminProjects() {
                     <IconBtn onClick={() => openEdit(p)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <FiEdit2 />
                     </IconBtn>
-                    <IconBtn $danger onClick={() => deleteProject(p.id)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                    <IconBtn $danger onClick={() => setDeletingProject(p)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <FiTrash2 />
                     </IconBtn>
                   </Actions>
@@ -552,56 +702,150 @@ export default function AdminProjects() {
         )}
       </Table>
 
-      {/* Modal */}
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingProject && (
+          <Backdrop
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={e => { if (e.target === e.currentTarget && !deleting) setDeletingProject(null) }}>
+            <Modal
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}>
+              <ModalHeader style={{ background: '#FF3C2F' }}>
+                <ModalTitle style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FiAlertTriangle /> Delete Project
+                </ModalTitle>
+                <IconBtn onClick={() => !deleting && setDeletingProject(null)} whileTap={{ scale: 0.9 }}>
+                  <FiX />
+                </IconBtn>
+              </ModalHeader>
+              <DeleteModalBody>
+                <DeleteWarning>
+                  Are you sure you want to permanently delete <strong>"{deletingProject.title}"</strong>?
+                  This action will remove it from Firebase Firestore and your live portfolio.
+                </DeleteWarning>
+                <DeleteActions>
+                  <CancelBtn onClick={() => setDeletingProject(null)} disabled={deleting}>
+                    Cancel
+                  </CancelBtn>
+                  <ConfirmDeleteBtn onClick={confirmDelete} disabled={deleting}>
+                    <FiTrash2 /> {deleting ? 'Deleting…' : 'Yes, Delete'}
+                  </ConfirmDeleteBtn>
+                </DeleteActions>
+              </DeleteModalBody>
+            </Modal>
+          </Backdrop>
+        )}
+      </AnimatePresence>
+
+      {/* Add / Edit Modal */}
       <AnimatePresence>
         {(isNew || editing) && (
           <Backdrop initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={e => { if (e.target === e.currentTarget) close() }}>
+            onClick={e => { if (e.target === e.currentTarget && !saving) close() }}>
             <Modal initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 24 }} transition={{ duration: 0.3 }}>
 
               <ModalHeader>
                 <ModalTitle>{isNew ? 'Add Project' : 'Edit Project'}</ModalTitle>
-                <IconBtn onClick={close} whileTap={{ scale: 0.9 }}><FiX /></IconBtn>
+                <IconBtn onClick={close} whileTap={{ scale: 0.9 }} disabled={saving}><FiX /></IconBtn>
               </ModalHeader>
 
               <ModalBody>
-                <Field><FieldLabel>Title *</FieldLabel>
-                  <Input value={form.title} onChange={e => set('title', e.target.value)} placeholder="Project title" /></Field>
+                <Field>
+                  <FieldLabel>Title *</FieldLabel>
+                  <Input
+                    value={form.title}
+                    onChange={e => set('title', e.target.value)}
+                    placeholder="Project title"
+                    required
+                  />
+                </Field>
 
-                <Field><FieldLabel>Short Description *</FieldLabel>
-                  <Textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="One-line description" style={{ minHeight: 60 }} /></Field>
+                <Field>
+                  <FieldLabel>Short Description *</FieldLabel>
+                  <Textarea
+                    value={form.description}
+                    onChange={e => set('description', e.target.value)}
+                    placeholder="One-line summary for project cards"
+                    style={{ minHeight: 60 }}
+                    required
+                  />
+                </Field>
 
-                <Field><FieldLabel>Long Description</FieldLabel>
-                  <Textarea value={form.longDescription ?? ''} onChange={e => set('longDescription', e.target.value)} placeholder="Full description shown on the card" /></Field>
+                <Field>
+                  <FieldLabel>Long Description</FieldLabel>
+                  <Textarea
+                    value={form.longDescription ?? ''}
+                    onChange={e => set('longDescription', e.target.value)}
+                    placeholder="Full detailed project description"
+                  />
+                </Field>
 
-                <Field><FieldLabel>Technologies (comma-separated)</FieldLabel>
-                  <Input value={Array.isArray(form.technologies) ? form.technologies.join(', ') : form.technologies}
-                    onChange={e => set('technologies', e.target.value)} placeholder="React, TypeScript, Node.js" /></Field>
+                <Field>
+                  <FieldLabel>Technologies (comma-separated)</FieldLabel>
+                  <Input
+                    value={Array.isArray(form.technologies) ? form.technologies.join(', ') : form.technologies}
+                    onChange={e => set('technologies', e.target.value)}
+                    placeholder="React, TypeScript, Node.js"
+                  />
+                </Field>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                  <Field><FieldLabel>Category</FieldLabel>
+                  <Field>
+                    <FieldLabel>Category</FieldLabel>
                     <Select value={form.category} onChange={e => set('category', e.target.value)}>
                       {['Business','Mobile','Gift','Personal'].map(c => <option key={c}>{c}</option>)}
-                    </Select></Field>
+                    </Select>
+                  </Field>
 
-                  <Field><FieldLabel>Status</FieldLabel>
+                  <Field>
+                    <FieldLabel>Status</FieldLabel>
                     <Select value={form.status} onChange={e => set('status', e.target.value as Project['status'])}>
                       {['live','wip','archived'].map(s => <option key={s}>{s}</option>)}
-                    </Select></Field>
+                    </Select>
+                  </Field>
                 </div>
 
-                <Field><FieldLabel>GitHub URL</FieldLabel>
-                  <Input value={form.github ?? ''} onChange={e => set('github', e.target.value)} placeholder="https://github.com/..." /></Field>
+                <Field>
+                  <FieldLabel>GitHub Repository URL</FieldLabel>
+                  <Input
+                    value={form.github ?? ''}
+                    onChange={e => set('github', e.target.value)}
+                    placeholder="https://github.com/..."
+                  />
+                </Field>
 
-                <Field><FieldLabel>Live URL</FieldLabel>
-                  <Input value={form.liveUrl ?? ''} onChange={e => set('liveUrl', e.target.value)} placeholder="https://..." /></Field>
+                <Field>
+                  <FieldLabel>Live Application URL</FieldLabel>
+                  <Input
+                    value={form.liveUrl ?? ''}
+                    onChange={e => set('liveUrl', e.target.value)}
+                    placeholder="https://..."
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>Project Image Path / URL</FieldLabel>
+                  <Input
+                    value={form.image ?? ''}
+                    onChange={e => set('image', e.target.value)}
+                    placeholder="/images/projects/example.webp or https://..."
+                  />
+                </Field>
 
                 <Field style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem' }}>
-                  <input type="checkbox" id="featured" checked={!!form.featured}
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    checked={!!form.featured}
                     onChange={e => set('featured', e.target.checked)}
-                    style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#FFE500' }} />
-                  <FieldLabel htmlFor="featured" style={{ margin: 0, cursor: 'pointer' }}>Featured project</FieldLabel>
+                    style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#FFE500' }}
+                  />
+                  <FieldLabel htmlFor="featured" style={{ margin: 0, cursor: 'pointer' }}>
+                    Featured on Home Showcase
+                  </FieldLabel>
                 </Field>
 
                 {error && (
@@ -614,8 +858,12 @@ export default function AdminProjects() {
                     ⚠ {error}
                   </div>
                 )}
-                <SaveBtn onClick={handleSave} disabled={saving} whileHover={{ scale: saving ? 1 : 1.02 }} whileTap={{ scale: 0.97 }}>
-                  <FiCheck /> {saving ? 'Saving…' : isNew ? 'Add Project' : 'Save Changes'}
+                <SaveBtn
+                  onClick={handleSave}
+                  disabled={saving}
+                  whileHover={{ scale: saving ? 1 : 1.02 }}
+                  whileTap={{ scale: 0.97 }}>
+                  <FiCheck /> {saving ? 'Saving to Firebase…' : isNew ? 'Add Project' : 'Save Changes'}
                 </SaveBtn>
               </ModalBody>
             </Modal>
@@ -625,3 +873,4 @@ export default function AdminProjects() {
     </div>
   )
 }
+

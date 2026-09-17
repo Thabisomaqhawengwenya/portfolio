@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiCheck,
   FiAward, FiExternalLink, FiChevronUp, FiChevronDown, FiSearch,
+  FiAlertTriangle, FiAlertCircle,
 } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { Certificate } from '../../types'
@@ -24,6 +25,21 @@ const PageTitle = styled.h1`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
   letter-spacing: -0.03em;
+`
+
+const Banner = styled(motion.div)<{ $type: 'success' | 'error' }>`
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+  border: 2px solid ${({ $type, theme }) => $type === 'success' ? theme.colors.accent3 : theme.colors.error};
+  background: ${({ $type }) => $type === 'success' ? '#00C85315' : '#FF3C2F15'};
+  color: ${({ $type, theme }) => $type === 'success' ? '#00C853' : theme.colors.error};
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  line-height: 1.4;
 `
 
 const Toolbar = styled.div`
@@ -102,7 +118,6 @@ const TableHead = styled.div`
   align-items: center;
 
   @media (max-width: 860px) {
-    grid-template-columns: 1fr;
     display: none;
   }
 `
@@ -170,16 +185,16 @@ const OrderBtn = styled.button`
 const IssuerBadge = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   border: 1.5px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surfaceAlt};
-  color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.text};
   width: fit-content;
 `
 
@@ -193,42 +208,40 @@ const CertTitle = styled.div`
 const SkillsWrap = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-top: 0.3rem;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
 `
 
 const SkillChip = styled.span`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: 0.6rem;
-  font-weight: 600;
-  padding: 0.1rem 0.4rem;
-  border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+  padding: 0.1rem 0.35rem;
   background: ${({ theme }) => theme.colors.background};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   color: ${({ theme }) => theme.colors.textMuted};
 `
 
-const MetaText = styled.div`
+const MetaText = styled.p`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: 0.65rem;
   color: ${({ theme }) => theme.colors.textFaint};
+  margin-top: 0.2rem;
 `
 
 const Actions = styled.div`
   display: flex;
   gap: 0.5rem;
-  align-items: center;
 `
 
-const IconBtn = styled(motion.button)<{ $danger?: boolean; $primary?: boolean }>`
+const IconBtn = styled(motion.button)<{ $danger?: boolean }>`
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${({ $danger, $primary, theme }) =>
-    $danger ? theme.colors.error : $primary ? theme.colors.primary : theme.colors.surfaceAlt};
+  background: ${({ $danger, theme }) => ($danger ? theme.colors.error : theme.colors.surfaceAlt)};
   border: 2px solid ${({ theme }) => theme.colors.border};
-  color: ${({ $danger, $primary }) => ($danger || $primary ? '#000' : 'inherit')};
+  color: ${({ $danger }) => ($danger ? '#fff' : 'inherit')};
   cursor: pointer;
   font-size: 0.875rem;
   transition: background 0.1s;
@@ -240,14 +253,15 @@ const IconBtn = styled(motion.button)<{ $danger?: boolean; $primary?: boolean }>
 `
 
 const VerifyLink = styled.a`
-  color: ${({ theme }) => theme.colors.primary};
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: 0.65rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary};
   text-decoration: none;
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
 
   &:hover {
     text-decoration: underline;
@@ -258,7 +272,7 @@ const VerifyLink = styled.a`
 const Backdrop = styled(motion.div)`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 200;
   display: flex;
   align-items: center;
@@ -298,6 +312,60 @@ const ModalBody = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+`
+
+const DeleteModalBody = styled.div`
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+`
+
+const DeleteWarning = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  color: ${({ theme }) => theme.colors.text};
+  line-height: 1.6;
+`
+
+const DeleteActions = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+`
+
+const CancelBtn = styled.button`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.6rem 1rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+`
+
+const ConfirmDeleteBtn = styled.button`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.6rem 1.25rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.error};
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  &:hover {
+    background: #cc2020;
+  }
 `
 
 const Field = styled.div`
@@ -361,25 +429,43 @@ const EmptyState = styled.div`
   letter-spacing: 0.08em;
 `
 
-/* Blank Certificate Form */
+/* ─── Blank form ─── */
 const blank = (): Omit<Certificate, 'id'> => ({
   title: '',
   issuer: '',
-  issueDate: '2024',
+  issuerLogo: '',
+  issueDate: '',
+  expiryDate: '',
   credentialId: '',
   credentialUrl: '',
   skills: [],
   featured: false,
 })
 
+/* ─── Component ─── */
 export default function AdminCertificates() {
-  const { certificates, addCertificate, updateCertificate, deleteCertificate, reorderCertificates } = useAdmin()
+  const {
+    certificates,
+    addCertificate,
+    updateCertificate,
+    deleteCertificate,
+    reorderCertificates,
+  } = useAdmin()
+
   const [editing, setEditing] = useState<Certificate | null>(null)
   const [isNew, setIsNew] = useState(false)
+  const [deletingCert, setDeletingCert] = useState<Certificate | null>(null)
   const [form, setForm] = useState<Omit<Certificate, 'id'>>(blank())
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [search, setSearch] = useState('')
+
+  const showStatus = (type: 'success' | 'error', text: string) => {
+    setStatusMsg({ type, text })
+    setTimeout(() => setStatusMsg(null), 4000)
+  }
 
   const openNew = () => {
     setForm(blank())
@@ -389,7 +475,17 @@ export default function AdminCertificates() {
   }
 
   const openEdit = (c: Certificate) => {
-    setForm({ ...c })
+    setForm({
+      title: c.title || '',
+      issuer: c.issuer || '',
+      issuerLogo: c.issuerLogo || '',
+      issueDate: c.issueDate || '',
+      expiryDate: c.expiryDate || '',
+      credentialId: c.credentialId || '',
+      credentialUrl: c.credentialUrl || '',
+      skills: c.skills || [],
+      featured: !!c.featured,
+    })
     setEditing(c)
     setIsNew(false)
     setError('')
@@ -411,13 +507,27 @@ export default function AdminCertificates() {
 
     const skills = typeof form.skills === 'string'
       ? (form.skills as unknown as string).split(',').map((s: string) => s.trim()).filter(Boolean)
-      : form.skills
+      : (Array.isArray(form.skills) ? form.skills : [])
+
+    const payload: Omit<Certificate, 'id'> = {
+      title: form.title.trim(),
+      issuer: form.issuer.trim(),
+      issuerLogo: form.issuerLogo?.trim() || '',
+      issueDate: form.issueDate.trim(),
+      expiryDate: form.expiryDate?.trim() || '',
+      credentialId: form.credentialId?.trim() || '',
+      credentialUrl: form.credentialUrl?.trim() || '',
+      skills,
+      featured: Boolean(form.featured),
+    }
 
     try {
       if (isNew) {
-        await addCertificate({ ...form, skills })
+        await addCertificate(payload)
+        showStatus('success', `✓ Successfully added "${payload.title}".`)
       } else if (editing) {
-        await updateCertificate({ ...editing, ...form, skills })
+        await updateCertificate({ ...payload, id: editing.id })
+        showStatus('success', `✓ Successfully updated "${payload.title}".`)
       }
       close()
     } catch (err: unknown) {
@@ -428,13 +538,34 @@ export default function AdminCertificates() {
     }
   }
 
+  const confirmDelete = async () => {
+    if (!deletingCert) return
+    setDeleting(true)
+    try {
+      await deleteCertificate(deletingCert.id)
+      showStatus('success', `✓ Certificate "${deletingCert.title}" deleted.`)
+      setDeletingCert(null)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      showStatus('error', `Failed to delete certificate: ${msg}`)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const handleMove = async (index: number, direction: 'up' | 'down') => {
     const targetIndex = direction === 'up' ? index - 1 : index + 1
     if (targetIndex < 0 || targetIndex >= certificates.length) return
     const reordered = [...certificates]
     const [moved] = reordered.splice(index, 1)
     reordered.splice(targetIndex, 0, moved)
-    await reorderCertificates(reordered.map(c => c.id))
+    try {
+      await reorderCertificates(reordered.map(c => c.id))
+      showStatus('success', '✓ Certificates order updated.')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      showStatus('error', `Failed to reorder: ${msg}`)
+    }
   }
 
   const set = (k: keyof typeof form, v: unknown) => setForm(f => ({ ...f, [k]: v }))
@@ -457,6 +588,17 @@ export default function AdminCertificates() {
           <FiPlus /> Add Certificate
         </AddBtn>
       </Header>
+
+      {statusMsg && (
+        <Banner
+          $type={statusMsg.type}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}>
+          {statusMsg.type === 'success' ? <FiCheck size={16} /> : <FiAlertCircle size={16} />}
+          <span>{statusMsg.text}</span>
+        </Banner>
+      )}
 
       <Toolbar>
         <SearchWrap>
@@ -541,7 +683,7 @@ export default function AdminCertificates() {
                     </IconBtn>
                     <IconBtn
                       $danger
-                      onClick={() => deleteCertificate(cert.id)}
+                      onClick={() => setDeletingCert(cert)}
                       title="Delete"
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}>
@@ -555,7 +697,47 @@ export default function AdminCertificates() {
         )}
       </Table>
 
-      {/* Modal */}
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingCert && (
+          <Backdrop
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={e => {
+              if (e.target === e.currentTarget && !deleting) setDeletingCert(null)
+            }}>
+            <Modal
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}>
+              <ModalHeader style={{ background: '#FF3C2F' }}>
+                <ModalTitle style={{ color: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FiAlertTriangle /> Delete Certificate
+                </ModalTitle>
+                <IconBtn onClick={() => !deleting && setDeletingCert(null)} whileTap={{ scale: 0.9 }}>
+                  <FiX />
+                </IconBtn>
+              </ModalHeader>
+              <DeleteModalBody>
+                <DeleteWarning>
+                  Are you sure you want to permanently delete <strong>"{deletingCert.title}"</strong> ({deletingCert.issuer})?
+                </DeleteWarning>
+                <DeleteActions>
+                  <CancelBtn onClick={() => setDeletingCert(null)} disabled={deleting}>
+                    Cancel
+                  </CancelBtn>
+                  <ConfirmDeleteBtn onClick={confirmDelete} disabled={deleting}>
+                    <FiTrash2 /> {deleting ? 'Deleting…' : 'Yes, Delete'}
+                  </ConfirmDeleteBtn>
+                </DeleteActions>
+              </DeleteModalBody>
+            </Modal>
+          </Backdrop>
+        )}
+      </AnimatePresence>
+
+      {/* Add / Edit Modal */}
       <AnimatePresence>
         {(isNew || editing) && (
           <Backdrop
@@ -563,7 +745,7 @@ export default function AdminCertificates() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={e => {
-              if (e.target === e.currentTarget) close()
+              if (e.target === e.currentTarget && !saving) close()
             }}>
             <Modal
               initial={{ opacity: 0, y: 24 }}
@@ -572,7 +754,7 @@ export default function AdminCertificates() {
               transition={{ duration: 0.3 }}>
               <ModalHeader>
                 <ModalTitle>{isNew ? 'Add Certificate' : 'Edit Certificate'}</ModalTitle>
-                <IconBtn onClick={close} whileTap={{ scale: 0.9 }}>
+                <IconBtn onClick={close} whileTap={{ scale: 0.9 }} disabled={saving}>
                   <FiX />
                 </IconBtn>
               </ModalHeader>
@@ -584,6 +766,7 @@ export default function AdminCertificates() {
                     value={form.title}
                     onChange={e => set('title', e.target.value)}
                     placeholder="e.g. Responsive Web Design Certification"
+                    required
                   />
                 </Field>
 
@@ -594,6 +777,7 @@ export default function AdminCertificates() {
                       value={form.issuer}
                       onChange={e => set('issuer', e.target.value)}
                       placeholder="e.g. FreeCodeCamp, Meta, Coursera"
+                      required
                     />
                   </Field>
 
@@ -603,6 +787,7 @@ export default function AdminCertificates() {
                       value={form.issueDate}
                       onChange={e => set('issueDate', e.target.value)}
                       placeholder="e.g. 2024, Jan 2025"
+                      required
                     />
                   </Field>
                 </div>
@@ -668,7 +853,7 @@ export default function AdminCertificates() {
                   disabled={saving}
                   whileHover={{ scale: saving ? 1 : 1.02 }}
                   whileTap={{ scale: 0.97 }}>
-                  <FiCheck /> {saving ? 'Saving…' : isNew ? 'Add Certificate' : 'Save Changes'}
+                  <FiCheck /> {saving ? 'Saving to Firebase…' : isNew ? 'Add Certificate' : 'Save Changes'}
                 </SaveBtn>
               </ModalBody>
             </Modal>

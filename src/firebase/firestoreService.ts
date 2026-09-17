@@ -1,6 +1,6 @@
 import {
   collection, doc,
-  getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
+  getDocs, getDoc, addDoc, setDoc, deleteDoc,
   query, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
@@ -17,9 +17,28 @@ const COL = {
   certificates: 'certificates',
 } as const
 
+/**
+ * Sanitizes object by removing any keys with `undefined` values.
+ * Firestore strictly rejects `undefined` values during document write operations.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function cleanFirestoreData<T extends Record<string, any>>(obj: T): Record<string, any> {
+  const result: Record<string, any> = {}
+  for (const [key, val] of Object.entries(obj)) {
+    if (val === undefined) continue
+    if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Timestamp) && !(val instanceof Date)) {
+      result[key] = cleanFirestoreData(val)
+    } else {
+      result[key] = val
+    }
+  }
+  return result
+}
+
 /* ──────────────── MESSAGES ──────────────── */
 export async function fsAddMessage(m: Omit<Message,'id'|'date'|'read'>): Promise<string> {
-  const ref = await addDoc(collection(db, COL.messages), { ...m, read: false, createdAt: serverTimestamp() })
+  const data = cleanFirestoreData({ ...m, read: false, createdAt: serverTimestamp() })
+  const ref = await addDoc(collection(db, COL.messages), data)
   return ref.id
 }
 export async function fsGetMessages(): Promise<Message[]> {
@@ -30,7 +49,7 @@ export async function fsGetMessages(): Promise<Message[]> {
     date: (d.data().createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
   }))
 }
-export async function fsMarkMessageRead(id: string)   { await updateDoc(doc(db, COL.messages, id), { read: true }) }
+export async function fsMarkMessageRead(id: string)   { await setDoc(doc(db, COL.messages, id), { read: true }, { merge: true }) }
 export async function fsDeleteMessage(id: string)     { await deleteDoc(doc(db, COL.messages, id)) }
 
 /* ──────────────── PROJECTS ──────────────── */
@@ -45,19 +64,23 @@ export async function fsGetProjects(): Promise<Project[]> {
     const snap = await getDocs(collection(db, COL.projects))
     list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
   }
-  if (!list.length) return []
   return list
 }
 export async function fsAddProject(p: Omit<Project,'id'>): Promise<string> {
-  const ref = await addDoc(collection(db, COL.projects), { ...p, order: Date.now() })
+  const cleaned = cleanFirestoreData({ ...p, order: Date.now() })
+  const ref = await addDoc(collection(db, COL.projects), cleaned)
   return ref.id
 }
 export async function fsUpdateProject(p: Project): Promise<void> {
-  const { id, ...rest } = p; await setDoc(doc(db, COL.projects, id), rest)
+  const { id, ...rest } = p
+  const cleaned = cleanFirestoreData(rest)
+  await setDoc(doc(db, COL.projects, id), cleaned, { merge: true })
 }
-export async function fsDeleteProject(id: string)     { await deleteDoc(doc(db, COL.projects, id)) }
+export async function fsDeleteProject(id: string) {
+  await deleteDoc(doc(db, COL.projects, id))
+}
 export async function fsReorderProjects(ids: string[]): Promise<void> {
-  await Promise.all(ids.map((id, i) => updateDoc(doc(db, COL.projects, id), { order: i })))
+  await Promise.all(ids.map((id, i) => setDoc(doc(db, COL.projects, id), { order: i }, { merge: true })))
 }
 
 /* ──────────────── CERTIFICATES ──────────────── */
@@ -71,21 +94,23 @@ export async function fsGetCertificates(): Promise<Certificate[]> {
     const snap = await getDocs(collection(db, COL.certificates))
     list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
   }
-  if (!list.length) return []
   return list
 }
 export async function fsAddCertificate(c: Omit<Certificate, 'id'>): Promise<string> {
-  const ref = await addDoc(collection(db, COL.certificates), { ...c, order: Date.now() })
+  const cleaned = cleanFirestoreData({ ...c, order: Date.now() })
+  const ref = await addDoc(collection(db, COL.certificates), cleaned)
   return ref.id
 }
 export async function fsUpdateCertificate(c: Certificate): Promise<void> {
-  const { id, ...rest } = c; await setDoc(doc(db, COL.certificates, id), rest)
+  const { id, ...rest } = c
+  const cleaned = cleanFirestoreData(rest)
+  await setDoc(doc(db, COL.certificates, id), cleaned, { merge: true })
 }
 export async function fsDeleteCertificate(id: string): Promise<void> {
   await deleteDoc(doc(db, COL.certificates, id))
 }
 export async function fsReorderCertificates(ids: string[]): Promise<void> {
-  await Promise.all(ids.map((id, i) => updateDoc(doc(db, COL.certificates, id), { order: i })))
+  await Promise.all(ids.map((id, i) => setDoc(doc(db, COL.certificates, id), { order: i }, { merge: true })))
 }
 
 /* ──────────────── SKILLS ──────────────── */
@@ -96,7 +121,7 @@ export async function fsGetSkills(): Promise<SkillGroup[]> {
 export async function fsSaveSkillGroups(groups: SkillGroup[]): Promise<void> {
   const snap = await getDocs(collection(db, COL.skills))
   await Promise.all(snap.docs.map(d => deleteDoc(d.ref)))
-  await Promise.all(groups.map(g => setDoc(doc(db, COL.skills, g.category), g)))
+  await Promise.all(groups.map(g => setDoc(doc(db, COL.skills, g.category), cleanFirestoreData(g))))
 }
 
 /* ──────────────── JOURNEY ──────────────── */
@@ -106,13 +131,18 @@ export async function fsGetJourney(): Promise<ExperienceItem[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as ExperienceItem))
 }
 export async function fsAddJourneyItem(item: Omit<ExperienceItem,'id'>): Promise<string> {
-  const ref = await addDoc(collection(db, COL.journey), item)
+  const cleaned = cleanFirestoreData(item)
+  const ref = await addDoc(collection(db, COL.journey), cleaned)
   return ref.id
 }
 export async function fsUpdateJourneyItem(item: ExperienceItem): Promise<void> {
-  const { id, ...rest } = item; await setDoc(doc(db, COL.journey, id), rest)
+  const { id, ...rest } = item
+  const cleaned = cleanFirestoreData(rest)
+  await setDoc(doc(db, COL.journey, id), cleaned, { merge: true })
 }
-export async function fsDeleteJourneyItem(id: string) { await deleteDoc(doc(db, COL.journey, id)) }
+export async function fsDeleteJourneyItem(id: string) {
+  await deleteDoc(doc(db, COL.journey, id))
+}
 
 /* ──────────────── SETTINGS ──────────────── */
 const SETTINGS_ID = 'main'
@@ -121,7 +151,7 @@ export async function fsGetSettings(): Promise<AdminSettings | null> {
   return snap.exists() ? snap.data() as AdminSettings : null
 }
 export async function fsSaveSettings(s: AdminSettings): Promise<void> {
-  await setDoc(doc(db, COL.settings, SETTINGS_ID), s)
+  await setDoc(doc(db, COL.settings, SETTINGS_ID), cleanFirestoreData(s), { merge: true })
 }
 
 /* ──────────────── HERO CONTENT ──────────────── */
@@ -140,6 +170,7 @@ export async function fsGetHeroContent(): Promise<HeroContent> {
   return snap.exists() ? snap.data() as HeroContent : HERO_DEFAULTS
 }
 export async function fsSaveHeroContent(h: HeroContent): Promise<void> {
-  await setDoc(doc(db, COL.hero, HERO_ID), h)
+  await setDoc(doc(db, COL.hero, HERO_ID), cleanFirestoreData(h), { merge: true })
 }
 export { HERO_DEFAULTS }
+

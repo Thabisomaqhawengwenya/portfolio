@@ -42,10 +42,7 @@ export async function publicGetProjects(): Promise<Project[]> {
       const snap = await getDocs(collection(db, 'projects'))
       list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
     }
-    if (!list.length) return staticProjects
-    const existingIds = new Set(list.map(p => p.id))
-    const missingStatic = staticProjects.filter(p => !existingIds.has(p.id))
-    return [...list, ...missingStatic]
+    return list.length ? list : staticProjects
   }, staticProjects)
 }
 
@@ -91,10 +88,7 @@ export async function publicGetCertificates(): Promise<Certificate[]> {
       const snap = await getDocs(collection(db, 'certificates'))
       list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
     }
-    if (!list.length) return staticCertificates
-    const existingIds = new Set(list.map(c => c.id))
-    const missingStatic = staticCertificates.filter(c => !existingIds.has(c.id))
-    return [...list, ...missingStatic]
+    return list.length ? list : staticCertificates
   }, staticCertificates)
 }
 

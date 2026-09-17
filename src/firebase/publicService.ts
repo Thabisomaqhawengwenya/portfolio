@@ -10,13 +10,14 @@ import {
   query, orderBy,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { Project, SkillGroup, ExperienceItem, HeroContent } from '../types'
+import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate } from '../types'
 import type { AdminSettings } from '../admin/context/AdminContext'
 import { HERO_DEFAULTS } from './firestoreService'
 
-import { projects   as staticProjects  } from '../data/projects'
-import { skillGroups as staticSkills    } from '../data/skills'
-import { experience  as staticExperience} from '../data/experience'
+import { projects     as staticProjects     } from '../data/projects'
+import { skillGroups  as staticSkills       } from '../data/skills'
+import { experience   as staticExperience   } from '../data/experience'
+import { certificates as staticCertificates } from '../data/certificates'
 
 const DEFAULT_SETTINGS: AdminSettings = {
   bio:         'Junior Full-Stack Software Developer from Zimbabwe, currently training at Uncommon.org.',
@@ -78,3 +79,23 @@ export async function publicGetHeroContent(): Promise<HeroContent> {
     return snap.exists() ? snap.data() as HeroContent : HERO_DEFAULTS
   }, HERO_DEFAULTS)
 }
+
+export async function publicGetCertificates(): Promise<Certificate[]> {
+  return tryFetch(async () => {
+    let list: Certificate[] = []
+    try {
+      const q    = query(collection(db, 'certificates'), orderBy('order', 'asc'))
+      const snap = await getDocs(q)
+      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
+    } catch {
+      const snap = await getDocs(collection(db, 'certificates'))
+      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
+    }
+    if (!list.length) return staticCertificates
+    const existingIds = new Set(list.map(c => c.id))
+    const missingStatic = staticCertificates.filter(c => !existingIds.has(c.id))
+    return [...list, ...missingStatic]
+  }, staticCertificates)
+}
+
+

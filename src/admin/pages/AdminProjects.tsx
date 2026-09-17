@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiPlus, FiEdit2, FiTrash2, FiX, FiCheck, FiGithub, FiExternalLink } from 'react-icons/fi'
+import {
+  FiPlus, FiEdit2, FiTrash2, FiX, FiCheck, FiGithub, FiExternalLink,
+  FiChevronUp, FiChevronDown, FiSearch,
+} from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { Project } from '../../types'
 
@@ -21,6 +24,69 @@ const PageTitle = styled.h1`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
   letter-spacing: -0.03em;
+`
+
+const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+`
+
+const ToolbarLeft = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  flex: 1;
+`
+
+const SearchWrap = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  padding: 0.4rem 0.75rem;
+  min-width: 240px;
+
+  svg { color: ${({ theme }) => theme.colors.textFaint}; flex-shrink: 0; }
+`
+
+const SearchInput = styled.input`
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  color: ${({ theme }) => theme.colors.text};
+  width: 100%;
+  &::placeholder { color: ${({ theme }) => theme.colors.textFaint}; }
+`
+
+const CategoryTabs = styled.div`
+  display: flex;
+  gap: 0.25rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  padding: 2px;
+  flex-wrap: wrap;
+`
+
+const CategoryTab = styled.button<{ $active: boolean }>`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: ${({ $active, theme }) => $active ? theme.colors.primary : 'transparent'};
+  color: ${({ $active }) => $active ? '#000' : 'inherit'};
+  cursor: pointer;
+  transition: all 0.1s;
 `
 
 const AddBtn = styled(motion.button)`
@@ -50,11 +116,16 @@ const Table = styled.div`
 
 const TableHead = styled.div`
   display: grid;
-  grid-template-columns: 1fr 120px 80px 100px;
+  grid-template-columns: 50px 1fr 120px 80px 100px;
   background: ${({ theme }) => theme.colors.primary};
   border-bottom: 3px solid ${({ theme }) => theme.colors.border};
   padding: 0.6rem 1rem;
   gap: 1rem;
+  align-items: center;
+
+  @media (max-width: 860px) {
+    display: none;
+  }
 `
 
 const TH = styled.span`
@@ -68,7 +139,7 @@ const TH = styled.span`
 
 const TableRow = styled(motion.div)`
   display: grid;
-  grid-template-columns: 1fr 120px 80px 100px;
+  grid-template-columns: 50px 1fr 120px 80px 100px;
   padding: 0.875rem 1rem;
   border-bottom: 2px solid ${({ theme }) => theme.colors.borderSubtle};
   align-items: center;
@@ -78,6 +149,39 @@ const TableRow = styled(motion.div)`
 
   &:last-child { border-bottom: none; }
   &:hover { background: ${({ theme }) => theme.colors.surfaceAlt}; }
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+`
+
+const OrderControls = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`
+
+const OrderBtn = styled.button`
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  color: ${({ theme }) => theme.colors.text};
+  width: 24px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+
+  &:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+  }
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.colors.primary};
+    color: #000;
+  }
 `
 
 const ProjectName = styled.div`
@@ -105,6 +209,7 @@ const StatusBadge = styled.span<{ $status: string }>`
   background: ${({ $status }) =>
     $status === 'live' ? '#FFE500' : $status === 'wip' ? '#FF3C2F' : '#444'};
   color: ${({ $status }) => $status === 'wip' ? '#fff' : '#000'};
+  width: fit-content;
 `
 
 const CategoryBadge = styled.span`
@@ -117,6 +222,7 @@ const CategoryBadge = styled.span`
   border: 1.5px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surfaceAlt};
   color: ${({ theme }) => theme.colors.textMuted};
+  width: fit-content;
 `
 
 const Actions = styled.div`
@@ -151,6 +257,17 @@ const MiniLink = styled.a`
   font-size: 0.75rem;
   text-decoration: none;
   &:hover { text-decoration: underline; }
+`
+
+const EmptyState = styled.div`
+  padding: 3rem;
+  text-align: center;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  color: ${({ theme }) => theme.colors.textFaint};
+  background: ${({ theme }) => theme.colors.surface};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 `
 
 /* Modal */
@@ -277,12 +394,14 @@ const blank = (): Omit<Project, 'id'> => ({
 
 /* ─── Component ─── */
 export default function AdminProjects() {
-  const { projects, addProject, updateProject, deleteProject } = useAdmin()
+  const { projects, addProject, updateProject, deleteProject, reorderProjects } = useAdmin()
   const [editing, setEditing] = useState<Project | null>(null)
   const [isNew,   setIsNew]   = useState(false)
   const [form,    setForm]    = useState<Omit<Project,'id'>>(blank())
   const [saving,  setSaving]  = useState(false)
   const [error,   setError]   = useState('')
+  const [search,  setSearch]  = useState('')
+  const [catFilter, setCatFilter] = useState<'All' | 'Business' | 'Mobile' | 'Gift' | 'Personal'>('All')
 
   const openNew  = () => { setForm(blank()); setIsNew(true); setEditing(null); setError('') }
   const openEdit = (p: Project) => { setForm({ ...p }); setEditing(p); setIsNew(false); setError('') }
@@ -314,7 +433,27 @@ export default function AdminProjects() {
     }
   }
 
+  const handleMove = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1
+    if (targetIndex < 0 || targetIndex >= projects.length) return
+    const reordered = [...projects]
+    const [moved] = reordered.splice(index, 1)
+    reordered.splice(targetIndex, 0, moved)
+    await reorderProjects(reordered.map(p => p.id))
+  }
+
   const set = (k: keyof typeof form, v: unknown) => setForm(f => ({ ...f, [k]: v }))
+
+  const filtered = projects.filter(p => {
+    if (catFilter !== 'All' && p.category !== catFilter) return false
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    return (
+      p.title.toLowerCase().includes(q) ||
+      p.description.toLowerCase().includes(q) ||
+      p.technologies.some(t => t.toLowerCase().includes(q))
+    )
+  })
 
   return (
     <div>
@@ -325,45 +464,92 @@ export default function AdminProjects() {
         </AddBtn>
       </Header>
 
+      <Toolbar>
+        <ToolbarLeft>
+          <SearchWrap>
+            <FiSearch size={14} />
+            <SearchInput
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search project title, tech, description..."
+            />
+          </SearchWrap>
+
+          <CategoryTabs>
+            {(['All', 'Business', 'Mobile', 'Gift', 'Personal'] as const).map(cat => (
+              <CategoryTab
+                key={cat}
+                $active={catFilter === cat}
+                onClick={() => setCatFilter(cat)}>
+                {cat}
+              </CategoryTab>
+            ))}
+          </CategoryTabs>
+        </ToolbarLeft>
+      </Toolbar>
+
       <Table>
         <TableHead>
+          <TH>Order</TH>
           <TH>Project</TH>
           <TH>Category</TH>
           <TH>Status</TH>
           <TH>Actions</TH>
         </TableHead>
 
-        <AnimatePresence>
-          {projects.map((p, i) => (
-            <TableRow key={p.id}
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }}
-              transition={{ delay: i * 0.04 }}>
+        {filtered.length === 0 ? (
+          <EmptyState>No projects found.</EmptyState>
+        ) : (
+          <AnimatePresence>
+            {filtered.map((p, i) => {
+              const originalIndex = projects.findIndex(proj => proj.id === p.id)
+              return (
+                <TableRow key={p.id}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  transition={{ delay: i * 0.04 }}>
 
-              <div>
-                <ProjectName>{p.title}</ProjectName>
-                <ProjectMeta>{p.technologies.slice(0,3).join(' · ')}</ProjectMeta>
-                <LinkBtns style={{ marginTop: '0.25rem' }}>
-                  {p.github  && <MiniLink href={p.github}  target="_blank"><FiGithub  size={11}/> GitHub</MiniLink>}
-                  {p.liveUrl && <MiniLink href={p.liveUrl} target="_blank"><FiExternalLink size={11}/> Live</MiniLink>}
-                </LinkBtns>
-              </div>
+                  <OrderControls>
+                    <OrderBtn
+                      disabled={originalIndex === 0}
+                      onClick={() => handleMove(originalIndex, 'up')}
+                      title="Move Up">
+                      <FiChevronUp />
+                    </OrderBtn>
+                    <OrderBtn
+                      disabled={originalIndex === projects.length - 1}
+                      onClick={() => handleMove(originalIndex, 'down')}
+                      title="Move Down">
+                      <FiChevronDown />
+                    </OrderBtn>
+                  </OrderControls>
 
-              <CategoryBadge>{p.category}</CategoryBadge>
-              <StatusBadge $status={p.status}>{p.status}</StatusBadge>
+                  <div>
+                    <ProjectName>{p.title}</ProjectName>
+                    <ProjectMeta>{p.technologies.slice(0,3).join(' · ')}</ProjectMeta>
+                    <LinkBtns style={{ marginTop: '0.25rem' }}>
+                      {p.github  && <MiniLink href={p.github}  target="_blank"><FiGithub  size={11}/> GitHub</MiniLink>}
+                      {p.liveUrl && <MiniLink href={p.liveUrl} target="_blank"><FiExternalLink size={11}/> Live</MiniLink>}
+                    </LinkBtns>
+                  </div>
 
-              <Actions>
-                <IconBtn onClick={() => openEdit(p)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <FiEdit2 />
-                </IconBtn>
-                <IconBtn $danger onClick={() => deleteProject(p.id)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <FiTrash2 />
-                </IconBtn>
-              </Actions>
-            </TableRow>
-          ))}
-        </AnimatePresence>
+                  <CategoryBadge>{p.category}</CategoryBadge>
+                  <StatusBadge $status={p.status}>{p.status}</StatusBadge>
+
+                  <Actions>
+                    <IconBtn onClick={() => openEdit(p)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <FiEdit2 />
+                    </IconBtn>
+                    <IconBtn $danger onClick={() => deleteProject(p.id)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <FiTrash2 />
+                    </IconBtn>
+                  </Actions>
+                </TableRow>
+              )
+            })}
+          </AnimatePresence>
+        )}
       </Table>
 
       {/* Modal */}

@@ -10,6 +10,7 @@ import {
 import { fadeUp, staggerContainer, staggerItem } from '../../styles/animations'
 import { certificates as staticCertificates } from '../../data/certificates'
 import { useAccent } from '../../styles/ThemeContext'
+import { usePublicData } from '../../styles/PublicDataContext'
 import type { Certificate } from '../../types'
 
 /* Multi-colour palette for non-mono themes */
@@ -243,8 +244,9 @@ function CertificateCard({ cert, index }: { cert: Certificate; index: number }) 
   )
 }
 
-/* ─── Section Component ─── */
 export default function Certificates() {
+  const { certificates } = usePublicData()
+  const certList = certificates && certificates.length > 0 ? certificates : staticCertificates
   const ref = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
 
@@ -269,7 +271,7 @@ export default function Certificates() {
           variants={staggerContainer}
           initial="hidden"
           animate={inView ? 'visible' : 'hidden'}>
-          {staticCertificates.map((cert, i) => (
+          {certList.map((cert, i) => (
             <CertificateCard key={cert.id} cert={cert} index={i} />
           ))}
         </CertificatesGrid>
@@ -277,3 +279,4 @@ export default function Certificates() {
     </Section>
   )
 }
+

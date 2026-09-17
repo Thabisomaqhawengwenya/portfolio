@@ -7,15 +7,16 @@
  */
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import type { Project, SkillGroup, ExperienceItem, HeroContent } from '../types'
+import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate } from '../types'
 import type { AdminSettings } from '../admin/context/AdminContext'
 import {
   publicGetProjects, publicGetSkills, publicGetJourney,
-  publicGetSettings, publicGetHeroContent,
+  publicGetSettings, publicGetHeroContent, publicGetCertificates,
 } from '../firebase/publicService'
-import { projects   as staticProjects  } from '../data/projects'
-import { skillGroups as staticSkills    } from '../data/skills'
-import { experience  as staticExperience} from '../data/experience'
+import { projects     as staticProjects     } from '../data/projects'
+import { skillGroups  as staticSkills       } from '../data/skills'
+import { experience   as staticExperience   } from '../data/experience'
+import { certificates as staticCertificates } from '../data/certificates'
 import { HERO_DEFAULTS } from '../firebase/firestoreService'
 
 const DEFAULT_SETTINGS: AdminSettings = {
@@ -27,30 +28,33 @@ const DEFAULT_SETTINGS: AdminSettings = {
 }
 
 interface PublicCtx {
-  projects:    Project[]
-  skillGroups: SkillGroup[]
-  journey:     ExperienceItem[]
-  settings:    AdminSettings
-  heroContent: HeroContent
-  loading:     boolean
+  projects:     Project[]
+  skillGroups:  SkillGroup[]
+  journey:      ExperienceItem[]
+  certificates: Certificate[]
+  settings:     AdminSettings
+  heroContent:  HeroContent
+  loading:      boolean
 }
 
 const Ctx = createContext<PublicCtx>({
-  projects:    staticProjects,
-  skillGroups: staticSkills,
-  journey:     staticExperience,
-  settings:    DEFAULT_SETTINGS,
-  heroContent: HERO_DEFAULTS,
-  loading:     true,
+  projects:     staticProjects,
+  skillGroups:  staticSkills,
+  journey:      staticExperience,
+  certificates: staticCertificates,
+  settings:     DEFAULT_SETTINGS,
+  heroContent:  HERO_DEFAULTS,
+  loading:      true,
 })
 
 export function PublicDataProvider({ children }: { children: ReactNode }) {
-  const [projects,    setProjects]    = useState<Project[]>(staticProjects)
-  const [skillGroups, setSkillGroups] = useState<SkillGroup[]>(staticSkills)
-  const [journey,     setJourney]     = useState<ExperienceItem[]>(staticExperience)
-  const [settings,    setSettings]    = useState<AdminSettings>(DEFAULT_SETTINGS)
-  const [heroContent, setHeroContent] = useState<HeroContent>(HERO_DEFAULTS)
-  const [loading,     setLoading]     = useState(true)
+  const [projects,     setProjects]     = useState<Project[]>(staticProjects)
+  const [skillGroups,  setSkillGroups]  = useState<SkillGroup[]>(staticSkills)
+  const [journey,      setJourney]      = useState<ExperienceItem[]>(staticExperience)
+  const [certificates, setCertificates] = useState<Certificate[]>(staticCertificates)
+  const [settings,     setSettings]     = useState<AdminSettings>(DEFAULT_SETTINGS)
+  const [heroContent,  setHeroContent]  = useState<HeroContent>(HERO_DEFAULTS)
+  const [loading,      setLoading]      = useState(true)
 
   useEffect(() => {
     /* Load all public data concurrently */
@@ -60,18 +64,20 @@ export function PublicDataProvider({ children }: { children: ReactNode }) {
       publicGetJourney(),
       publicGetSettings(),
       publicGetHeroContent(),
-    ]).then(([p, s, j, st, h]) => {
+      publicGetCertificates(),
+    ]).then(([p, s, j, st, h, c]) => {
       setProjects(p)
       setSkillGroups(s)
       setJourney(j)
       setSettings(st)
       setHeroContent(h)
+      setCertificates(c)
     }).catch(console.error)
       .finally(() => setLoading(false))
   }, [])
 
   return (
-    <Ctx.Provider value={{ projects, skillGroups, journey, settings, heroContent, loading }}>
+    <Ctx.Provider value={{ projects, skillGroups, journey, certificates, settings, heroContent, loading }}>
       {children}
     </Ctx.Provider>
   )

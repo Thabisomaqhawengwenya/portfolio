@@ -4,16 +4,17 @@ import {
   query, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { Project, SkillGroup, ExperienceItem, HeroContent } from '../types'
+import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate } from '../types'
 import type { Message, AdminSettings } from '../admin/context/AdminContext'
 
 const COL = {
-  messages: 'messages',
-  projects: 'projects',
-  skills:   'skills',
-  settings: 'settings',
-  journey:  'journey',
-  hero:     'heroContent',
+  messages:     'messages',
+  projects:     'projects',
+  skills:       'skills',
+  settings:     'settings',
+  journey:      'journey',
+  hero:         'heroContent',
+  certificates: 'certificates',
 } as const
 
 /* ──────────────── MESSAGES ──────────────── */
@@ -57,6 +58,34 @@ export async function fsUpdateProject(p: Project): Promise<void> {
 export async function fsDeleteProject(id: string)     { await deleteDoc(doc(db, COL.projects, id)) }
 export async function fsReorderProjects(ids: string[]): Promise<void> {
   await Promise.all(ids.map((id, i) => updateDoc(doc(db, COL.projects, id), { order: i })))
+}
+
+/* ──────────────── CERTIFICATES ──────────────── */
+export async function fsGetCertificates(): Promise<Certificate[]> {
+  let list: Certificate[] = []
+  try {
+    const q    = query(collection(db, COL.certificates), orderBy('order', 'asc'))
+    const snap = await getDocs(q)
+    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
+  } catch {
+    const snap = await getDocs(collection(db, COL.certificates))
+    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
+  }
+  if (!list.length) return []
+  return list
+}
+export async function fsAddCertificate(c: Omit<Certificate, 'id'>): Promise<string> {
+  const ref = await addDoc(collection(db, COL.certificates), { ...c, order: Date.now() })
+  return ref.id
+}
+export async function fsUpdateCertificate(c: Certificate): Promise<void> {
+  const { id, ...rest } = c; await setDoc(doc(db, COL.certificates, id), rest)
+}
+export async function fsDeleteCertificate(id: string): Promise<void> {
+  await deleteDoc(doc(db, COL.certificates, id))
+}
+export async function fsReorderCertificates(ids: string[]): Promise<void> {
+  await Promise.all(ids.map((id, i) => updateDoc(doc(db, COL.certificates, id), { order: i })))
 }
 
 /* ──────────────── SKILLS ──────────────── */

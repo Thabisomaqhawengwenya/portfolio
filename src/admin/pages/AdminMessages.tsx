@@ -1,16 +1,59 @@
+import { useState } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiMail, FiCheckCircle, FiTrash2,
   FiCalendar, FiAtSign, FiArrowRight,
-  FiCheckSquare, FiDelete,
+  FiCheckSquare, FiDelete, FiSearch,
 } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { Message } from '../context/AdminContext'
 
 const PageTitle = styled.h1`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['2xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.03em;margin-bottom:0.5rem;`
 const PageSub = styled.p`font-family:${({theme})=>theme.typography.fontMono};font-size:${({theme})=>theme.typography.sizes.xs};color:${({theme})=>theme.colors.textFaint};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1.5rem;`
-const Toolbar = styled.div`display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;flex-wrap:wrap;`
+const Toolbar = styled.div`display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1.25rem;flex-wrap:wrap;`
+const ToolbarLeft = styled.div`display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;flex:1;`
+const SearchWrap = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  padding: 0.4rem 0.75rem;
+  min-width: 260px;
+
+  svg { color: ${({ theme }) => theme.colors.textFaint}; flex-shrink: 0; }
+`
+const SearchInput = styled.input`
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  color: ${({ theme }) => theme.colors.text};
+  width: 100%;
+  &::placeholder { color: ${({ theme }) => theme.colors.textFaint}; }
+`
+const FilterTabs = styled.div`
+  display: flex;
+  gap: 0.25rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  padding: 2px;
+`
+const FilterTab = styled.button<{ $active: boolean }>`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: ${({ $active, theme }) => $active ? theme.colors.primary : 'transparent'};
+  color: ${({ $active }) => $active ? '#000' : 'inherit'};
+  cursor: pointer;
+  transition: all 0.1s;
+`
 const BulkBtn = styled(motion.button)<{$danger?:boolean}>`display:flex;align-items:center;gap:0.4rem;font-family:${({theme})=>theme.typography.fontMono};font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:0.4rem 0.875rem;border:2px solid ${({theme})=>theme.colors.border};cursor:pointer;background:${({$danger,theme})=>$danger?theme.colors.error:theme.colors.primary};color:${({$danger})=>$danger?'#fff':'#000'};&:hover{opacity:0.85;}`
 const MsgList = styled.div`border:3px solid ${({theme})=>theme.colors.border};box-shadow:${({theme})=>theme.shadows.md};`
 const MsgCard = styled(motion.div)<{$unread:boolean}>`border-bottom:3px solid ${({theme})=>theme.colors.border};background:${({$unread,theme})=>$unread?theme.colors.surfaceAlt:theme.colors.surface};&:last-child{border-bottom:none;}`
@@ -30,7 +73,22 @@ const UnreadBadge = styled.span`font-family:'Space Mono',monospace;font-size:0.6
 
 export default function AdminMessages() {
   const { messages, markRead, deleteMessage, markAllRead, deleteReadMessages } = useAdmin()
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
+
   const unread = messages.filter(m => !m.read).length
+
+  const filtered = messages.filter(m => {
+    if (filter === 'unread' && m.read) return false
+    if (filter === 'read' && !m.read) return false
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    return (
+      m.name.toLowerCase().includes(q) ||
+      m.email.toLowerCase().includes(q) ||
+      m.message.toLowerCase().includes(q)
+    )
+  })
 
   return (
     <div>
@@ -39,24 +97,49 @@ export default function AdminMessages() {
 
       {messages.length > 0 && (
         <Toolbar>
-          <BulkBtn onClick={markAllRead} whileTap={{scale:0.95}}>
-            <FiCheckSquare size={12}/> Mark all read
-          </BulkBtn>
-          <BulkBtn $danger onClick={deleteReadMessages} whileTap={{scale:0.95}}>
-            <FiDelete size={12}/> Delete read
-          </BulkBtn>
+          <ToolbarLeft>
+            <SearchWrap>
+              <FiSearch size={14} />
+              <SearchInput
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search sender, email, message..."
+              />
+            </SearchWrap>
+
+            <FilterTabs>
+              <FilterTab $active={filter === 'all'} onClick={() => setFilter('all')}>
+                All ({messages.length})
+              </FilterTab>
+              <FilterTab $active={filter === 'unread'} onClick={() => setFilter('unread')}>
+                Unread ({unread})
+              </FilterTab>
+              <FilterTab $active={filter === 'read'} onClick={() => setFilter('read')}>
+                Read ({messages.length - unread})
+              </FilterTab>
+            </FilterTabs>
+          </ToolbarLeft>
+
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <BulkBtn onClick={markAllRead} whileTap={{scale:0.95}}>
+              <FiCheckSquare size={12}/> Mark all read
+            </BulkBtn>
+            <BulkBtn $danger onClick={deleteReadMessages} whileTap={{scale:0.95}}>
+              <FiDelete size={12}/> Delete read
+            </BulkBtn>
+          </div>
         </Toolbar>
       )}
 
       <MsgList>
-        {messages.length === 0 ? (
+        {filtered.length === 0 ? (
           <EmptyState>
             <EmptyIcon><FiMail/></EmptyIcon>
-            <EmptyText>No messages yet</EmptyText>
+            <EmptyText>{messages.length === 0 ? 'No messages yet' : 'No matching messages found'}</EmptyText>
           </EmptyState>
         ) : (
           <AnimatePresence>
-            {messages.map((m: Message, i: number) => (
+            {filtered.map((m: Message, i: number) => (
               <MsgCard key={m.id} $unread={!m.read}
                 initial={{opacity:0,x:-16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:16}}
                 transition={{delay:i*0.04}}>
@@ -68,9 +151,9 @@ export default function AdminMessages() {
                     {new Date(m.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
                   </MetaItem>
                   <MsgActions>
-                    {/* Reply shortcut */}
+                    {/* Direct 1-Click Mailto Reply */}
                     <ReplyBtn
-                      href={`mailto:${m.email}?subject=Re: Portfolio Contact&body=Hi ${m.name},%0A%0A`}
+                      href={`mailto:${m.email}?subject=Re:%20Portfolio%20Inquiry%20-%20Maqhawe%20Ngwenya&body=Hi%20${encodeURIComponent(m.name)},%0A%0AThank%20you%20for%20reaching%20out%20via%20my%20portfolio.%0A%0A%3E%20${encodeURIComponent(m.message)}%0A%0A`}
                       whileHover={{scale:1.05}}>
                       <FiArrowRight size={10}/> Reply
                     </ReplyBtn>
@@ -95,3 +178,4 @@ export default function AdminMessages() {
     </div>
   )
 }
+

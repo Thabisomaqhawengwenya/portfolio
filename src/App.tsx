@@ -25,6 +25,7 @@ import Login             from './admin/pages/Login'
 import Setup             from './admin/pages/Setup'
 import Overview          from './admin/pages/Overview'
 import AdminProjects     from './admin/pages/AdminProjects'
+import AdminCertificates from './admin/pages/AdminCertificates'
 import AdminJourney      from './admin/pages/AdminJourney'
 import AdminSkills       from './admin/pages/AdminSkills'
 import AdminMessages     from './admin/pages/AdminMessages'
@@ -148,12 +149,13 @@ export default function App() {
         </ThemeProvider>
       }>
         <Route index       element={<Overview />}          />
-        <Route path="projects" element={<AdminProjects />}   />
-        <Route path="journey"  element={<AdminJourney />}    />
-        <Route path="skills"   element={<AdminSkills />}     />
-        <Route path="messages" element={<AdminMessages />}   />
-        <Route path="hero"     element={<AdminHeroSettings />} />
-        <Route path="settings" element={<AdminSettings />}   />
+        <Route path="projects"     element={<AdminProjects />}     />
+        <Route path="certificates" element={<AdminCertificates />} />
+        <Route path="journey"      element={<AdminJourney />}      />
+        <Route path="skills"       element={<AdminSkills />}       />
+        <Route path="messages"     element={<AdminMessages />}     />
+        <Route path="hero"         element={<AdminHeroSettings />} />
+        <Route path="settings"     element={<AdminSettings />}     />
       </Route>
     </Routes>
   )

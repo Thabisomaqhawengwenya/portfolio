@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { FiFolder, FiCode, FiMail, FiTrendingUp, FiActivity, FiArrowRight, FiGlobe } from 'react-icons/fi'
+import { FiFolder, FiCode, FiMail, FiTrendingUp, FiActivity, FiArrowRight, FiGlobe, FiAward } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import { useAdmin } from '../context/AdminContext'
 import { analyticsPromise } from '../../firebase/config'
@@ -9,7 +9,7 @@ import { analyticsPromise } from '../../firebase/config'
 /* ─── Styled ─── */
 const PageTitle = styled.h1`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['3xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.03em;margin-bottom:0.5rem;`
 const PageSub = styled.p`font-family:${({theme})=>theme.typography.fontMono};font-size:${({theme})=>theme.typography.sizes.xs};color:${({theme})=>theme.colors.textFaint};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2.5rem;`
-const StatsGrid = styled.div`display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:0;border:3px solid ${({theme})=>theme.colors.border};box-shadow:${({theme})=>theme.shadows.md};margin-bottom:2.5rem;`
+const StatsGrid = styled.div`display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0;border:3px solid ${({theme})=>theme.colors.border};box-shadow:${({theme})=>theme.shadows.md};margin-bottom:2.5rem;`
 const StatCard = styled(motion(Link))`display:flex;flex-direction:column;gap:0.5rem;padding:1.5rem;background:${({theme})=>theme.colors.surface};border-right:3px solid ${({theme})=>theme.colors.border};text-decoration:none;transition:background 0.15s;&:last-child{border-right:none;}&:hover{background:${({theme})=>theme.colors.surfaceAlt};}@media(max-width:900px){border-right:none;border-bottom:3px solid ${({theme})=>theme.colors.border};&:last-child{border-bottom:none;}}`
 const StatIcon = styled.div<{$color:string}>`width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:${({$color})=>$color};border:2px solid ${({theme})=>theme.colors.border};font-size:1.1rem;color:#000;margin-bottom:0.5rem;`
 const StatValue = styled.p`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['3xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.04em;line-height:1;`
@@ -37,7 +37,7 @@ const AnalyticsNote = styled.p`font-family:'Space Mono',monospace;font-size:0.65
 const GaLink = styled.a`color:${({theme})=>theme.colors.primary};text-decoration:none;&:hover{text-decoration:underline;}`
 
 export default function Overview() {
-  const { projects, skillGroups, messages, journey, settings } = useAdmin()
+  const { projects, certificates, skillGroups, messages, journey, settings } = useAdmin()
   const unread = messages.filter(m => !m.read).length
   const totalSkills = skillGroups.reduce((a,g)=>a+g.skills.length, 0)
   const [gaReady, setGaReady] = useState(false)
@@ -47,11 +47,12 @@ export default function Overview() {
   }, [])
 
   const stats = [
-    { label:'Projects',     value:projects.length,    icon:<FiFolder/>,     color:'#FFE500', to:'/admin/projects' },
-    { label:'Skill Groups', value:skillGroups.length,  icon:<FiCode/>,       color:'#0047FF', to:'/admin/skills'   },
-    { label:'Total Skills', value:totalSkills,          icon:<FiTrendingUp/>, color:'#00C853', to:'/admin/skills'   },
-    { label:'Journey',      value:journey.length,      icon:<FiActivity/>,   color:'#FF6B9D', to:'/admin/journey'  },
-    { label:'Messages',     value:messages.length,     icon:<FiMail/>,       color:'#FF3C2F', to:'/admin/messages' },
+    { label:'Projects',     value:projects.length,     icon:<FiFolder/>,     color:'#FFE500', to:'/admin/projects'     },
+    { label:'Certificates', value:certificates.length, icon:<FiAward/>,      color:'#FF6B9D', to:'/admin/certificates' },
+    { label:'Skill Groups', value:skillGroups.length,  icon:<FiCode/>,       color:'#0047FF', to:'/admin/skills'       },
+    { label:'Total Skills', value:totalSkills,          icon:<FiTrendingUp/>, color:'#00C853', to:'/admin/skills'       },
+    { label:'Journey',      value:journey.length,      icon:<FiActivity/>,   color:'#FFA500', to:'/admin/journey'      },
+    { label:'Messages',     value:messages.length,     icon:<FiMail/>,       color:'#FF3C2F', to:'/admin/messages'     },
   ]
 
   return (
@@ -123,11 +124,12 @@ export default function Overview() {
       </MsgList>
 
       <QuickLinks>
-        <QuickLink to="/admin/journey"   whileHover={{scale:1.03}}><FiActivity/>Manage Journey</QuickLink>
-        <QuickLink to="/admin/projects"  whileHover={{scale:1.03}}><FiFolder/>Projects</QuickLink>
-        <QuickLink to="/admin/skills"    whileHover={{scale:1.03}}><FiCode/>Skills</QuickLink>
-        <QuickLink to="/admin/hero"      whileHover={{scale:1.03}}><FiArrowRight/>Hero Content</QuickLink>
-        <QuickLink to="/admin/messages"  whileHover={{scale:1.03}}><FiMail/>Messages</QuickLink>
+        <QuickLink to="/admin/projects"     whileHover={{scale:1.03}}><FiFolder/>Projects</QuickLink>
+        <QuickLink to="/admin/certificates" whileHover={{scale:1.03}}><FiAward/>Certificates</QuickLink>
+        <QuickLink to="/admin/journey"      whileHover={{scale:1.03}}><FiActivity/>Journey</QuickLink>
+        <QuickLink to="/admin/skills"       whileHover={{scale:1.03}}><FiCode/>Skills</QuickLink>
+        <QuickLink to="/admin/hero"         whileHover={{scale:1.03}}><FiArrowRight/>Hero Content</QuickLink>
+        <QuickLink to="/admin/messages"     whileHover={{scale:1.03}}><FiMail/>Messages</QuickLink>
       </QuickLinks>
     </div>
   )

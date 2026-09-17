@@ -553,12 +553,27 @@ export default function AdminCertificates() {
     }
   }
 
-  const handleMove = async (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= certificates.length) return
+  const handleMove = async (filteredIndex: number, direction: 'up' | 'down') => {
+    const targetFilteredIndex = direction === 'up' ? filteredIndex - 1 : filteredIndex + 1
+    if (targetFilteredIndex < 0 || targetFilteredIndex >= filtered.length) return
+
+    const currentItem = filtered[filteredIndex]
+    const targetItem = filtered[targetFilteredIndex]
+
+    const currentIndex = certificates.findIndex(c => c.id === currentItem.id)
+    if (currentIndex === -1) return
+
     const reordered = [...certificates]
-    const [moved] = reordered.splice(index, 1)
-    reordered.splice(targetIndex, 0, moved)
+    const [moved] = reordered.splice(currentIndex, 1)
+    const newTargetIndex = reordered.findIndex(c => c.id === targetItem.id)
+    if (newTargetIndex === -1) return
+
+    if (direction === 'up') {
+      reordered.splice(newTargetIndex, 0, moved)
+    } else {
+      reordered.splice(newTargetIndex + 1, 0, moved)
+    }
+
     try {
       await reorderCertificates(reordered.map(c => c.id))
       showStatus('success', '✓ Certificates order updated.')
@@ -625,7 +640,6 @@ export default function AdminCertificates() {
         ) : (
           <AnimatePresence>
             {filtered.map((cert, i) => {
-              const originalIndex = certificates.findIndex(c => c.id === cert.id)
               return (
                 <TableRow
                   key={cert.id}
@@ -635,14 +649,14 @@ export default function AdminCertificates() {
                   transition={{ delay: i * 0.04 }}>
                   <OrderControls>
                     <OrderBtn
-                      disabled={originalIndex === 0}
-                      onClick={() => handleMove(originalIndex, 'up')}
+                      disabled={i === 0}
+                      onClick={() => handleMove(i, 'up')}
                       title="Move Up">
                       <FiChevronUp />
                     </OrderBtn>
                     <OrderBtn
-                      disabled={originalIndex === certificates.length - 1}
-                      onClick={() => handleMove(originalIndex, 'down')}
+                      disabled={i === filtered.length - 1}
+                      onClick={() => handleMove(i, 'down')}
                       title="Move Down">
                       <FiChevronDown />
                     </OrderBtn>

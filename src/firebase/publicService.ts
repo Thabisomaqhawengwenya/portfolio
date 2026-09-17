@@ -33,16 +33,14 @@ async function tryFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
 
 export async function publicGetProjects(): Promise<Project[]> {
   return tryFetch(async () => {
-    let list: Project[] = []
-    try {
-      const q    = query(collection(db, 'projects'), orderBy('order', 'asc'))
-      const snap = await getDocs(q)
-      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
-    } catch {
-      const snap = await getDocs(collection(db, 'projects'))
-      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
-    }
-    return list.length ? list : staticProjects
+    const snap = await getDocs(collection(db, 'projects'))
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
+    if (!list.length) return staticProjects
+    return list.sort((a, b) => {
+      const ordA = typeof a.order === 'number' ? a.order : 999999
+      const ordB = typeof b.order === 'number' ? b.order : 999999
+      return ordA - ordB
+    })
   }, staticProjects)
 }
 
@@ -79,16 +77,14 @@ export async function publicGetHeroContent(): Promise<HeroContent> {
 
 export async function publicGetCertificates(): Promise<Certificate[]> {
   return tryFetch(async () => {
-    let list: Certificate[] = []
-    try {
-      const q    = query(collection(db, 'certificates'), orderBy('order', 'asc'))
-      const snap = await getDocs(q)
-      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
-    } catch {
-      const snap = await getDocs(collection(db, 'certificates'))
-      list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
-    }
-    return list.length ? list : staticCertificates
+    const snap = await getDocs(collection(db, 'certificates'))
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
+    if (!list.length) return staticCertificates
+    return list.sort((a, b) => {
+      const ordA = typeof a.order === 'number' ? a.order : 999999
+      const ordB = typeof b.order === 'number' ? b.order : 999999
+      return ordA - ordB
+    })
   }, staticCertificates)
 }
 

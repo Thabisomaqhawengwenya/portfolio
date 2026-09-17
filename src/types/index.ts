@@ -11,6 +11,7 @@ export interface Project {
   featured?:   boolean
   status:      'live' | 'wip' | 'archived'
   category:    'Business' | 'Mobile' | 'Gift' | 'Personal'
+  order?:      number
 }
 
 /* ─── Certificate ─── */
@@ -25,6 +26,7 @@ export interface Certificate {
   credentialUrl?: string
   skills:        string[]
   featured?:     boolean
+  order?:        number
 }
 
 /* ─── Experience / Journey ─── */

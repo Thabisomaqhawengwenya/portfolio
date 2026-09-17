@@ -171,18 +171,28 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, [toast])
 
   const reorderProjects = useCallback(async (ids: string[]) => {
+    // Optimistic update so UI responds immediately
+    setProjects(prev => {
+      const idMap = new Map(prev.map(p => [p.id, p]))
+      const ordered = ids.map(id => idMap.get(id)!).filter(Boolean)
+      const remaining = prev.filter(p => !ids.includes(p.id))
+      return [...ordered, ...remaining]
+    })
+
     try {
       await toast.promise(
         fsReorderProjects(ids),
         {
           loading: 'Updating project order on Firebase…',
           success: 'Project order saved to Firebase!',
-          error: (err) => `Failed to save project order: ${(err as Error)?.message || 'Error'}`,
+          error: (err) => `Failed to save project order: ${(err as Error)?.message || 'Permission denied'}`,
         }
       )
-      setProjects(prev => ids.map(id => prev.find(p => p.id === id)!).filter(Boolean))
     } catch (err) {
-      console.error(err)
+      console.error('Failed to reorder projects on Firebase:', err)
+      // Rollback on error from Firestore
+      fsGetProjects().then(setProjects).catch(console.error)
+      throw err
     }
   }, [toast])
 
@@ -238,18 +248,27 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, [toast])
 
   const reorderCertificates = useCallback(async (ids: string[]) => {
+    // Optimistic update
+    setCertificates(prev => {
+      const idMap = new Map(prev.map(c => [c.id, c]))
+      const ordered = ids.map(id => idMap.get(id)!).filter(Boolean)
+      const remaining = prev.filter(c => !ids.includes(c.id))
+      return [...ordered, ...remaining]
+    })
+
     try {
       await toast.promise(
         fsReorderCertificates(ids),
         {
           loading: 'Updating certificate order on Firebase…',
           success: 'Certificate order saved to Firebase!',
-          error: (err) => `Failed to save certificate order: ${(err as Error)?.message || 'Error'}`,
+          error: (err) => `Failed to save certificate order: ${(err as Error)?.message || 'Permission denied'}`,
         }
       )
-      setCertificates(prev => ids.map(id => prev.find(c => c.id === id)!).filter(Boolean))
     } catch (err) {
-      console.error(err)
+      console.error('Failed to reorder certificates on Firebase:', err)
+      fsGetCertificates().then(setCertificates).catch(console.error)
+      throw err
     }
   }, [toast])
 

@@ -54,20 +54,21 @@ export async function fsDeleteMessage(id: string)     { await deleteDoc(doc(db, 
 
 /* ──────────────── PROJECTS ──────────────── */
 export async function fsGetProjects(): Promise<Project[]> {
-  /* Try ordered first; fall back to unordered if index doesn't exist yet */
-  let list: Project[] = []
   try {
-    const q    = query(collection(db, COL.projects), orderBy('order', 'asc'))
-    const snap = await getDocs(q)
-    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
-  } catch {
     const snap = await getDocs(collection(db, COL.projects))
-    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Project))
+    return list.sort((a, b) => {
+      const ordA = typeof a.order === 'number' ? a.order : 999999
+      const ordB = typeof b.order === 'number' ? b.order : 999999
+      return ordA - ordB
+    })
+  } catch (err) {
+    console.error('Error fetching projects from Firestore:', err)
+    return []
   }
-  return list
 }
 export async function fsAddProject(p: Omit<Project,'id'>): Promise<string> {
-  const cleaned = cleanFirestoreData({ ...p, order: Date.now() })
+  const cleaned = cleanFirestoreData({ ...p, order: typeof p.order === 'number' ? p.order : Date.now() })
   const ref = await addDoc(collection(db, COL.projects), cleaned)
   return ref.id
 }
@@ -80,24 +81,30 @@ export async function fsDeleteProject(id: string) {
   await deleteDoc(doc(db, COL.projects, id))
 }
 export async function fsReorderProjects(ids: string[]): Promise<void> {
-  await Promise.all(ids.map((id, i) => setDoc(doc(db, COL.projects, id), { order: i }, { merge: true })))
+  await Promise.all(
+    ids.map((id, index) =>
+      setDoc(doc(db, COL.projects, id), { order: index }, { merge: true })
+    )
+  )
 }
 
 /* ──────────────── CERTIFICATES ──────────────── */
 export async function fsGetCertificates(): Promise<Certificate[]> {
-  let list: Certificate[] = []
   try {
-    const q    = query(collection(db, COL.certificates), orderBy('order', 'asc'))
-    const snap = await getDocs(q)
-    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
-  } catch {
     const snap = await getDocs(collection(db, COL.certificates))
-    list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
+    const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as Certificate))
+    return list.sort((a, b) => {
+      const ordA = typeof a.order === 'number' ? a.order : 999999
+      const ordB = typeof b.order === 'number' ? b.order : 999999
+      return ordA - ordB
+    })
+  } catch (err) {
+    console.error('Error fetching certificates from Firestore:', err)
+    return []
   }
-  return list
 }
 export async function fsAddCertificate(c: Omit<Certificate, 'id'>): Promise<string> {
-  const cleaned = cleanFirestoreData({ ...c, order: Date.now() })
+  const cleaned = cleanFirestoreData({ ...c, order: typeof c.order === 'number' ? c.order : Date.now() })
   const ref = await addDoc(collection(db, COL.certificates), cleaned)
   return ref.id
 }
@@ -110,7 +117,11 @@ export async function fsDeleteCertificate(id: string): Promise<void> {
   await deleteDoc(doc(db, COL.certificates, id))
 }
 export async function fsReorderCertificates(ids: string[]): Promise<void> {
-  await Promise.all(ids.map((id, i) => setDoc(doc(db, COL.certificates, id), { order: i }, { merge: true })))
+  await Promise.all(
+    ids.map((id, index) =>
+      setDoc(doc(db, COL.certificates, id), { order: index }, { merge: true })
+    )
+  )
 }
 
 /* ──────────────── SKILLS ──────────────── */

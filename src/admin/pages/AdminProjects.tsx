@@ -566,12 +566,27 @@ export default function AdminProjects() {
     }
   }
 
-  const handleMove = async (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= projects.length) return
+  const handleMove = async (filteredIndex: number, direction: 'up' | 'down') => {
+    const targetFilteredIndex = direction === 'up' ? filteredIndex - 1 : filteredIndex + 1
+    if (targetFilteredIndex < 0 || targetFilteredIndex >= filtered.length) return
+
+    const currentItem = filtered[filteredIndex]
+    const targetItem = filtered[targetFilteredIndex]
+
+    const currentIndex = projects.findIndex(p => p.id === currentItem.id)
+    if (currentIndex === -1) return
+
     const reordered = [...projects]
-    const [moved] = reordered.splice(index, 1)
-    reordered.splice(targetIndex, 0, moved)
+    const [moved] = reordered.splice(currentIndex, 1)
+    const newTargetIndex = reordered.findIndex(p => p.id === targetItem.id)
+    if (newTargetIndex === -1) return
+
+    if (direction === 'up') {
+      reordered.splice(newTargetIndex, 0, moved)
+    } else {
+      reordered.splice(newTargetIndex + 1, 0, moved)
+    }
+
     try {
       await reorderProjects(reordered.map(p => p.id))
       showStatus('success', '✓ Projects order updated.')
@@ -652,7 +667,6 @@ export default function AdminProjects() {
         ) : (
           <AnimatePresence>
             {filtered.map((p, i) => {
-              const originalIndex = projects.findIndex(proj => proj.id === p.id)
               return (
                 <TableRow key={p.id}
                   initial={{ opacity: 0, x: -16 }}
@@ -662,14 +676,14 @@ export default function AdminProjects() {
 
                   <OrderControls>
                     <OrderBtn
-                      disabled={originalIndex === 0}
-                      onClick={() => handleMove(originalIndex, 'up')}
+                      disabled={i === 0}
+                      onClick={() => handleMove(i, 'up')}
                       title="Move Up">
                       <FiChevronUp />
                     </OrderBtn>
                     <OrderBtn
-                      disabled={originalIndex === projects.length - 1}
-                      onClick={() => handleMove(originalIndex, 'down')}
+                      disabled={i === filtered.length - 1}
+                      onClick={() => handleMove(i, 'down')}
                       title="Move Down">
                       <FiChevronDown />
                     </OrderBtn>

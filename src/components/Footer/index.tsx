@@ -1,71 +1,140 @@
 import styled from 'styled-components'
 import { popSpring } from '../UI'
 import { motion } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiArrowUp, FiLock } from 'react-icons/fi'
+import { FiGithub, FiLinkedin, FiMail, FiArrowUp, FiLock, FiArrowRight } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import { usePublicData } from '../../styles/PublicDataContext'
+import { useAccent } from '../../styles/ThemeContext'
 
-/* ─── Styled ─── */
+/* ─── Styled Components ─── */
 const FooterEl = styled.footer`
-  background: ${({ theme }) => theme.colors.text};
-  border-top: 3px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  border-top: 4px solid ${({ theme }) => theme.colors.border};
+  width: 100%;
+`
+
+const FooterContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
 `
 
 const FooterTop = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 ${({ theme }) => theme.spacing['8']};
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  border-bottom: 3px solid #1a1a1a;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  border-bottom: 3px solid ${({ theme }) => theme.colors.border};
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
+    grid-template-columns: 1fr 1fr;
+  }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     grid-template-columns: 1fr;
-    padding: 0 ${({ theme }) => theme.spacing['6']};
   }
 `
 
 const FooterCell = styled.div`
-  padding: ${({ theme }) => theme.spacing['8']};
-  border-right: 3px solid #1a1a1a;
+  padding: ${({ theme }) => theme.spacing['8']} ${({ theme }) => theme.spacing['8']};
+  border-right: 3px solid ${({ theme }) => theme.colors.border};
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 
-  &:last-child { border-right: none; }
+  &:last-child {
+    border-right: none;
+  }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
+    &:nth-child(2) {
+      border-right: none;
+    }
+    &:nth-child(3) {
+      grid-column: span 2;
+      border-top: 3px solid ${({ theme }) => theme.colors.border};
+      border-right: none;
+    }
+  }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     border-right: none;
-    border-bottom: 3px solid #1a1a1a;
+    border-bottom: 3px solid ${({ theme }) => theme.colors.border};
     padding: ${({ theme }) => theme.spacing['6']};
 
-    &:last-child { border-bottom: none; }
+    &:nth-child(3) {
+      grid-column: span 1;
+      border-top: none;
+      border-bottom: none;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
   }
 `
 
-const FooterName = styled.p`
-  font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: ${({ theme }) => theme.typography.sizes.xl};
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.colors.primary};
-  letter-spacing: -0.02em;
-  margin-bottom: ${({ theme }) => theme.spacing['1']};
-`
-
-const FooterRole = styled.p`
+const BrandEyebrow = styled.div`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: #555;
+  color: ${({ theme }) => theme.colors.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: ${({ theme }) => theme.spacing['2']};
+`
+
+const FooterName = styled.h3`
+  font-family: ${({ theme }) => theme.typography.fontDisplay};
+  font-size: ${({ theme }) => theme.typography.sizes['2xl']};
+  font-weight: ${({ theme }) => theme.typography.weights.bold};
+  color: ${({ theme }) => theme.colors.text};
+  letter-spacing: -0.03em;
+  margin-bottom: ${({ theme }) => theme.spacing['2']};
+  line-height: 1.1;
+`
+
+const FooterBio = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  color: ${({ theme }) => theme.colors.textMuted};
+  line-height: 1.6;
+  margin-bottom: ${({ theme }) => theme.spacing['4']};
+`
+
+const StatusBadge = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.7rem;
+  font-weight: ${({ theme }) => theme.typography.weights.bold};
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  padding: 0.35rem 0.75rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  color: ${({ theme }) => theme.colors.text};
+  width: fit-content;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00c853;
+    display: inline-block;
+  }
 `
 
 const CellLabel = styled.p`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: #555;
+  color: ${({ theme }) => theme.colors.text};
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   margin-bottom: ${({ theme }) => theme.spacing['4']};
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 `
 
 const FooterNav = styled.nav`
@@ -75,20 +144,26 @@ const FooterNav = styled.nav`
 `
 
 const FooterLink = styled(motion.button)`
-  font-family: ${({ theme }) => theme.typography.fontBody};
-  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: #888;
+  color: ${({ theme }) => theme.colors.textMuted};
   background: none;
   border: none;
   cursor: pointer;
   text-align: left;
-  padding: 0;
-  transition: color 0.15s ease;
+  padding: 0.25rem 0;
+  transition: color 0.15s ease, transform 0.15s ease;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
 
-  &:hover { color: ${({ theme }) => theme.colors.primary}; }
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
+    transform: translateX(4px);
+  }
 `
 
 const SocialLinks = styled.div`
@@ -97,25 +172,40 @@ const SocialLinks = styled.div`
   gap: ${({ theme }) => theme.spacing['3']};
 `
 
-const SocialBtn = styled(motion.a)`
+const SocialBtn = styled(motion.a)<{ $hoverBg: string; $hoverFg: string }>`
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  font-family: ${({ theme }) => theme.typography.fontBody};
-  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  justify-content: space-between;
+  padding: 0.5rem 0.85rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: #888;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  border: 2px solid ${({ theme }) => theme.colors.border};
   text-decoration: none;
-  transition: color 0.15s ease;
-  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
 
-  &:hover { color: ${({ theme }) => theme.colors.primary}; }
+  div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &:hover {
+    background: ${({ $hoverBg }) => $hoverBg};
+    color: ${({ $hoverFg }) => $hoverFg};
+    transform: translate(-2px, -2px);
+    box-shadow: ${({ theme }) => theme.shadows.md};
+  }
 `
 
 /* Bottom bar */
 const FooterBottom = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
+  background: ${({ theme }) => theme.colors.surfaceAlt};
   padding: ${({ theme }) => theme.spacing['4']} ${({ theme }) => theme.spacing['8']};
   display: flex;
   align-items: center;
@@ -125,6 +215,8 @@ const FooterBottom = styled.div`
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     padding: ${({ theme }) => theme.spacing['4']} ${({ theme }) => theme.spacing['6']};
+    flex-direction: column;
+    align-items: flex-start;
   }
 `
 
@@ -132,31 +224,39 @@ const Copyright = styled.p`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: #444;
+  color: ${({ theme }) => theme.colors.textMuted};
   text-transform: uppercase;
   letter-spacing: 0.06em;
 `
 
-const BackTop = styled(motion.button)`
+const ActionGroup = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+`
+
+const BackTop = styled(motion.button)`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: #555;
-  background: none;
-  border: 2px solid #333;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.border};
   cursor: pointer;
-  padding: 0.4rem 0.875rem;
+  padding: 0.45rem 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-    border-color: ${({ theme }) => theme.colors.primary};
-    box-shadow: 3px 3px 0 ${({ theme }) => theme.colors.primary};
+    background: ${({ theme }) => theme.colors.primary};
+    transform: translate(-2px, -2px);
+    box-shadow: ${({ theme }) => theme.shadows.md};
   }
 `
 
@@ -169,91 +269,138 @@ const AdminBtn = styled(motion(Link))`
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #444;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.border};
   text-decoration: none;
-  padding: 0.4rem 0.875rem;
-  border: 2px solid #2a2a2a;
-  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  padding: 0.45rem 0.85rem;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
 
-  svg { opacity: 0.6; }
+  svg {
+    opacity: 0.8;
+  }
 
   &:hover {
-    color: ${({ theme }) => theme.colors.primary};
-    border-color: #444;
-    box-shadow: 3px 3px 0 #333;
-    svg { opacity: 1; }
+    background: ${({ theme }) => theme.colors.primary};
+    transform: translate(-2px, -2px);
+    box-shadow: ${({ theme }) => theme.shadows.md};
   }
 `
 
-const LINKS = ['Home','About','Journey','Skills','Projects','Certificates','Contact']
+const LINKS = ['Home', 'About', 'Journey', 'Skills', 'Projects', 'Certificates', 'Contact']
 const scrollTo = (id: string) =>
   document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })
 
 /* ─── Component ─── */
 export default function Footer() {
   const { settings } = usePublicData()
+  const { accent, isMonoTheme } = useAccent()
+  const hoverBg = accent.primary
+  const hoverFg = isMonoTheme ? '#000000' : accent.textColor
+
   return (
     <FooterEl>
-      <FooterTop>
-        <FooterCell>
-          <FooterName>Maqhawe Ngwenya</FooterName>
-          <FooterRole>Junior Full-Stack Dev</FooterRole>
-        </FooterCell>
+      <FooterContainer>
+        <FooterTop>
+          {/* Identity */}
+          <FooterCell>
+            <BrandEyebrow>// JUNIOR FULL-STACK DEVELOPER</BrandEyebrow>
+            <FooterName>Maqhawe Ngwenya</FooterName>
+            <FooterBio>
+              Building responsive, accessible, and high-performance digital products and applications.
+            </FooterBio>
+            <StatusBadge>
+              <span /> Open to Work & Collaborations
+            </StatusBadge>
+          </FooterCell>
 
-        <FooterCell>
-          <CellLabel>Navigation</CellLabel>
-          <FooterNav aria-label="Footer navigation">
-            {LINKS.map(l => (
-              <FooterLink key={l} onClick={() => scrollTo(l)}
-                whileHover={{ scale: 1.06, y: -3 }}
-                whileTap={{ scale: 0.94 }}
+          {/* Navigation */}
+          <FooterCell>
+            <CellLabel>// NAVIGATION</CellLabel>
+            <FooterNav aria-label="Footer navigation">
+              {LINKS.map(l => (
+                <FooterLink
+                  key={l}
+                  onClick={() => scrollTo(l)}
+                  whileTap={{ scale: 0.95 }}
+                  transition={popSpring}>
+                  <FiArrowRight size={12} /> {l}
+                </FooterLink>
+              ))}
+            </FooterNav>
+          </FooterCell>
+
+          {/* Connect */}
+          <FooterCell>
+            <CellLabel>// CONNECT</CellLabel>
+            <SocialLinks>
+              <SocialBtn
+                href={settings.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub"
+                $hoverBg={hoverBg}
+                $hoverFg={hoverFg}
+                whileTap={{ scale: 0.95 }}
                 transition={popSpring}>
-                {l}
-              </FooterLink>
-            ))}
-          </FooterNav>
-        </FooterCell>
+                <div>
+                  <FiGithub /> GitHub
+                </div>
+                <FiArrowRight size={12} />
+              </SocialBtn>
+              <SocialBtn
+                href={settings.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                $hoverBg={hoverBg}
+                $hoverFg={hoverFg}
+                whileTap={{ scale: 0.95 }}
+                transition={popSpring}>
+                <div>
+                  <FiLinkedin /> LinkedIn
+                </div>
+                <FiArrowRight size={12} />
+              </SocialBtn>
+              <SocialBtn
+                href={`mailto:${settings.email}`}
+                aria-label="Email"
+                $hoverBg={hoverBg}
+                $hoverFg={hoverFg}
+                whileTap={{ scale: 0.95 }}
+                transition={popSpring}>
+                <div>
+                  <FiMail /> Email
+                </div>
+                <FiArrowRight size={12} />
+              </SocialBtn>
+            </SocialLinks>
+          </FooterCell>
+        </FooterTop>
 
-        <FooterCell>
-          <CellLabel>Connect</CellLabel>
-          <SocialLinks>
-            <SocialBtn href={settings.githubUrl} target="_blank"
-              rel="noopener noreferrer" aria-label="GitHub"
-              whileHover={{ scale: 1.1, y: -5 }}
-              whileTap={{ scale: 0.92 }}
+        <FooterBottom>
+          <Copyright>
+            © {new Date().getFullYear()} Maqhawe Ngwenya. All rights reserved.
+          </Copyright>
+          <ActionGroup>
+            <AdminBtn
+              to="/admin"
+              whileTap={{ scale: 0.95 }}
               transition={popSpring}>
-              <FiGithub /> GitHub
-            </SocialBtn>
-            <SocialBtn href={settings.linkedinUrl} target="_blank"
-              rel="noopener noreferrer" aria-label="LinkedIn"
-              whileHover={{ scale: 1.1, y: -5 }}
-              whileTap={{ scale: 0.92 }}
+              <FiLock /> Admin
+            </AdminBtn>
+            <BackTop
+              onClick={() => scrollTo('home')}
+              aria-label="Back to top"
+              whileTap={{ scale: 0.95 }}
               transition={popSpring}>
-              <FiLinkedin /> LinkedIn
-            </SocialBtn>
-          </SocialLinks>
-        </FooterCell>
-      </FooterTop>
-
-      <FooterBottom>
-        <Copyright>
-          © {new Date().getFullYear()} Maqhawe Ngwenya. All rights reserved.
-        </Copyright>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <AdminBtn to="/admin"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            transition={popSpring}>
-            <FiLock /> Admin
-          </AdminBtn>
-          <BackTop onClick={() => scrollTo('home')} aria-label="Back to top"
-            whileHover={{ scale: 1.08, y: -5 }}
-            whileTap={{ scale: 0.92 }}
-            transition={popSpring}>
-            <FiArrowUp /> Back to top
-          </BackTop>
-        </div>
-      </FooterBottom>
+              <FiArrowUp /> Back to top
+            </BackTop>
+          </ActionGroup>
+        </FooterBottom>
+      </FooterContainer>
     </FooterEl>
   )
 }
+

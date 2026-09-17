@@ -1,44 +1,165 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Primary meta -->
-    <title>Maqhawe Ngwenya | Junior Full-Stack Software Developer</title>
-    <meta name="description"
-      content="Maqhawe Ngwenya — Junior Full-Stack Software Developer from Zimbabwe. Building modern, useful, and engaging web applications with React, TypeScript, Node.js, and more." />
-    <meta name="author" content="Maqhawe Ngwenya" />
-    <meta name="theme-color" content="#0a0a0a" />
+    <!-- Primary Meta Tags -->
+    <title>Maqhawe Ngwenya | Full-Stack Software Developer & Engineer Portfolio</title>
+    <meta name="title" content="Maqhawe Ngwenya | Full-Stack Software Developer & Engineer Portfolio" />
+    <meta
+      name="description"
+      content="Portfolio of Maqhawe Thabiso Ngwenya — Junior Full-Stack Software Developer from Zimbabwe. Specialized in React, TypeScript, Node.js, Express, PostgreSQL & Cloud Firestore."
+    />
+    <meta
+      name="keywords"
+      content="Maqhawe Ngwenya, Maqhawe Thabiso Ngwenya, Full-Stack Developer, Junior Software Developer, Frontend Developer, Backend Developer, React, TypeScript, Node.js, Express, PostgreSQL, Firebase, Zimbabwe Software Engineer, Uncommon.org, Web Developer Portfolio"
+    />
+    <meta name="author" content="Maqhawe Thabiso Ngwenya" />
+    <meta name="creator" content="Maqhawe Thabiso Ngwenya" />
+    <meta name="publisher" content="Maqhawe Thabiso Ngwenya" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
 
-    <!-- Open Graph -->
-    <meta property="og:type"        content="website" />
-    <meta property="og:title"       content="Maqhawe Ngwenya | Junior Full-Stack Developer" />
-    <meta property="og:description" content="Junior Full-Stack Software Developer from Zimbabwe building modern web experiences." />
-    <meta property="og:url"         content="https://maqhawe.dev" />
-    <meta property="og:site_name"   content="Maqhawe Ngwenya Portfolio" />
+    <!-- Geographic & Language Tags -->
+    <meta name="geo.region" content="ZW" />
+    <meta name="geo.placename" content="Harare, Zimbabwe" />
+    <meta name="language" content="English" />
 
-    <!-- Twitter -->
-    <meta name="twitter:card"        content="summary_large_image" />
-    <meta name="twitter:title"       content="Maqhawe Ngwenya | Junior Full-Stack Developer" />
-    <meta name="twitter:description" content="Junior Full-Stack Software Developer from Zimbabwe." />
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://thabisomaqhawengwenya.github.io/portfolio/" />
 
-    <!-- Favicon — simple M lettermark -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Georgia,serif' font-size='18' fill='%23e8ff8b'>M</text></svg>" />
+    <!-- Web App & Theme -->
+    <meta name="theme-color" content="#FFE500" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Maqhawe Dev" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph / Facebook / LinkedIn -->
+    <meta property="og:type" content="profile" />
+    <meta property="og:site_name" content="Maqhawe Ngwenya | Portfolio" />
+    <meta property="og:url" content="https://thabisomaqhawengwenya.github.io/portfolio/" />
+    <meta property="og:title" content="Maqhawe Ngwenya | Full-Stack Software Developer & Engineer" />
+    <meta
+      property="og:description"
+      content="Explore full-stack software development projects, technical skills, certificates, and engineering CMS built with React, TypeScript & Node.js by Maqhawe Ngwenya."
+    />
+    <meta property="og:image" content="https://thabisomaqhawengwenya.github.io/portfolio/og-image.svg" />
+    <meta property="og:image:secure_url" content="https://thabisomaqhawengwenya.github.io/portfolio/og-image.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Maqhawe Ngwenya - Junior Full-Stack Software Developer Portfolio" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="profile:first_name" content="Maqhawe" />
+    <meta property="profile:last_name" content="Ngwenya" />
+    <meta property="profile:username" content="Thabisomaqhawengwenya" />
+
+    <!-- Twitter / X Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://thabisomaqhawengwenya.github.io/portfolio/" />
+    <meta name="twitter:title" content="Maqhawe Ngwenya | Full-Stack Software Developer & Engineer" />
+    <meta
+      name="twitter:description"
+      content="Explore full-stack projects, skills, certificates & interactive portfolio CMS by Maqhawe Ngwenya."
+    />
+    <meta name="twitter:image" content="https://thabisomaqhawengwenya.github.io/portfolio/og-image.svg" />
+    <meta name="twitter:image:alt" content="Maqhawe Ngwenya Portfolio" />
 
     <!-- Google Search Console verification -->
     <meta name="google-site-verification" content="pm4RB-oqYwAE3ApTtI9dCJAOZFVyp0-LOlzjYbzzkQ0" />
 
-    <!-- Canonical -->
-    <link rel="canonical" href="https://maqhawe.dev" />
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.svg" />
 
-    <!-- Fonts: Inter + Instrument Serif + JetBrains Mono -->
+    <!-- Performance Preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin />
+
+    <!-- Fonts: Space Grotesk + Space Mono -->
     <link
       href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Structured Data: JSON-LD (Schema.org) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://thabisomaqhawengwenya.github.io/portfolio/#person",
+            "name": "Maqhawe Thabiso Ngwenya",
+            "alternateName": ["Maqhawe Ngwenya", "Thabiso Ngwenya"],
+            "jobTitle": "Junior Full-Stack Software Developer",
+            "description": "Junior Full-Stack Software Developer from Zimbabwe building modern, performant web applications with React, TypeScript, Node.js, PostgreSQL, and Cloud Firestore.",
+            "url": "https://thabisomaqhawengwenya.github.io/portfolio/",
+            "image": "https://thabisomaqhawengwenya.github.io/portfolio/og-image.svg",
+            "sameAs": [
+              "https://github.com/Thabisomaqhawengwenya",
+              "https://www.linkedin.com/in/maqhawe-ngwenya/"
+            ],
+            "address": {
+              "@type": "PostalAddress",
+              "addressCountry": "Zimbabwe"
+            },
+            "nationality": {
+              "@type": "Country",
+              "name": "Zimbabwe"
+            },
+            "alumniOf": {
+              "@type": "EducationalOrganization",
+              "name": "Uncommon.org",
+              "url": "https://uncommon.org"
+            },
+            "knowsAbout": [
+              "React",
+              "TypeScript",
+              "JavaScript",
+              "Node.js",
+              "Express.js",
+              "PostgreSQL",
+              "Prisma",
+              "Firebase",
+              "REST APIs",
+              "HTML5",
+              "CSS3",
+              "Full-Stack Web Development",
+              "Git & GitHub Workflow"
+            ]
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://thabisomaqhawengwenya.github.io/portfolio/#website",
+            "url": "https://thabisomaqhawengwenya.github.io/portfolio/",
+            "name": "Maqhawe Ngwenya Portfolio",
+            "description": "Official software developer portfolio and engineering showcase of Maqhawe Ngwenya.",
+            "author": {
+              "@id": "https://thabisomaqhawengwenya.github.io/portfolio/#person"
+            },
+            "inLanguage": "en-US"
+          },
+          {
+            "@type": "ProfilePage",
+            "@id": "https://thabisomaqhawengwenya.github.io/portfolio/#profilepage",
+            "url": "https://thabisomaqhawengwenya.github.io/portfolio/",
+            "name": "Maqhawe Ngwenya | Software Developer Profile",
+            "isPartOf": {
+              "@id": "https://thabisomaqhawengwenya.github.io/portfolio/#website"
+            },
+            "mainEntity": {
+              "@id": "https://thabisomaqhawengwenya.github.io/portfolio/#person"
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -104,13 +104,37 @@ export async function fsGetCertificates(): Promise<Certificate[]> {
   }
 }
 export async function fsAddCertificate(c: Omit<Certificate, 'id'>): Promise<string> {
-  const cleaned = cleanFirestoreData({ ...c, order: typeof c.order === 'number' ? c.order : Date.now() })
+  const data = {
+    title: c.title || '',
+    issuer: c.issuer || '',
+    issuerLogo: c.issuerLogo || '',
+    issueDate: c.issueDate || '',
+    expiryDate: c.expiryDate || '',
+    credentialId: c.credentialId || '',
+    credentialUrl: c.credentialUrl || '',
+    skills: Array.isArray(c.skills) ? c.skills.filter(Boolean) : [],
+    featured: Boolean(c.featured),
+    order: typeof c.order === 'number' ? c.order : Date.now(),
+  }
+  const cleaned = cleanFirestoreData(data)
   const ref = await addDoc(collection(db, COL.certificates), cleaned)
   return ref.id
 }
 export async function fsUpdateCertificate(c: Certificate): Promise<void> {
   const { id, ...rest } = c
-  const cleaned = cleanFirestoreData(rest)
+  const data = {
+    title: rest.title || '',
+    issuer: rest.issuer || '',
+    issuerLogo: rest.issuerLogo || '',
+    issueDate: rest.issueDate || '',
+    expiryDate: rest.expiryDate || '',
+    credentialId: rest.credentialId || '',
+    credentialUrl: rest.credentialUrl || '',
+    skills: Array.isArray(rest.skills) ? rest.skills.filter(Boolean) : [],
+    featured: Boolean(rest.featured),
+    ...(typeof rest.order === 'number' ? { order: rest.order } : {}),
+  }
+  const cleaned = cleanFirestoreData(data)
   await setDoc(doc(db, COL.certificates, id), cleaned, { merge: true })
 }
 export async function fsDeleteCertificate(id: string): Promise<void> {

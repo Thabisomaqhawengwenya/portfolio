@@ -10,8 +10,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && 
-             request.auth.token.email == 'thabisomaqhawengwenya@gmail.com';
+      return isAuthenticated();
     }
 
     function isValidMessage() {

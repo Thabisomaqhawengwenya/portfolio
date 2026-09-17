@@ -94,10 +94,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthed) return
-    fsGetProjects().then(p => { if (p.length) setProjects(p) }).catch(console.error)
-    fsGetCertificates().then(c => { if (c.length) setCertificates(c) }).catch(console.error)
-    fsGetSkills().then(s => { if (s.length) setSkills(s) }).catch(console.error)
-    fsGetJourney().then(j => { if (j.length) setJourney(j) }).catch(console.error)
+    fsGetProjects().then(p => setProjects(p.length ? p : defaultProjects)).catch(console.error)
+    fsGetCertificates().then(c => setCertificates(c.length ? c : defaultCertificates)).catch(console.error)
+    fsGetSkills().then(s => setSkills(s.length ? s : defaultSkills)).catch(console.error)
+    fsGetJourney().then(j => setJourney(j.length ? j : defaultExperience)).catch(console.error)
     fsGetMessages().then(m => setMessages(m)).catch(console.error)
     fsGetSettings().then(s => { if (s) setSettings(s) }).catch(console.error)
     fsGetHeroContent().then(h => setHero(h)).catch(console.error)

@@ -532,7 +532,11 @@ export default function AdminCertificates() {
       close()
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      setError(`Save failed: ${msg}`)
+      if (msg.toLowerCase().includes('permission') || msg.includes('PERMISSION_DENIED')) {
+        setError('Permission denied — please check your admin sign-in session.')
+      } else {
+        setError(`Save failed: ${msg}`)
+      }
     } finally {
       setSaving(false)
     }

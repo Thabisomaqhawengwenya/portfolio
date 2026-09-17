@@ -6,12 +6,13 @@ import { popSpring } from '../UI'
 import ColorPicker from '../ColorPicker'
 
 const NAV_ITEMS = [
-  { label: 'Home',     href: '#home' },
-  { label: 'About',    href: '#about' },
-  { label: 'Journey',  href: '#journey' },
-  { label: 'Skills',   href: '#skills' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Contact',  href: '#contact' },
+  { label: 'Home',         href: '#home' },
+  { label: 'About',        href: '#about' },
+  { label: 'Journey',      href: '#journey' },
+  { label: 'Skills',       href: '#skills' },
+  { label: 'Projects',     href: '#projects' },
+  { label: 'Certificates', href: '#certificates' },
+  { label: 'Contact',      href: '#contact' },
 ]
 
 /* ─── Styled ─── */

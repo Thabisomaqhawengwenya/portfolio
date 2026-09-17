@@ -13,6 +13,20 @@ export interface Project {
   category:    'Business' | 'Mobile' | 'Gift' | 'Personal'
 }
 
+/* ─── Certificate ─── */
+export interface Certificate {
+  id:            string
+  title:         string
+  issuer:        string
+  issuerLogo?:   string
+  issueDate:     string
+  expiryDate?:   string
+  credentialId?: string
+  credentialUrl?: string
+  skills:        string[]
+  featured?:     boolean
+}
+
 /* ─── Experience / Journey ─── */
 export interface ExperienceItem {
   id:           string

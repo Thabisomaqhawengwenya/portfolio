@@ -131,8 +131,8 @@ const Warning = styled.p`
 
 export default function Setup() {
   const navigate = useNavigate()
-  const [email,   setEmail]   = useState('thabisomaqhawengwenya@gmail.com')
-  const [pw,      setPw]      = useState('maqhawe06')
+  const [email,   setEmail]   = useState('')
+  const [pw,      setPw]      = useState('')
   const [loading, setLoading] = useState(false)
   const [done,    setDone]    = useState(false)
   const [error,   setError]   = useState('')
@@ -170,11 +170,24 @@ export default function Setup() {
             <form onSubmit={handleCreate} style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
               <Field>
                 <Label>Email</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} />
+                <Input 
+                  type="email" 
+                  placeholder="admin@domain.com"
+                  required
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                />
               </Field>
               <Field>
                 <Label>Password</Label>
-                <Input type="password" value={pw} onChange={e => setPw(e.target.value)} />
+                <Input 
+                  type="password" 
+                  placeholder="Create a strong password (min 6 chars)"
+                  required
+                  minLength={6}
+                  value={pw} 
+                  onChange={e => setPw(e.target.value)} 
+                />
               </Field>
 
               {error && (

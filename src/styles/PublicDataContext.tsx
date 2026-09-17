@@ -20,11 +20,11 @@ import { certificates as staticCertificates } from '../data/certificates'
 import { HERO_DEFAULTS } from '../firebase/firestoreService'
 
 const DEFAULT_SETTINGS: AdminSettings = {
-  bio:         'Junior Full-Stack Software Developer from Zimbabwe, currently training at Uncommon.org.',
+  bio:         'Software Developer & Frontend Engineer based in Zimbabwe, building performant web applications with React, TypeScript & Node.js.',
   githubUrl:   'https://github.com/Thabisomaqhawengwenya',
   linkedinUrl: 'https://www.linkedin.com/in/maqhawe-ngwenya/',
   email:       'thabisomaqhawengwenya@gmail.com',
-  location:    'Zimbabwe',
+  location:    'Harare, Zimbabwe',
 }
 
 interface PublicCtx {

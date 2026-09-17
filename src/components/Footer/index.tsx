@@ -81,7 +81,7 @@ const BrandEyebrow = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing['2']};
 `
 
-const FooterName = styled.h3`
+const FooterName = styled.p`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
   font-size: ${({ theme }) => theme.typography.sizes['2xl']};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
@@ -305,13 +305,13 @@ export default function Footer() {
         <FooterTop>
           {/* Identity */}
           <FooterCell>
-            <BrandEyebrow>// JUNIOR FULL-STACK DEVELOPER</BrandEyebrow>
-            <FooterName>Maqhawe Ngwenya</FooterName>
+            <BrandEyebrow>// SOFTWARE DEVELOPER &amp; FRONTEND ENGINEER</BrandEyebrow>
+            <FooterName>Maqhawe Thabiso Ngwenya</FooterName>
             <FooterBio>
-              Building responsive, accessible, and high-performance digital products and applications.
+              Building responsive, high-performance web applications, accessible user interfaces, and digital products from Zimbabwe.
             </FooterBio>
             <StatusBadge>
-              <span /> Open to Work & Collaborations
+              <span /> Open to Work &amp; Collaborations
             </StatusBadge>
           </FooterCell>
 

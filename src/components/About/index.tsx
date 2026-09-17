@@ -215,19 +215,13 @@ export default function About() {
             <motion.div variants={staggerContainer} initial="hidden"
               animate={inView ? 'visible' : 'hidden'}>
               <Paragraph variants={staggerItem}>
-                I'm <strong>Maqhawe Ngwenya</strong>, a Junior Full-Stack Software Developer from
-                Zimbabwe, currently building my career through <strong>Uncommon.org</strong>. I
-                work across the complete stack — from pixel-precise UI to database schema design.
+                I'm <strong>Maqhawe Thabiso Ngwenya</strong> (also known as <strong>Thabiso</strong> or <strong>thabisongwenya</strong>), a Software Developer and Frontend Engineer based in <strong>Harare, Zimbabwe</strong>. Currently advancing my craft through <strong>Uncommon.org</strong>, I build modern web applications, accessible user interfaces, and responsive digital products.
               </Paragraph>
               <Paragraph variants={staggerItem}>
-                My stack centres on <strong>React, TypeScript, and Node.js</strong>. I care deeply
-                about code quality, developer experience, and shipping things that actually work well
-                for the people using them.
+                My primary technical focus is on <strong>React, TypeScript, JavaScript, and Node.js</strong>. From building fluid UI/UX layouts to architecting backend services with PostgreSQL and Cloud Firestore, I care deeply about clean code architecture, web performance, and delivering intuitive digital experiences.
               </Paragraph>
               <Paragraph variants={staggerItem}>
-                I'm early in my career but deliberate about how I grow — I focus on
-                <strong> fundamentals over shortcuts</strong>, and on becoming the kind of engineer
-                teammates actually want to work with.
+                I focus on <strong>engineering fundamentals over shortcuts</strong> — continuous learning, deliberate problem-solving, and writing maintainable code that teammates and users enjoy working with.
               </Paragraph>
             </motion.div>
           </AboutLeft>

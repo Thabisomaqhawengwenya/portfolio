@@ -341,7 +341,7 @@ export default function Hero() {
 
   /* Use admin-managed content with sensible fallbacks */
   const greeting  = heroContent.greeting  || 'Hello, World'
-  const role      = heroContent.role      || 'Junior Full-Stack Software Developer. Building modern, useful, and engaging digital experiences — from Zimbabwe to the world.'
+  const role      = heroContent.role      || 'Software Developer & Frontend Engineer from Zimbabwe. Building modern, performant, and engaging web experiences.'
   const cvUrl     = heroContent.cvUrl     || '/Maqhawe-Ngwenya-CV.pdf'
   const available = heroContent.available !== false
   const stick1    = heroContent.sticker1  || 'React + TS'
@@ -365,7 +365,7 @@ export default function Hero() {
             👋 {greeting}
           </Greeting>
 
-          <HeroTitle variants={heroItem}>
+          <HeroTitle variants={heroItem} aria-label="Maqhawe Thabiso Ngwenya">
             Maqhawe<br />
             <em>Ngwenya.</em>
           </HeroTitle>
@@ -407,7 +407,7 @@ export default function Hero() {
             <SocialLink
               href="https://github.com/Thabisomaqhawengwenya"
               target="_blank" rel="noopener noreferrer"
-              aria-label="GitHub"
+              aria-label="GitHub Profile - Thabisomaqhawengwenya"
               whileHover={{ scale: 1.15, y: -5 }}
               whileTap={{ scale: 0.9 }}
               transition={popSpring}>
@@ -416,7 +416,7 @@ export default function Hero() {
             <SocialLink
               href="https://www.linkedin.com/in/maqhawe-ngwenya/"
               target="_blank" rel="noopener noreferrer"
-              aria-label="LinkedIn"
+              aria-label="LinkedIn Profile - Maqhawe Ngwenya"
               whileHover={{ scale: 1.15, y: -5 }}
               whileTap={{ scale: 0.9 }}
               transition={popSpring}>
@@ -438,7 +438,7 @@ export default function Hero() {
               <AvatarMonogram>MN</AvatarMonogram>
             </AvatarBody>
             <AvatarFooter>
-              <AvatarNameText>Maqhawe Ngwenya</AvatarNameText>
+              <AvatarNameText>Maqhawe Thabiso Ngwenya</AvatarNameText>
               {available && (
                 <AvailableDot>
                   <span />

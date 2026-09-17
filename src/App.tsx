@@ -18,19 +18,27 @@ import Certificates from './components/Certificates'
 import Contact  from './components/Contact'
 import Footer   from './components/Footer'
 
-/* Admin */
+import { lazy, Suspense } from 'react'
+
+/* Admin (Lazy Loaded for performance & SEO) */
 import { adminTheme }    from './admin/adminTheme'
-import AdminLayout       from './admin/components/AdminLayout'
-import Login             from './admin/pages/Login'
-import Setup             from './admin/pages/Setup'
-import Overview          from './admin/pages/Overview'
-import AdminProjects     from './admin/pages/AdminProjects'
-import AdminCertificates from './admin/pages/AdminCertificates'
-import AdminJourney      from './admin/pages/AdminJourney'
-import AdminSkills       from './admin/pages/AdminSkills'
-import AdminMessages     from './admin/pages/AdminMessages'
-import AdminHeroSettings from './admin/pages/AdminHeroSettings'
-import AdminSettings     from './admin/pages/AdminSettings'
+const AdminLayout       = lazy(() => import('./admin/components/AdminLayout'))
+const Login             = lazy(() => import('./admin/pages/Login'))
+const Setup             = lazy(() => import('./admin/pages/Setup'))
+const Overview          = lazy(() => import('./admin/pages/Overview'))
+const AdminProjects     = lazy(() => import('./admin/pages/AdminProjects'))
+const AdminCertificates = lazy(() => import('./admin/pages/AdminCertificates'))
+const AdminJourney      = lazy(() => import('./admin/pages/AdminJourney'))
+const AdminSkills       = lazy(() => import('./admin/pages/AdminSkills'))
+const AdminMessages     = lazy(() => import('./admin/pages/AdminMessages'))
+const AdminHeroSettings = lazy(() => import('./admin/pages/AdminHeroSettings'))
+const AdminSettings     = lazy(() => import('./admin/pages/AdminSettings'))
+
+const AdminLoadingFallback = () => (
+  <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#FFE500', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Mono, monospace' }}>
+    LOADING ADMIN CONSOLE…
+  </div>
+)
 
 /* ─── Portfolio wrapper ─── */
 function PortfolioApp() {
@@ -126,36 +134,42 @@ export default function App() {
       {/* Admin */}
       {/* Admin setup — one-time user creation */}
       <Route path="/admin/setup" element={
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <ThemeProvider theme={adminTheme as any}>
-          <GlobalStyles />
-          <Setup />
-        </ThemeProvider>
+        <Suspense fallback={<AdminLoadingFallback />}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <ThemeProvider theme={adminTheme as any}>
+            <GlobalStyles />
+            <Setup />
+          </ThemeProvider>
+        </Suspense>
       } />
 
       <Route path="/admin/login" element={
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <ThemeProvider theme={adminTheme as any}>
-          <GlobalStyles />
-          <Login />
-        </ThemeProvider>
+        <Suspense fallback={<AdminLoadingFallback />}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <ThemeProvider theme={adminTheme as any}>
+            <GlobalStyles />
+            <Login />
+          </ThemeProvider>
+        </Suspense>
       } />
 
       <Route path="/admin" element={
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <ThemeProvider theme={adminTheme as any}>
-          <GlobalStyles />
-          <AdminLayout />
-        </ThemeProvider>
+        <Suspense fallback={<AdminLoadingFallback />}>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <ThemeProvider theme={adminTheme as any}>
+            <GlobalStyles />
+            <AdminLayout />
+          </ThemeProvider>
+        </Suspense>
       }>
-        <Route index       element={<Overview />}          />
-        <Route path="projects"     element={<AdminProjects />}     />
-        <Route path="certificates" element={<AdminCertificates />} />
-        <Route path="journey"      element={<AdminJourney />}      />
-        <Route path="skills"       element={<AdminSkills />}       />
-        <Route path="messages"     element={<AdminMessages />}     />
-        <Route path="hero"         element={<AdminHeroSettings />} />
-        <Route path="settings"     element={<AdminSettings />}     />
+        <Route index       element={<Suspense fallback={<AdminLoadingFallback />}><Overview /></Suspense>}          />
+        <Route path="projects"     element={<Suspense fallback={<AdminLoadingFallback />}><AdminProjects /></Suspense>}     />
+        <Route path="certificates" element={<Suspense fallback={<AdminLoadingFallback />}><AdminCertificates /></Suspense>} />
+        <Route path="journey"      element={<Suspense fallback={<AdminLoadingFallback />}><AdminJourney /></Suspense>}      />
+        <Route path="skills"       element={<Suspense fallback={<AdminLoadingFallback />}><AdminSkills /></Suspense>}       />
+        <Route path="messages"     element={<Suspense fallback={<AdminLoadingFallback />}><AdminMessages /></Suspense>}     />
+        <Route path="hero"         element={<Suspense fallback={<AdminLoadingFallback />}><AdminHeroSettings /></Suspense>} />
+        <Route path="settings"     element={<Suspense fallback={<AdminLoadingFallback />}><AdminSettings /></Suspense>}     />
       </Route>
     </Routes>
   )

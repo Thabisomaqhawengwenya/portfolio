@@ -352,15 +352,18 @@ export default function Contact() {
     e.preventDefault()
     if (!form.name.trim() || !form.email.trim() || !form.message.trim()) return
     setSending(true)
-    await addMessage({ name: form.name, email: form.email, message: form.message })
-    const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
-    const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
-    window.location.href = `mailto:${settings.email}?subject=${subject}&body=${body}`
-    setTimeout(() => {
-      setSending(false)
+    try {
+      await addMessage({ name: form.name.trim(), email: form.email.trim(), message: form.message.trim() })
+      const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
+      const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
+      window.location.href = `mailto:${settings.email}?subject=${subject}&body=${body}`
       setSent(true)
       setForm({ name: '', email: '', message: '' })
-    }, 800)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (

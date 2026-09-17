@@ -1,6 +1,6 @@
-/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
+import { useToast } from '../../context/ToastContext'
 import { loginWithEmail, logout as fbLogout, onAuthChange } from '../../firebase/authService'
 import {
   fsGetMessages, fsAddMessage, fsMarkMessageRead, fsDeleteMessage,
@@ -77,6 +77,7 @@ const DEFAULT_SETTINGS: AdminSettings = {
 const Ctx = createContext<AdminCtx>({} as AdminCtx)
 
 export function AdminProvider({ children }: { children: ReactNode }) {
+  const { toast } = useToast()
   const [isAuthed,     setAuthed]       = useState(false)
   const [authLoading,  setAuthLoad]     = useState(true)
   const [projects,     setProjects]     = useState<Project[]>(defaultProjects)
@@ -102,67 +103,368 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     fsGetHeroContent().then(h => setHero(h)).catch(console.error)
   }, [isAuthed])
 
-  const login  = useCallback(async (email: string, pw: string) => { try { await loginWithEmail(email, pw); return true } catch { return false } }, [])
-  const logout = useCallback(async () => { await fbLogout() }, [])
+  const login  = useCallback(async (email: string, pw: string) => { 
+    try { 
+      await loginWithEmail(email, pw)
+      toast.success('Signed in successfully', `Welcome back, ${email}`)
+      return true 
+    } catch (err: unknown) { 
+      toast.error('Sign in failed', (err as Error)?.message || 'Invalid credentials')
+      return false 
+    } 
+  }, [toast])
 
-  const addProject     = useCallback(async (p: Omit<Project,'id'>) => { const id = await fsAddProject(p); setProjects(prev => [...prev, { ...p, id }]) }, [])
-  const updateProject  = useCallback(async (p: Project) => { await fsUpdateProject(p); setProjects(prev => prev.map(x => x.id === p.id ? p : x)) }, [])
-  const deleteProject  = useCallback(async (id: string) => { await fsDeleteProject(id); setProjects(prev => prev.filter(x => x.id !== id)) }, [])
+  const logout = useCallback(async () => { 
+    await fbLogout()
+    toast.info('Signed out', 'Admin session ended')
+  }, [toast])
+
+  const addProject = useCallback(async (p: Omit<Project,'id'>) => {
+    try {
+      const id = await toast.promise(
+        fsAddProject(p),
+        {
+          loading: 'Saving project to Firebase…',
+          success: `Project "${p.title}" saved to Firebase!`,
+          error: (err) => `Failed to save project: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setProjects(prev => [...prev, { ...p, id }])
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const updateProject = useCallback(async (p: Project) => {
+    try {
+      await toast.promise(
+        fsUpdateProject(p),
+        {
+          loading: `Updating "${p.title}" on Firebase…`,
+          success: `Project "${p.title}" updated successfully!`,
+          error: (err) => `Failed to update project: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setProjects(prev => prev.map(x => x.id === p.id ? p : x))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const deleteProject = useCallback(async (id: string) => {
+    try {
+      await toast.promise(
+        fsDeleteProject(id),
+        {
+          loading: 'Deleting project from Firebase…',
+          success: 'Project deleted from Firebase.',
+          error: (err) => `Failed to delete project: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setProjects(prev => prev.filter(x => x.id !== id))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
   const reorderProjects = useCallback(async (ids: string[]) => {
-    await fsReorderProjects(ids)
-    setProjects(prev => ids.map(id => prev.find(p => p.id === id)!).filter(Boolean))
-  }, [])
+    try {
+      await toast.promise(
+        fsReorderProjects(ids),
+        {
+          loading: 'Updating project order on Firebase…',
+          success: 'Project order saved to Firebase!',
+          error: (err) => `Failed to save project order: ${(err as Error)?.message || 'Error'}`,
+        }
+      )
+      setProjects(prev => ids.map(id => prev.find(p => p.id === id)!).filter(Boolean))
+    } catch (err) {
+      console.error(err)
+    }
+  }, [toast])
 
-  const addCertificate     = useCallback(async (c: Omit<Certificate,'id'>) => { const id = await fsAddCertificate(c); setCertificates(prev => [...prev, { ...c, id }]) }, [])
-  const updateCertificate  = useCallback(async (c: Certificate) => { await fsUpdateCertificate(c); setCertificates(prev => prev.map(x => x.id === c.id ? c : x)) }, [])
-  const deleteCertificate  = useCallback(async (id: string) => { await fsDeleteCertificate(id); setCertificates(prev => prev.filter(x => x.id !== id)) }, [])
+  const addCertificate = useCallback(async (c: Omit<Certificate,'id'>) => {
+    try {
+      const id = await toast.promise(
+        fsAddCertificate(c),
+        {
+          loading: 'Saving certificate to Firebase…',
+          success: `Certificate "${c.title}" saved!`,
+          error: (err) => `Failed to save certificate: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setCertificates(prev => [...prev, { ...c, id }])
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const updateCertificate = useCallback(async (c: Certificate) => {
+    try {
+      await toast.promise(
+        fsUpdateCertificate(c),
+        {
+          loading: `Updating "${c.title}" on Firebase…`,
+          success: `Certificate "${c.title}" updated!`,
+          error: (err) => `Failed to update certificate: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setCertificates(prev => prev.map(x => x.id === c.id ? c : x))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const deleteCertificate = useCallback(async (id: string) => {
+    try {
+      await toast.promise(
+        fsDeleteCertificate(id),
+        {
+          loading: 'Deleting certificate from Firebase…',
+          success: 'Certificate deleted from Firebase.',
+          error: (err) => `Failed to delete certificate: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setCertificates(prev => prev.filter(x => x.id !== id))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
   const reorderCertificates = useCallback(async (ids: string[]) => {
-    await fsReorderCertificates(ids)
-    setCertificates(prev => ids.map(id => prev.find(c => c.id === id)!).filter(Boolean))
-  }, [])
+    try {
+      await toast.promise(
+        fsReorderCertificates(ids),
+        {
+          loading: 'Updating certificate order on Firebase…',
+          success: 'Certificate order saved to Firebase!',
+          error: (err) => `Failed to save certificate order: ${(err as Error)?.message || 'Error'}`,
+        }
+      )
+      setCertificates(prev => ids.map(id => prev.find(c => c.id === id)!).filter(Boolean))
+    } catch (err) {
+      console.error(err)
+    }
+  }, [toast])
 
-  const updateSkillGroups = useCallback(async (g: SkillGroup[]) => { await fsSaveSkillGroups(g); setSkills(g) }, [])
+  const updateSkillGroups = useCallback(async (g: SkillGroup[]) => {
+    try {
+      await toast.promise(
+        fsSaveSkillGroups(g),
+        {
+          loading: 'Saving skills to Firebase…',
+          success: 'Skills updated successfully!',
+          error: (err) => `Failed to save skills: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setSkills(g)
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
 
-  const addJourneyItem    = useCallback(async (i: Omit<ExperienceItem,'id'>) => { const id = await fsAddJourneyItem(i); setJourney(prev => [{ ...i, id }, ...prev]) }, [])
-  const updateJourneyItem = useCallback(async (i: ExperienceItem) => { await fsUpdateJourneyItem(i); setJourney(prev => prev.map(x => x.id === i.id ? i : x)) }, [])
-  const deleteJourneyItem = useCallback(async (id: string) => { await fsDeleteJourneyItem(id); setJourney(prev => prev.filter(x => x.id !== id)) }, [])
+  const addJourneyItem = useCallback(async (i: Omit<ExperienceItem,'id'>) => {
+    try {
+      const id = await toast.promise(
+        fsAddJourneyItem(i),
+        {
+          loading: 'Saving journey entry to Firebase…',
+          success: `Journey "${i.title}" saved!`,
+          error: (err) => `Failed to save journey entry: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setJourney(prev => [{ ...i, id }, ...prev])
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
 
-  const addMessage    = useCallback(async (m: Omit<Message,'id'|'date'|'read'>) => { const id = await fsAddMessage(m); setMessages(prev => [{ ...m, id, date: new Date().toISOString(), read: false }, ...prev]) }, [])
-  const markRead      = useCallback(async (id: string) => { await fsMarkMessageRead(id); setMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m)) }, [])
-  const deleteMessage = useCallback(async (id: string) => { await fsDeleteMessage(id); setMessages(prev => prev.filter(m => m.id !== id)) }, [])
-  const markAllRead   = useCallback(async () => {
+  const updateJourneyItem = useCallback(async (i: ExperienceItem) => {
+    try {
+      await toast.promise(
+        fsUpdateJourneyItem(i),
+        {
+          loading: `Updating "${i.title}" on Firebase…`,
+          success: `Journey "${i.title}" updated!`,
+          error: (err) => `Failed to update journey entry: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setJourney(prev => prev.map(x => x.id === i.id ? i : x))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const deleteJourneyItem = useCallback(async (id: string) => {
+    try {
+      await toast.promise(
+        fsDeleteJourneyItem(id),
+        {
+          loading: 'Deleting journey entry from Firebase…',
+          success: 'Journey entry deleted from Firebase.',
+          error: (err) => `Failed to delete journey entry: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setJourney(prev => prev.filter(x => x.id !== id))
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const addMessage = useCallback(async (m: Omit<Message,'id'|'date'|'read'>) => {
+    try {
+      const id = await toast.promise(
+        fsAddMessage(m),
+        {
+          loading: 'Sending message to Firebase…',
+          success: 'Message sent & saved to Firebase!',
+          error: (err) => `Failed to send message: ${(err as Error)?.message || 'Submission error'}`,
+        }
+      )
+      setMessages(prev => [{ ...m, id, date: new Date().toISOString(), read: false }, ...prev])
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const markRead = useCallback(async (id: string) => {
+    try {
+      await fsMarkMessageRead(id)
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m))
+      toast.info('Message marked as read')
+    } catch (err) {
+      toast.error('Failed to update message', (err as Error)?.message)
+    }
+  }, [toast])
+
+  const deleteMessage = useCallback(async (id: string) => {
+    try {
+      await toast.promise(
+        fsDeleteMessage(id),
+        {
+          loading: 'Deleting message…',
+          success: 'Message deleted.',
+          error: (err) => `Failed to delete message: ${(err as Error)?.message || 'Error'}`,
+        }
+      )
+      setMessages(prev => prev.filter(m => m.id !== id))
+    } catch (err) {
+      console.error(err)
+    }
+  }, [toast])
+
+  const markAllRead = useCallback(async () => {
     const unread = messages.filter(m => !m.read)
-    await Promise.all(unread.map(m => fsMarkMessageRead(m.id)))
-    setMessages(prev => prev.map(m => ({ ...m, read: true })))
-  }, [messages])
+    if (!unread.length) return
+    try {
+      await toast.promise(
+        Promise.all(unread.map(m => fsMarkMessageRead(m.id))),
+        {
+          loading: 'Marking all messages as read…',
+          success: 'All messages marked as read.',
+          error: (err) => `Failed to update messages: ${(err as Error)?.message || 'Error'}`,
+        }
+      )
+      setMessages(prev => prev.map(m => ({ ...m, read: true })))
+    } catch (err) {
+      console.error(err)
+    }
+  }, [messages, toast])
+
   const deleteReadMessages = useCallback(async () => {
     const read = messages.filter(m => m.read)
-    await Promise.all(read.map(m => fsDeleteMessage(m.id)))
-    setMessages(prev => prev.filter(m => !m.read))
-  }, [messages])
+    if (!read.length) return
+    try {
+      await toast.promise(
+        Promise.all(read.map(m => fsDeleteMessage(m.id))),
+        {
+          loading: 'Deleting read messages…',
+          success: 'Read messages deleted.',
+          error: (err) => `Failed to delete messages: ${(err as Error)?.message || 'Error'}`,
+        }
+      )
+      setMessages(prev => prev.filter(m => !m.read))
+    } catch (err) {
+      console.error(err)
+    }
+  }, [messages, toast])
 
-  const updateSettings    = useCallback(async (s: AdminSettings) => { await fsSaveSettings(s); setSettings(s) }, [])
-  const updateHeroContent = useCallback(async (h: HeroContent) => { await fsSaveHeroContent(h); setHero(h) }, [])
+  const updateSettings = useCallback(async (s: AdminSettings) => {
+    try {
+      await toast.promise(
+        fsSaveSettings(s),
+        {
+          loading: 'Saving profile settings to Firebase…',
+          success: 'Profile settings saved to Firebase!',
+          error: (err) => `Failed to save settings: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setSettings(s)
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
+  const updateHeroContent = useCallback(async (h: HeroContent) => {
+    try {
+      await toast.promise(
+        fsSaveHeroContent(h),
+        {
+          loading: 'Saving hero content to Firebase…',
+          success: 'Hero content saved to Firebase!',
+          error: (err) => `Failed to save hero content: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+      setHero(h)
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
 
   const seedDatabase = useCallback(async () => {
-    const res = await seedAllDataToFirestore()
-    // Refresh local states
-    const [p, c, s, j, st, hero] = await Promise.all([
-      fsGetProjects(),
-      fsGetCertificates(),
-      fsGetSkills(),
-      fsGetJourney(),
-      fsGetSettings(),
-      fsGetHeroContent(),
-    ])
-    if (p.length) setProjects(p)
-    if (c.length) setCertificates(c)
-    if (s.length) setSkills(s)
-    if (j.length) setJourney(j)
-    if (st) setSettings(st)
-    setHero(hero)
-    return res
-  }, [])
+    try {
+      const res = await toast.promise(
+        seedAllDataToFirestore(),
+        {
+          loading: 'Syncing all portfolio data to Firebase…',
+          success: 'All data successfully synced to Firebase!',
+          error: (err) => `Sync failed: ${(err as Error)?.message || 'Check Firestore connection'}`,
+        }
+      )
+      // Refresh local states
+      const [p, c, s, j, st, hero] = await Promise.all([
+        fsGetProjects(),
+        fsGetCertificates(),
+        fsGetSkills(),
+        fsGetJourney(),
+        fsGetSettings(),
+        fsGetHeroContent(),
+      ])
+      if (p.length) setProjects(p)
+      if (c.length) setCertificates(c)
+      if (s.length) setSkills(s)
+      if (j.length) setJourney(j)
+      if (st) setSettings(st)
+      setHero(hero)
+      return res
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
 
   return (
     <Ctx.Provider value={{

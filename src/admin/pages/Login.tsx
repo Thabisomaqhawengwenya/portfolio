@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { FiMail, FiLock, FiArrowRight, FiAlertCircle } from 'react-icons/fi'
+import { FiMail, FiLock, FiArrowRight, FiArrowLeft, FiAlertCircle } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 
 const Page = styled.div`
@@ -14,9 +14,42 @@ const Page = styled.div`
   padding: 2rem;
 `
 
-const Card = styled(motion.div)`
+const Wrapper = styled.div`
   width: 100%;
   max-width: 420px;
+  display: flex;
+  flex-direction: column;
+`
+
+const BackLink = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.text};
+  text-decoration: none;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 3px solid ${({ theme }) => theme.colors.border};
+  padding: 0.5rem 0.85rem;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  align-self: flex-start;
+  margin-bottom: 1.25rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary};
+    color: #000;
+    box-shadow: ${({ theme }) => theme.shadows.md};
+    transform: translate(-2px, -2px);
+  }
+`
+
+const Card = styled(motion.div)`
+  width: 100%;
   background: ${({ theme }) => theme.colors.surface};
   border: 3px solid ${({ theme }) => theme.colors.border};
   box-shadow: ${({ theme }) => theme.shadows.lg};
@@ -112,6 +145,31 @@ const SubmitBtn = styled(motion.button)`
   &:disabled { opacity: 0.6; cursor: not-allowed; }
 `
 
+const BackBtn = styled(motion.button)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  padding: 0.75rem;
+  border: 3px solid ${({ theme }) => theme.colors.border};
+  cursor: pointer;
+  width: 100%;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  transition: box-shadow 0.1s ease, background 0.15s ease;
+
+  &:hover {
+    box-shadow: ${({ theme }) => theme.shadows.md};
+    background: ${({ theme }) => theme.colors.surface};
+  }
+`
+
 const ErrorMsg = styled(motion.div)`
   display: flex;
   align-items: center;
@@ -154,56 +212,67 @@ export default function Login() {
 
   return (
     <Page>
-      <Card
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16,1,0.3,1] }}>
+      <Wrapper>
+        <BackLink to="/" title="Return to Portfolio">
+          <FiArrowLeft /> Back to Portfolio
+        </BackLink>
 
-        <CardHeader>
-          <Title>Admin Access</Title>
-          <Subtitle>Maqhawe Ngwenya — Portfolio CMS</Subtitle>
-        </CardHeader>
+        <Card
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.16,1,0.3,1] }}>
 
-        <CardBody>
-          <form onSubmit={handleSubmit}
-            style={{ display:'flex', flexDirection:'column', gap:'1.25rem' }}>
+          <CardHeader>
+            <Title>Admin Access</Title>
+            <Subtitle>Maqhawe Ngwenya — Portfolio CMS</Subtitle>
+          </CardHeader>
 
-            <Field>
-              <Label><FiMail /> Email</Label>
-              <Input
-                type="email"
-                placeholder="admin@email.com"
-                value={email}
-                onChange={e => { setEmail(e.target.value); setError('') }}
-                autoFocus
-                autoComplete="email"
-              />
-            </Field>
+          <CardBody>
+            <form onSubmit={handleSubmit}
+              style={{ display:'flex', flexDirection:'column', gap:'1.25rem' }}>
 
-            <Field>
-              <Label><FiLock /> Password</Label>
-              <Input
-                type="password"
-                placeholder="Firebase password"
-                value={pw}
-                onChange={e => { setPw(e.target.value); setError('') }}
-                autoComplete="current-password"
-              />
-            </Field>
+              <Field>
+                <Label><FiMail /> Email</Label>
+                <Input
+                  type="email"
+                  placeholder="admin@email.com"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError('') }}
+                  autoFocus
+                  autoComplete="email"
+                />
+              </Field>
 
-            {error && (
-              <ErrorMsg initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }}>
-                <FiAlertCircle /> {error}
-              </ErrorMsg>
-            )}
+              <Field>
+                <Label><FiLock /> Password</Label>
+                <Input
+                  type="password"
+                  placeholder="Firebase password"
+                  value={pw}
+                  onChange={e => { setPw(e.target.value); setError('') }}
+                  autoComplete="current-password"
+                />
+              </Field>
 
-            <SubmitBtn type="submit" disabled={loading}
-              whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-              {loading ? 'Signing in…' : <> Sign In <FiArrowRight /> </>}
-            </SubmitBtn>
-          </form>
-        </CardBody>
-      </Card>
+              {error && (
+                <ErrorMsg initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }}>
+                  <FiAlertCircle /> {error}
+                </ErrorMsg>
+              )}
+
+              <SubmitBtn type="submit" disabled={loading}
+                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+                {loading ? 'Signing in…' : <> Sign In <FiArrowRight /> </>}
+              </SubmitBtn>
+
+              <BackBtn type="button" onClick={() => navigate('/')}
+                whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+                <FiArrowLeft /> Back to Portfolio
+              </BackBtn>
+            </form>
+          </CardBody>
+        </Card>
+      </Wrapper>
     </Page>
   )
 }

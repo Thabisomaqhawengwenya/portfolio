@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { FiFolder, FiCode, FiMail, FiTrendingUp, FiActivity, FiArrowRight, FiGlobe, FiAward } from 'react-icons/fi'
+import { FiFolder, FiCode, FiMail, FiTrendingUp, FiActivity, FiArrowRight, FiGlobe, FiAward, FiGithub } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import { useAdmin } from '../context/AdminContext'
 import { analyticsPromise } from '../../firebase/config'
+import {
+  getOrUpdateGitHubStats,
+  getCachedGitHubStats,
+  DEFAULT_GITHUB_STATS,
+  extractGitHubUsername,
+} from '../../services/githubService'
+import type { GitHubStats } from '../../types'
 
 /* ─── Styled ─── */
 const PageTitle = styled.h1`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['3xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.03em;margin-bottom:0.5rem;`
@@ -41,10 +48,25 @@ export default function Overview() {
   const unread = messages.filter(m => !m.read).length
   const totalSkills = skillGroups.reduce((a,g)=>a+g.skills.length, 0)
   const [gaReady, setGaReady] = useState(false)
+  const [ghStats, setGhStats] = useState<GitHubStats>(() => getCachedGitHubStats() || DEFAULT_GITHUB_STATS)
+  const [syncingGh, setSyncingGh] = useState(false)
 
   useEffect(() => {
     analyticsPromise.then(a => setGaReady(!!a)).catch(() => setGaReady(false))
   }, [])
+
+  useEffect(() => {
+    const username = extractGitHubUsername(settings.githubUrl)
+    getOrUpdateGitHubStats(username).then(setGhStats)
+  }, [settings.githubUrl])
+
+  const handleManualSync = async () => {
+    setSyncingGh(true)
+    const username = extractGitHubUsername(settings.githubUrl)
+    const updated = await getOrUpdateGitHubStats(username, true)
+    setGhStats(updated)
+    setSyncingGh(false)
+  }
 
   const stats = [
     { label:'Projects',     value:projects.length,     icon:<FiFolder/>,     color:'#FFE500', to:'/admin/projects'     },
@@ -74,6 +96,50 @@ export default function Overview() {
           </StatCard>
         ))}
       </StatsGrid>
+
+      {/* GitHub Sync Status */}
+      <AnalyticsCard>
+        <AnalyticsHead>
+          <AnalyticsLabel>GitHub Automation (12h Sync)</AnalyticsLabel>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <button
+              onClick={handleManualSync}
+              disabled={syncingGh}
+              style={{
+                background: 'none',
+                border: '1px solid currentColor',
+                padding: '2px 8px',
+                fontSize: '0.65rem',
+                fontFamily: "'Space Mono', monospace",
+                fontWeight: 700,
+                cursor: syncingGh ? 'not-allowed' : 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              {syncingGh ? 'Syncing…' : 'Sync Now'}
+            </button>
+            <FiGithub style={{ fontSize: '1.1rem' }} />
+          </div>
+        </AnalyticsHead>
+        <AnalyticsBody>
+          <AMetric>
+            <AValue>{ghStats.projectCount}+</AValue>
+            <ALabel>Public Repositories</ALabel>
+          </AMetric>
+          <AMetric>
+            <AValue>{ghStats.commitCount}+</AValue>
+            <ALabel>Authored Commits</ALabel>
+          </AMetric>
+          <AMetric>
+            <AValue>{syncingGh ? 'Syncing…' : 'Active'}</AValue>
+            <ALabel>12h Cycle Status</ALabel>
+          </AMetric>
+        </AnalyticsBody>
+        <AnalyticsNote>
+          Auto-synced from GitHub account <strong>@{extractGitHubUsername(settings.githubUrl)}</strong> every 12 hours.
+          {ghStats.lastUpdated > 0 && ` Last updated: ${new Date(ghStats.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`}
+        </AnalyticsNote>
+      </AnalyticsCard>
 
       {/* Analytics */}
       <AnalyticsCard>
@@ -105,6 +171,7 @@ export default function Overview() {
           using Measurement ID <strong>G-WYTDKSMD0G</strong>.
         </AnalyticsNote>
       </AnalyticsCard>
+
 
       {/* Recent messages */}
       <SectionTitle>Recent Messages</SectionTitle>

@@ -147,56 +147,46 @@ function AnimatedStat({ label, value, suffix = '', active }: StatProps) {
   )
 }
 
-/* ─── GitHub commits fetcher ─── */
-async function fetchTotalCommits(username: string): Promise<number> {
-  try {
-    // Get all repos first
-    const reposRes = await fetch(
-      `https://api.github.com/users/${username}/repos?per_page=100&type=owner`,
-      { headers: { Accept: 'application/vnd.github.v3+json' } }
-    )
-    if (!reposRes.ok) return 0
-    const repos: Array<{ full_name: string }> = await reposRes.json()
+const SyncMeta = styled(motion.div)`
+  padding: 0.75rem 1.25rem;
+  background: ${({ theme }) => theme.colors.surface};
+  border-top: 2px solid ${({ theme }) => theme.colors.borderSubtle};
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.7rem;
+  color: ${({ theme }) => theme.colors.textFaint};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 
-    // Fetch commit count per repo using contributor stats
-    const counts = await Promise.all(
-      repos.map(async (repo) => {
-        try {
-          const res = await fetch(
-            `https://api.github.com/repos/${repo.full_name}/commits?author=${username}&per_page=1`,
-            { headers: { Accept: 'application/vnd.github.v3+json' } }
-          )
-          if (!res.ok) return 0
-          // GitHub returns total in Link header
-          const link = res.headers.get('Link') ?? ''
-          const match = link.match(/page=(\d+)>; rel="last"/)
-          if (match) return parseInt(match[1], 10)
-          // If no Link header, count the returned items
-          const data = await res.json()
-          return Array.isArray(data) ? data.length : 0
-        } catch { return 0 }
-      })
-    )
-    return counts.reduce((a, b) => a + b, 0)
-  } catch { return 0 }
-}
+  .sync-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  span.dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.colors.primary};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    display: inline-block;
+  }
+`
 
 /* ─── Component ─── */
 export default function About() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
-  const { settings, projects } = usePublicData()
+  const { settings, githubStats } = usePublicData()
   const userLocation = settings.location || 'Zimbabwe'
-  const projectCount = projects.length || 3  // fallback to 3
-
-  const [commitCount, setCommitCount] = useState<number | null>(null)
-
-  useEffect(() => {
-    fetchTotalCommits('Thabisomaqhawengwenya').then(n => {
-      if (n > 0) setCommitCount(n)
-    })
-  }, [])
+  const projectCount = githubStats?.projectCount || 94
+  const commitCount  = githubStats?.commitCount || 312
 
   return (
     <Section id="about">
@@ -231,7 +221,7 @@ export default function About() {
             <StatsGrid variants={staggerContainer} initial="hidden"
               animate={inView ? 'visible' : 'hidden'}>
 
-              {/* Projects — count up to real number */}
+              {/* Projects — count up to real number of GitHub projects */}
               <AnimatedStat
                 label="Projects"
                 value={projectCount}
@@ -246,11 +236,11 @@ export default function About() {
                 active={inView}
               />
 
-              {/* Commits — count up if fetched, else show ∞ */}
+              {/* Commits — count up to real number of GitHub commits */}
               <AnimatedStat
                 label="Commits"
-                value={commitCount !== null ? commitCount : '∞'}
-                suffix={commitCount !== null ? '+' : ''}
+                value={commitCount}
+                suffix="+"
                 active={inView}
               />
 
@@ -269,9 +259,18 @@ export default function About() {
                 "Coding for a better tomorrow."
               </Quote>
             </QuoteBlock>
+
+            <SyncMeta variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+              <span className="sync-status">
+                <span className="dot" />
+                Live GitHub Sync
+              </span>
+              <span>Updated every 12h</span>
+            </SyncMeta>
           </AboutRight>
         </AboutGrid>
       </Container>
     </Section>
   )
 }
+

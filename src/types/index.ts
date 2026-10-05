@@ -100,3 +100,10 @@ export interface HeroContent {
   sticker3:     string
   cvUrl:        string   // public URL to the CV PDF
 }
+
+/* ─── GitHub Stats ─── */
+export interface GitHubStats {
+  projectCount: number   // total public repositories from GitHub
+  commitCount:  number   // total authored commits from GitHub
+  lastUpdated:  number   // timestamp in milliseconds
+}

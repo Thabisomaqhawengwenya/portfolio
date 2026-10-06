@@ -327,6 +327,14 @@ const Sticker = styled(motion.div)`
   text-transform: uppercase;
   letter-spacing: 0.06em;
   white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  z-index: 10;
+
+  &:active {
+    cursor: grabbing;
+  }
 `
 
 /* ─── Component ─── */
@@ -448,23 +456,41 @@ export default function Hero() {
             </AvatarFooter>
           </AvatarCard>
 
-          {/* Sticker badges */}
+          {/* Sticker badges — physically draggable with elastic spring snap-back */}
           <Sticker
-            style={{ top: -16, right: -16, transform: 'rotate(4deg)', background: s1.bg, color: s1.fg }}
-            animate={{ y: [0, -5, 0] }}
-            transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}>
+            drag
+            dragConstraints={{ top: -35, bottom: 35, left: -35, right: 35 }}
+            dragElastic={0.35}
+            dragTransition={{ bounceStiffness: 400, bounceDamping: 20 }}
+            whileHover={{ scale: 1.08, rotate: 0 }}
+            whileDrag={{ scale: 1.16, zIndex: 100 }}
+            whileTap={{ scale: 0.95 }}
+            style={{ top: -16, right: -16, rotate: 4, background: s1.bg, color: s1.fg }}
+            title="Drag me!">
             {stick1}
           </Sticker>
           <Sticker
-            style={{ bottom: 60, left: -20, transform: 'rotate(-3deg)', background: s2.bg, color: s2.fg }}
-            animate={{ y: [0, 5, 0] }}
-            transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 1 }}>
+            drag
+            dragConstraints={{ top: -35, bottom: 35, left: -35, right: 35 }}
+            dragElastic={0.35}
+            dragTransition={{ bounceStiffness: 400, bounceDamping: 20 }}
+            whileHover={{ scale: 1.08, rotate: 0 }}
+            whileDrag={{ scale: 1.16, zIndex: 100 }}
+            whileTap={{ scale: 0.95 }}
+            style={{ bottom: 60, left: -20, rotate: -3, background: s2.bg, color: s2.fg }}
+            title="Drag me!">
             {stick2}
           </Sticker>
           <Sticker
-            style={{ bottom: -16, right: 20, transform: 'rotate(2deg)', background: s3.bg, color: s3.fg }}
-            animate={{ y: [0, -4, 0] }}
-            transition={{ repeat: Infinity, duration: 4.5, ease: 'easeInOut', delay: 0.5 }}>
+            drag
+            dragConstraints={{ top: -35, bottom: 35, left: -35, right: 35 }}
+            dragElastic={0.35}
+            dragTransition={{ bounceStiffness: 400, bounceDamping: 20 }}
+            whileHover={{ scale: 1.08, rotate: 0 }}
+            whileDrag={{ scale: 1.16, zIndex: 100 }}
+            whileTap={{ scale: 0.95 }}
+            style={{ bottom: -16, right: 20, rotate: 2, background: s3.bg, color: s3.fg }}
+            title="Drag me!">
             {stick3}
           </Sticker>
         </HeroVisual>

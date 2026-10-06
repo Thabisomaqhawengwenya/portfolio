@@ -49,15 +49,15 @@ const FilterBtn = styled(motion.button)<{ $active: boolean }>`
   padding: 0.5rem 1rem;
   border: none;
   border-right: 3px solid ${({ theme }) => theme.colors.border};
-  background: ${({ $active, theme }) => $active ? theme.colors.primary : theme.colors.background};
-  color: ${({ $active, theme }) => $active ? (theme.accentText ?? theme.colors.text) : theme.colors.text};
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+  position: relative;
+  z-index: 1;
 
   &:last-child { border-right: none; }
-  &:hover:not([data-active="true"]) {
-    background: ${({ theme }) => theme.colors.text};
-    color: ${({ theme }) => theme.colors.background};
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
   }
 `
 
@@ -156,20 +156,33 @@ export default function Skills() {
         <FilterRow initial={{ opacity: 0, y: 12 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           transition={{ delay: 0.15 }}>
-          {categories.map(cat => (
-            <FilterBtn key={cat} $active={active === cat}
-              data-active={active === cat ? 'true' : 'false'}
-              onClick={() => setActive(cat)}
-              whileHover={{ scale: 1.05, y: -3 }}
-              whileTap={{ scale: 0.94 }}
-              style={active === cat ? {
-                background: labelBg(cat),
-                color: labelFg(cat),
-              } : {}}
-              transition={popSpring}>
-              {cat}
-            </FilterBtn>
-          ))}
+          {categories.map(cat => {
+            const isCatActive = active === cat
+            return (
+              <FilterBtn key={cat} $active={isCatActive}
+                data-active={isCatActive ? 'true' : 'false'}
+                onClick={() => setActive(cat)}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                transition={popSpring}>
+                {isCatActive && (
+                  <motion.div
+                    layoutId="activeSkillCategoryPill"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: labelBg(cat),
+                      zIndex: 0,
+                    }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                  />
+                )}
+                <span style={{ position: 'relative', zIndex: 1, color: isCatActive ? labelFg(cat) : undefined }}>
+                  {cat}
+                </span>
+              </FilterBtn>
+            )
+          })}
         </FilterRow>
 
         {/* Cards */}

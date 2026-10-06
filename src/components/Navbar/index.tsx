@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import styled from 'styled-components'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useScroll } from 'framer-motion'
 import { staggerContainer, mobileMenuItem } from '../../styles/animations'
 import { popSpring } from '../UI'
 import ColorPicker from '../ColorPicker'
@@ -28,6 +28,18 @@ const NavBar = styled.header`
   display: flex;
   align-items: center;
   transition: background 0.12s ease;
+`
+
+const ScrollProgress = styled(motion.div)`
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: ${({ theme }) => (theme.navBg === theme.colors.text ? theme.colors.primary : theme.colors.text)};
+  transform-origin: 0%;
+  z-index: 10;
+  pointer-events: none;
 `
 
 const NavInner = styled.div`
@@ -234,6 +246,7 @@ const MobileClose = styled(motion.button)`
 export default function Navbar() {
   const [activeSection, setActive]  = useState('home')
   const [menuOpen,      setMenuOpen] = useState(false)
+  const { scrollYProgress } = useScroll()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -268,6 +281,7 @@ export default function Navbar() {
   return (
     <>
       <NavBar>
+        <ScrollProgress style={{ scaleX: scrollYProgress }} />
         <NavInner>
           <Logo onClick={() => scrollTo('#home')}
             whileHover={{ scale: 1.08, y: -3 }}

@@ -21,13 +21,12 @@ const COL = {
  * Sanitizes object by removing any keys with `undefined` values.
  * Firestore strictly rejects `undefined` values during document write operations.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function cleanFirestoreData<T extends Record<string, any>>(obj: T): Record<string, any> {
-  const result: Record<string, any> = {}
+export function cleanFirestoreData<T extends object>(obj: T): Record<string, unknown> {
+  const result: Record<string, unknown> = {}
   for (const [key, val] of Object.entries(obj)) {
     if (val === undefined) continue
     if (val && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Timestamp) && !(val instanceof Date)) {
-      result[key] = cleanFirestoreData(val)
+      result[key] = cleanFirestoreData(val as object)
     } else {
       result[key] = val
     }

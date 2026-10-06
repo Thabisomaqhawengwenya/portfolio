@@ -36,12 +36,25 @@ const CertCard = styled(motion.div)`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.2s cubic-bezier(0.23, 1, 0.32, 1), background 0.15s ease;
+  will-change: transform;
 
-  &:hover {
-    transform: translate(-3px, -3px);
-    box-shadow: ${({ theme }) => theme.shadows.hover};
-    background: ${({ theme }) => theme.colors.surfaceAlt};
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      box-shadow: ${({ theme }) => theme.shadows.xl};
+      background: ${({ theme }) => theme.colors.surfaceAlt};
+    }
+    &:nth-child(even):hover {
+      transform: translate(-4px, -4px) rotate(-0.5deg);
+    }
+    &:nth-child(odd):hover {
+      transform: translate(-4px, -4px) rotate(0.5deg);
+    }
+  }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
   }
 `
 

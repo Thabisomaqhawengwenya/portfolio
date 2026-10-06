@@ -12,6 +12,7 @@ import { PublicDataProvider } from './styles/PublicDataContext'
 import LoadingScreen from './components/LoadingScreen'
 import Navbar   from './components/Navbar'
 import Hero     from './components/Hero'
+import Marquee  from './components/Marquee'
 import About    from './components/About'
 import Journey  from './components/Journey'
 import Skills   from './components/Skills'
@@ -127,6 +128,7 @@ function PortfolioApp() {
       <Navbar />
       <main id="main-content">
         <Hero />
+        <Marquee />
         <About />
         <Journey />
         <Skills />

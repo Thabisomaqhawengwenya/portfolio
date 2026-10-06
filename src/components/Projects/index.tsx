@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import styled, { css } from 'styled-components'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiArrowRight, FiArrowLeft } from 'react-icons/fi'
@@ -39,7 +39,7 @@ const FilterBar = styled.div`
   /* no gap — tabs share borders */
 `
 
-const FilterTab = styled(motion.button)<{ $active: boolean; $activeBg: string; $activeFg: string }>`
+const FilterTab = styled(motion.button)<{ $active: boolean }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
@@ -48,19 +48,17 @@ const FilterTab = styled(motion.button)<{ $active: boolean; $activeBg: string; $
   padding: 0.55rem 1.25rem;
   border: none;
   border-right: 3px solid ${({ theme }) => theme.colors.border};
-  background: ${({ $active, $activeBg, theme }) =>
-    $active ? $activeBg : theme.colors.background};
-  color: ${({ $active, $activeFg, theme }) =>
-    $active ? $activeFg : theme.colors.text};
+  background: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
   white-space: nowrap;
+  position: relative;
+  z-index: 1;
 
   &:last-child { border-right: none; }
 
-  &:hover:not([data-active="true"]) {
-    background: ${({ theme }) => theme.colors.text};
-    color: ${({ theme }) => theme.colors.background};
+  &:hover {
+    color: ${({ theme }) => theme.colors.text};
   }
 `
 
@@ -80,10 +78,16 @@ const Row = styled(motion.div)`
   border-bottom: 3px solid ${({ theme }) => theme.colors.border};
   min-height: 300px;
   background: ${({ theme }) => theme.colors.surface};
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
 
   &:last-child { border-bottom: none; }
-  &:hover { background: ${({ theme }) => theme.colors.surfaceAlt}; }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: ${({ theme }) => theme.colors.surfaceAlt};
+      transform: translateX(4px);
+    }
+  }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
     grid-template-columns: 48px 1fr;
@@ -591,32 +595,26 @@ export default function Projects() {
   const { projects: adminProjects } = usePublicData()
   const projects = adminProjects.length ? adminProjects : staticProjects
 
-  /* Predefined category display order */
-  const ORDERED_CATEGORIES: Project['category'][] = ['Business', 'Personal', 'Mobile', 'Gift']
-  
   /* Derive unique categories from data while respecting canonical order */
-  const rawCategories = Array.from(new Set(projects.map(p => p.category))) as Project['category'][]
-  const categories: Project['category'][] = [
-    ...ORDERED_CATEGORIES.filter(c => rawCategories.includes(c)),
-    ...rawCategories.filter(c => !ORDERED_CATEGORIES.includes(c)),
-  ]
+  const categories = useMemo(() => {
+    const ORDERED_CATEGORIES: Project['category'][] = ['Business', 'Personal', 'Mobile', 'Gift']
+    const rawCategories = Array.from(new Set(projects.map(p => p.category))) as Project['category'][]
+    return [
+      ...ORDERED_CATEGORIES.filter(c => rawCategories.includes(c)),
+      ...rawCategories.filter(c => !ORDERED_CATEGORIES.includes(c)),
+    ]
+  }, [projects])
 
-  const [active, setActive] = useState<Project['category']>(categories[0] ?? 'Business')
+  const [selectedCategory, setSelectedCategory] = useState<Project['category'] | null>(null)
+  const active = selectedCategory && categories.includes(selectedCategory) ? selectedCategory : (categories[0] ?? 'Business')
   const [currentPage, setCurrentPage] = useState<number>(1)
 
-  /* Ensure active category remains valid if dataset changes */
-  useEffect(() => {
-    if (categories.length && !categories.includes(active)) {
-      setActive(categories[0])
-    }
-  }, [categories, active])
+  const handleSelectCategory = (cat: Project['category']) => {
+    setSelectedCategory(cat)
+    setCurrentPage(1)
+  }
 
   const filtered = projects.filter(p => p.category === active)
-
-  /* Reset pagination when active category changes */
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [active])
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1
   const safePage = Math.min(currentPage, totalPages)
@@ -682,18 +680,31 @@ export default function Projects() {
           <FilterBar role="group" aria-label="Filter projects by category">
             {categories.map((cat, i) => {
               const { bg, fg } = TAB_COLORS[i % TAB_COLORS.length]
+              const isCatActive = active === cat
               return (
                 <FilterTab
                   key={cat}
-                  $active={active === cat}
-                  $activeBg={bg}
-                  $activeFg={fg}
-                  data-active={active === cat ? 'true' : 'false'}
-                  onClick={() => setActive(cat)}
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  whileTap={{ scale: 0.94 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}>
-                  {cat}
+                  $active={isCatActive}
+                  data-active={isCatActive ? 'true' : 'false'}
+                  onClick={() => handleSelectCategory(cat)}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 25 }}>
+                  {isCatActive && (
+                    <motion.div
+                      layoutId="activeProjectCategoryPill"
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        background: bg,
+                        zIndex: 0,
+                      }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                    />
+                  )}
+                  <span style={{ position: 'relative', zIndex: 1, color: isCatActive ? fg : undefined }}>
+                    {cat}
+                  </span>
                 </FilterTab>
               )
             })}

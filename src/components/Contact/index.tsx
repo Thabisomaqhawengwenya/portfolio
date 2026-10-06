@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import styled from 'styled-components'
-import { motion, useInView } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiMail, FiArrowRight, FiDownload, FiCheck, FiSend } from 'react-icons/fi'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { FiGithub, FiLinkedin, FiMail, FiArrowRight, FiDownload, FiCheck, FiSend, FiCopy } from 'react-icons/fi'
 import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, popSpring } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
 import { useAdmin } from '../../admin/context/AdminContext'
@@ -231,24 +231,31 @@ const InfoText = styled.p`
   line-height: 1.7;
 `
 
-const EmailCard = styled.a<{ $hoverBg: string; $hoverFg: string }>`
+const EmailCard = styled(motion.button)<{ $hoverBg: string; $hoverFg: string; $copied: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border: 2px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
-  text-decoration: none;
+  background: ${({ $copied, $hoverBg, theme }) => ($copied ? $hoverBg : theme.colors.surface)};
+  color: ${({ $copied, $hoverFg, theme }) => ($copied ? $hoverFg : theme.colors.text)};
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
   box-shadow: ${({ theme }) => theme.shadows.sm};
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease, color 0.15s ease;
 
   &:hover {
     background: ${({ $hoverBg }) => $hoverBg};
     color: ${({ $hoverFg }) => $hoverFg};
     transform: translate(-2px, -2px);
     box-shadow: ${({ theme }) => theme.shadows.md};
+  }
+
+  &:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 ${({ theme }) => theme.colors.border};
   }
 `
 
@@ -339,6 +346,21 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyEmail = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (navigator?.clipboard && settings.email) {
+      navigator.clipboard.writeText(settings.email).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2200)
+      }).catch(() => {
+        window.location.href = `mailto:${settings.email}`
+      })
+    } else {
+      window.location.href = `mailto:${settings.email}`
+    }
+  }
 
   const btnFg = isMonoTheme ? '#000000' : (accent.textColor || '#000000')
   const hoverBg = isMonoTheme ? accent.primary : accent.primary
@@ -469,14 +491,40 @@ export default function Contact() {
                 </InfoText>
 
                 <EmailCard
-                  href={`mailto:${settings.email}`}
+                  type="button"
+                  onClick={handleCopyEmail}
                   $hoverBg={hoverBg}
-                  $hoverFg={hoverFg}>
+                  $hoverFg={hoverFg}
+                  $copied={copied}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  title="Click to copy email address">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <FiMail />
-                    <EmailText>{settings.email}</EmailText>
+                    <EmailText>{copied ? 'COPIED TO CLIPBOARD!' : settings.email}</EmailText>
                   </div>
-                  <FiArrowRight />
+                  <AnimatePresence mode="wait">
+                    {copied ? (
+                      <motion.span
+                        key="copied"
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.6, opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 700, fontSize: '0.75rem' }}>
+                        <FiCheck size={16} /> COPIED!
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="copy"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', opacity: 0.8, fontSize: '0.75rem' }}>
+                        <FiCopy size={13} /> COPY
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </EmailCard>
               </InfoTop>
 

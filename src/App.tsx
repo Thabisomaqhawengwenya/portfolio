@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { useEffect, useMemo, lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
-import { AnimatePresence } from 'framer-motion'
 import Lenis from 'lenis'
 
 /* Portfolio */
@@ -9,7 +8,6 @@ import { theme as baseTheme } from './styles/theme'
 import { GlobalStyles }       from './styles/GlobalStyles'
 import { ThemeAccentProvider, useAccent } from './styles/ThemeContext'
 import { PublicDataProvider } from './styles/PublicDataContext'
-import LoadingScreen from './components/LoadingScreen'
 import Navbar   from './components/Navbar'
 import Hero     from './components/Hero'
 import Marquee  from './components/Marquee'
@@ -44,7 +42,6 @@ const AdminLoadingFallback = () => (
 /* ─── Portfolio wrapper ─── */
 function PortfolioApp() {
   const { accent } = useAccent()
-  const [isLoading, setIsLoading] = useState(true)
 
   const activeTheme = useMemo(() => {
     const ov = accent.overrides ?? {}
@@ -78,22 +75,8 @@ function PortfolioApp() {
     }
   }, [accent])
 
-  // Prevent scrolling behind the loading screen
+  // Initialize smooth scrolling immediately on mount
   useEffect(() => {
-    if (isLoading) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [isLoading])
-
-  // Initialize smooth scrolling after loader completes
-  useEffect(() => {
-    if (isLoading) return
-
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -103,16 +86,11 @@ function PortfolioApp() {
     const animate = (time: number) => { lenis.raf(time); raf = requestAnimationFrame(animate) }
     raf = requestAnimationFrame(animate)
     return () => { cancelAnimationFrame(raf); lenis.destroy() }
-  }, [isLoading])
+  }, [])
 
   return (
     <ThemeProvider theme={activeTheme}>
       <GlobalStyles />
-      <AnimatePresence mode="wait">
-        {isLoading && (
-          <LoadingScreen key="portfolio-loader" onComplete={() => setIsLoading(false)} />
-        )}
-      </AnimatePresence>
       <a href="#main-content"
         style={{
           position: 'absolute', top: -40, left: 8,

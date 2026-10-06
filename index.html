@@ -199,10 +199,16 @@
         ]
       }
     </script>
+    <style>
+      body {
+        margin: 0;
+        background-color: #F5F0E8;
+      }
+    </style>
   </head>
   <body>
-    <div id="root">
-      <!-- Semantic Static Crawlable Fallback for Search Engine Crawlers & Non-JS Clients -->
+    <div id="root"></div>
+    <noscript>
       <header>
         <h1>Maqhawe Thabiso Ngwenya — Software Developer &amp; Frontend Developer</h1>
         <p>Junior Full-Stack Software Developer &amp; Frontend Engineer based in Zimbabwe. Specialized in React, TypeScript, Node.js, Express, PostgreSQL &amp; Cloud Firestore.</p>
@@ -219,7 +225,7 @@
           </ul>
         </nav>
       </header>
-    </div>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

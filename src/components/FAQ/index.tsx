@@ -25,35 +25,35 @@ const FAQ_DATA: FAQItem[] = [
     category: 'About Me',
     question: 'Who is Maqhawe Thabiso Ngwenya?',
     answer:
-      'I am a Zimbabwean full-stack software developer and frontend engineer based in Harare, Zimbabwe. An alumnus of Uncommon.org, I build performant, accessible web applications and scalable digital solutions utilizing React, TypeScript, Node.js, Express, PostgreSQL, and Cloud Firestore.',
+      'I am a Zimbabwean Front-End Software Developer based in Bulawayo, Zimbabwe. An alumnus of Uncommon.org, I build performant, accessible web applications and modern user interfaces utilizing React, TypeScript, Node.js, Express, PostgreSQL, and Cloud Firestore.',
   },
   {
     id: 'services',
     category: 'Engineering Services',
     question: 'What engineering services and technical expertise do you provide?',
     answer:
-      'I deliver end-to-end full-stack web engineering: responsive frontend user interfaces (React, TypeScript, styled-components, Tailwind), RESTful API design & backend microservices (Node.js, Express, Prisma), relational & NoSQL databases (PostgreSQL, Cloud Firestore), performance optimization, and SEO-first web architecture.',
+      'I deliver high-performance front-end and web engineering: responsive user interfaces (React, TypeScript, styled-components, Tailwind), modern component systems, RESTful API integrations (Node.js, Express, Prisma), database querying (PostgreSQL, Cloud Firestore), performance optimization, and SEO-first web architecture.',
   },
   {
     id: 'availability',
     category: 'Career & Hiring',
     question: 'Are you available for full-time remote roles or freelance contracts?',
     answer:
-      'Yes. I am actively available for global remote full-time software engineering opportunities, long-term contracts, and high-impact freelance projects. I have extensive experience collaborating asynchronously and shipping production code with distributed teams.',
+      'Yes. I am actively available for global remote full-time front-end software developer opportunities, long-term contracts, and high-impact freelance projects. I have extensive experience collaborating asynchronously and shipping production code with distributed teams.',
   },
   {
     id: 'tech-stack',
     category: 'Technical Stack',
     question: 'What technologies and frameworks make up your primary stack?',
     answer:
-      'My primary frontend stack centers on React 19, TypeScript, Vite, and modern styling architectures. On the backend, I leverage Node.js, Express, and PostgreSQL with Prisma ORM, alongside Firebase and Google Cloud Firestore for real-time applications.',
+      'My primary stack centers on React 19, TypeScript, Vite, and modern styling architectures. On the backend, I leverage Node.js, Express, and PostgreSQL with Prisma ORM, alongside Firebase and Google Cloud Firestore for real-time applications.',
   },
   {
     id: 'location-contact',
     category: 'Collaboration',
     question: 'Where are you based and what time zones do you support?',
     answer:
-      'I am based in Harare, Zimbabwe (CAT / UTC+2), which provides natural working-hour overlap with European, African, and North American engineering teams. You can reach out directly through the contact section below, via LinkedIn, or by emailing me directly.',
+      'I am based in Bulawayo, Zimbabwe (CAT / UTC+2), which provides natural working-hour overlap with European, African, and North American engineering teams. You can reach out directly through the contact section below, via LinkedIn, or by emailing me directly.',
   },
 ]
 

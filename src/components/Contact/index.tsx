@@ -487,7 +487,7 @@ export default function Contact() {
                 </StatusPill>
                 <InfoHeading>Open to opportunities.</InfoHeading>
                 <InfoText>
-                  Available for Junior Full-Stack roles, freelance web applications, and collaborative engineering projects.
+                  Available for Front-End Software Developer roles, freelance web applications, and collaborative engineering projects.
                 </InfoText>
 
                 <EmailCard

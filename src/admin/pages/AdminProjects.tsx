@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiCheck, FiGithub, FiExternalLink,
   FiChevronUp, FiChevronDown, FiSearch, FiAlertTriangle, FiAlertCircle,
+  FiUploadCloud, FiImage, FiCamera,
 } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { Project } from '../../types'
+import { optimizeImageForUpload } from '../../utils/imageUpload'
 
 /* ─── Styled Components ─── */
 const Header = styled.div`
@@ -386,6 +388,154 @@ const Select = styled.select`
   cursor: pointer;
 `
 
+const ImageUploadArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+`
+
+const Dropzone = styled.div<{ $isDragging?: boolean }>`
+  border: 2px dashed ${({ theme, $isDragging }) => $isDragging ? theme.colors.primary : theme.colors.border};
+  background: ${({ theme, $isDragging }) => $isDragging ? `${theme.colors.primary}15` : theme.colors.surfaceAlt};
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+`
+
+const DropzoneIcon = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  color: ${({ theme }) => theme.colors.primary};
+`
+
+const DropzoneText = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+  margin: 0;
+`
+
+const DropzoneHint = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`
+
+const PreviewWrap = styled.div`
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+`
+
+const PreviewHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+`
+
+const PreviewBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const ImagePreviewBox = styled.div`
+  width: 100%;
+  height: 180px;
+  background: #000;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+`
+
+const PreviewActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+`
+
+const MiniBtn = styled.button<{ $danger?: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.35rem 0.65rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme, $danger }) => $danger ? theme.colors.error : theme.colors.surface};
+  color: ${({ $danger }) => $danger ? '#fff' : 'inherit'};
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+`
+
+const UploadStatus = styled.div`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.primary};
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+`
+
+const UploadError = styled.div`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.7rem;
+  color: ${({ theme }) => theme.colors.error};
+  font-weight: 700;
+`
+
 const SaveBtn = styled(motion.button)`
   display: flex; align-items: center; gap: 0.5rem;
   font-family: ${({ theme }) => theme.typography.fontBody};
@@ -474,13 +624,48 @@ export default function AdminProjects() {
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [search,  setSearch]  = useState('')
   const [catFilter, setCatFilter] = useState<'All' | 'Business' | 'Mobile' | 'Gift' | 'Personal'>('All')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [uploadError, setUploadError] = useState('')
 
   const showStatus = (type: 'success' | 'error', text: string) => {
     setStatusMsg({ type, text })
     setTimeout(() => setStatusMsg(null), 4000)
   }
 
-  const openNew  = () => { setForm(blank()); setIsNew(true); setEditing(null); setError('') }
+  const handleFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select a valid image file (PNG, JPG, WebP, etc.).')
+      return
+    }
+    setIsUploading(true)
+    setUploadError('')
+    try {
+      const result = await optimizeImageForUpload(file, { maxWidth: 1200, maxHeight: 800, quality: 0.82 })
+      set('image', result.dataUrl)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to process image.'
+      setUploadError(msg)
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFile(file)
+    e.target.value = ''
+  }
+
+  const openNew  = () => {
+    setForm(blank())
+    setIsNew(true)
+    setEditing(null)
+    setError('')
+    setUploadError('')
+    setIsUploading(false)
+  }
   const openEdit = (p: Project) => {
     setForm({
       title: p.title || '',
@@ -497,8 +682,16 @@ export default function AdminProjects() {
     setEditing(p)
     setIsNew(false)
     setError('')
+    setUploadError('')
+    setIsUploading(false)
   }
-  const close = () => { setEditing(null); setIsNew(false); setError('') }
+  const close = () => {
+    setEditing(null)
+    setIsNew(false)
+    setError('')
+    setUploadError('')
+    setIsUploading(false)
+  }
 
   const handleSave = async () => {
     if (!form.title.trim()) {
@@ -841,12 +1034,100 @@ export default function AdminProjects() {
                 </Field>
 
                 <Field>
-                  <FieldLabel>Project Image Path / URL</FieldLabel>
-                  <Input
-                    value={form.image ?? ''}
-                    onChange={e => set('image', e.target.value)}
-                    placeholder="/images/projects/example.webp or https://..."
+                  <FieldLabel>Project Image (Upload from Phone / PC)</FieldLabel>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
                   />
+
+                  <ImageUploadArea>
+                    {form.image ? (
+                      <PreviewWrap>
+                        <PreviewHeader>
+                          <PreviewBadge>
+                            <FiImage /> {form.image.startsWith('data:') ? 'Uploaded Image' : 'Image Preview'}
+                          </PreviewBadge>
+                          <PreviewActions>
+                            <MiniBtn
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={isUploading}
+                            >
+                              <FiUploadCloud /> Replace
+                            </MiniBtn>
+                            <MiniBtn
+                              type="button"
+                              $danger
+                              onClick={() => set('image', '')}
+                            >
+                              <FiTrash2 /> Remove
+                            </MiniBtn>
+                          </PreviewActions>
+                        </PreviewHeader>
+
+                        <ImagePreviewBox>
+                          <img
+                            src={form.image}
+                            alt="Project preview"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none'
+                            }}
+                          />
+                        </ImagePreviewBox>
+                      </PreviewWrap>
+                    ) : (
+                      <Dropzone
+                        $isDragging={isDragging}
+                        onClick={() => fileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+                        onDragLeave={() => setIsDragging(false)}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          setIsDragging(false)
+                          const f = e.dataTransfer.files?.[0]
+                          if (f) handleFile(f)
+                        }}
+                      >
+                        <DropzoneIcon>
+                          <FiUploadCloud />
+                          <FiCamera />
+                        </DropzoneIcon>
+                        <DropzoneText>
+                          {isUploading ? 'Optimizing image from device…' : 'Tap to upload from Phone Camera / Photo Library or PC'}
+                        </DropzoneText>
+                        <DropzoneHint>
+                          Supports PNG, JPG, WebP — auto-compressed for high speed
+                        </DropzoneHint>
+                      </Dropzone>
+                    )}
+
+                    {isUploading && (
+                      <UploadStatus>
+                        ⏳ Optimizing and preparing image…
+                      </UploadStatus>
+                    )}
+
+                    {uploadError && (
+                      <UploadError>
+                        ⚠ {uploadError}
+                      </UploadError>
+                    )}
+
+                    <div>
+                      <FieldLabel style={{ fontSize: '0.6rem', marginTop: '0.25rem' }}>
+                        Or enter direct image URL / path
+                      </FieldLabel>
+                      <Input
+                        value={form.image ?? ''}
+                        onChange={e => set('image', e.target.value)}
+                        placeholder="https://... or /images/projects/example.webp"
+                        style={{ fontSize: '0.75rem', padding: '0.45rem 0.75rem' }}
+                      />
+                    </div>
+                  </ImageUploadArea>
                 </Field>
 
                 <Field style={{ flexDirection: 'row', alignItems: 'center', gap: '0.75rem' }}>

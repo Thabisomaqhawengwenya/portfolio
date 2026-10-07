@@ -27,11 +27,11 @@ import {
 } from '../services/githubService'
 
 const DEFAULT_SETTINGS: AdminSettings = {
-  bio:         'Software Developer & Frontend Engineer based in Zimbabwe, building performant web applications with React, TypeScript & Node.js.',
+  bio:         'Front-End Software Developer based in Bulawayo, Zimbabwe, building performant web applications with React, TypeScript & Node.js.',
   githubUrl:   'https://github.com/Thabisomaqhawengwenya',
   linkedinUrl: 'https://www.linkedin.com/in/maqhawe-ngwenya/',
   email:       'thabisomaqhawengwenya@gmail.com',
-  location:    'Harare, Zimbabwe',
+  location:    'Bulawayo, Zimbabwe',
 }
 
 interface PublicCtx {

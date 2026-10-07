@@ -349,12 +349,12 @@ export default function Hero() {
 
   /* Use admin-managed content with sensible fallbacks */
   const greeting  = heroContent.greeting  || 'Hello, World'
-  const role      = heroContent.role      || 'Software Developer & Frontend Engineer from Zimbabwe. Building modern, performant, and engaging web experiences.'
+  const role      = heroContent.role      || 'Front-End Software Developer from Zimbabwe. Building modern, performant, and engaging web experiences.'
   const cvUrl     = heroContent.cvUrl     || '/Maqhawe-Ngwenya-CV.pdf'
   const available = heroContent.available !== false
   const stick1    = heroContent.sticker1  || 'React + TS'
   const stick2    = heroContent.sticker2  || 'Node.js'
-  const stick3    = heroContent.sticker3  || 'Full-Stack'
+  const stick3    = heroContent.sticker3  || 'Front-End'
 
   /* Sticker colours: vivid in normal themes, mono in Black */
   const s1 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }

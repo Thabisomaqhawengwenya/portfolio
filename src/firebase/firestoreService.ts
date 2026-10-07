@@ -192,11 +192,11 @@ export async function fsSaveSettings(s: AdminSettings): Promise<void> {
 const HERO_ID = 'main'
 const HERO_DEFAULTS: HeroContent = {
   greeting:  'Hello, World',
-  role:      'Junior Full-Stack Software Developer. Building modern, useful, and engaging digital experiences — from Zimbabwe to the world.',
+  role:      'Front-End Software Developer. Building modern, useful, and engaging digital experiences — from Zimbabwe to the world.',
   available: true,
   sticker1:  'React + TS',
   sticker2:  'Node.js',
-  sticker3:  'Full-Stack',
+  sticker3:  'Front-End',
   cvUrl:     '/Maqhawe-Ngwenya-CV.pdf',
 }
 export async function fsGetHeroContent(): Promise<HeroContent> {

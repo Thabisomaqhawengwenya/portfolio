@@ -8,11 +8,11 @@ import { HERO_DEFAULTS } from './firestoreService'
 import type { AdminSettings } from '../admin/context/AdminContext'
 
 const DEFAULT_SETTINGS: AdminSettings = {
-  bio:         'Junior Full-Stack Software Developer from Zimbabwe, currently training at Uncommon.org.',
+  bio:         'Front-End Software Developer from Bulawayo, Zimbabwe, currently training at Uncommon.org.',
   githubUrl:   'https://github.com/Thabisomaqhawengwenya',
   linkedinUrl: 'https://www.linkedin.com/in/maqhawe-ngwenya/',
   email:       'thabisomaqhawengwenya@gmail.com',
-  location:    'Zimbabwe',
+  location:    'Bulawayo, Zimbabwe',
 }
 
 export interface SeedResult {

@@ -1,6 +1,6 @@
 # Maqhawe Ngwenya — Portfolio
 
-> Personal developer portfolio for **Maqhawe Ngwenya**, Junior Full-Stack Software Developer from Zimbabwe.
+> Personal developer portfolio for **Maqhawe Ngwenya**, Front-End Software Developer from Bulawayo, Zimbabwe.
 
 Live at → _deploy to Vercel and add URL here_
 
@@ -195,7 +195,7 @@ In Black mono theme all shadows flip to white offset.
 ## Author
 
 **Maqhawe Ngwenya**
-Junior Full-Stack Software Developer · Zimbabwe
+Front-End Software Developer · Bulawayo, Zimbabwe
 
 - GitHub: [github.com/Thabisomaqhawengwenya](https://github.com/Thabisomaqhawengwenya)
 

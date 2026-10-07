@@ -205,7 +205,7 @@ export default function About() {
             <motion.div variants={staggerContainer} initial="hidden"
               animate={inView ? 'visible' : 'hidden'}>
               <Paragraph variants={staggerItem}>
-                I'm <strong>Maqhawe Thabiso Ngwenya</strong> (also known as <strong>Thabiso</strong> or <strong>thabisongwenya</strong>), a Software Developer and Frontend Engineer based in <strong>Harare, Zimbabwe</strong>. Currently advancing my craft through <strong>Uncommon.org</strong>, I build modern web applications, accessible user interfaces, and responsive digital products.
+                I'm <strong>Maqhawe Thabiso Ngwenya</strong> (also known as <strong>Thabiso</strong> or <strong>thabisongwenya</strong>), a Front-End Software Developer based in <strong>Bulawayo, Zimbabwe</strong>. Currently advancing my craft through <strong>Uncommon.org</strong>, I build modern web applications, accessible user interfaces, and responsive digital products.
               </Paragraph>
               <Paragraph variants={staggerItem}>
                 My primary technical focus is on <strong>React, TypeScript, JavaScript, and Node.js</strong>. From building fluid UI/UX layouts to architecting backend services with PostgreSQL and Cloud Firestore, I care deeply about clean code architecture, web performance, and delivering intuitive digital experiences.

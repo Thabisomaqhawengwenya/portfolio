@@ -305,7 +305,7 @@ export default function Footer() {
         <FooterTop>
           {/* Identity */}
           <FooterCell>
-            <BrandEyebrow>// SOFTWARE DEVELOPER &amp; FRONTEND ENGINEER</BrandEyebrow>
+            <BrandEyebrow>// FRONT-END SOFTWARE DEVELOPER</BrandEyebrow>
             <FooterName>Maqhawe Thabiso Ngwenya</FooterName>
             <FooterBio>
               Building responsive, high-performance web applications, accessible user interfaces, and digital products from Zimbabwe.

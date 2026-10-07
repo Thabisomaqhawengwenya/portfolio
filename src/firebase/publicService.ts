@@ -20,11 +20,11 @@ import { experience   as staticExperience   } from '../data/experience'
 import { certificates as staticCertificates } from '../data/certificates'
 
 const DEFAULT_SETTINGS: AdminSettings = {
-  bio:         'Junior Full-Stack Software Developer from Zimbabwe, currently training at Uncommon.org.',
+  bio:         'Front-End Software Developer from Bulawayo, Zimbabwe, currently training at Uncommon.org.',
   githubUrl:   'https://github.com/Thabisomaqhawengwenya',
   linkedinUrl: 'https://www.linkedin.com/in/maqhawe-ngwenya/',
   email:       'thabisomaqhawengwenya@gmail.com',
-  location:    'Zimbabwe',
+  location:    'Bulawayo, Zimbabwe',
 }
 
 async function tryFetch<T>(fn: () => Promise<T>, fallback: T): Promise<T> {

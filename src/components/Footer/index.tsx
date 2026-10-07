@@ -288,7 +288,7 @@ const AdminBtn = styled(motion(Link))`
   }
 `
 
-const LINKS = ['Home', 'About', 'Journey', 'Skills', 'Projects', 'Certificates', 'Contact']
+const LINKS = ['Home', 'About', 'Journey', 'Skills', 'Projects', 'Certificates', 'FAQ', 'Contact']
 const scrollTo = (id: string) =>
   document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })
 

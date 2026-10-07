@@ -5,4 +5,22 @@ Disallow: /admin
 Disallow: /admin/
 Disallow: /admin/*
 
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+
+User-agent: Googlebot-Image
+Allow: /
+Allow: /images/
+Allow: /public/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+
+User-agent: Applebot
+Allow: /
+Disallow: /admin
+
+# Canonical Sitemap
 Sitemap: https://thabisomaqhawengwenya.github.io/portfolio/sitemap.xml

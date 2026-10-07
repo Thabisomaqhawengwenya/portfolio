@@ -16,8 +16,9 @@ import Journey  from './components/Journey'
 import Skills   from './components/Skills'
 import Projects from './components/Projects'
 import Certificates from './components/Certificates'
-import Contact  from './components/Contact'
-import Footer   from './components/Footer'
+import FAQ          from './components/FAQ'
+import Contact      from './components/Contact'
+import Footer       from './components/Footer'
 
 /* Admin (Lazy Loaded for performance & SEO) */
 import { adminTheme }    from './admin/adminTheme'
@@ -112,6 +113,7 @@ function PortfolioApp() {
         <Skills />
         <Projects />
         <Certificates />
+        <FAQ />
         <Contact />
       </main>
       <Footer />

@@ -74,7 +74,7 @@ const RowList = styled(motion.div)`
 
 const Row = styled(motion.div)`
   display: grid;
-  grid-template-columns: 64px 260px 1fr;
+  grid-template-columns: 64px 300px 1fr;
   border-bottom: 3px solid ${({ theme }) => theme.colors.border};
   min-height: 300px;
   background: ${({ theme }) => theme.colors.surface};
@@ -158,9 +158,9 @@ const BookWrap = styled.div`
 /* The outer container holds perspective */
 const Book = styled.div`
   position: relative;
-  width: 160px;
-  height: 220px;
-  perspective: 700px;
+  width: 185px;
+  height: 235px;
+  perspective: 750px;
   transform-style: preserve-3d;
   display: flex;
   align-items: center;
@@ -171,9 +171,10 @@ const Book = styled.div`
   &:hover { transform: rotateZ(-8deg); }
   &:hover .book-cover { transform: rotateY(-65deg); }
   &:hover .book-inner {
-    transform: rotateZ(8deg) rotateX(-3deg) rotateY(-10deg) translateX(120px);
+    transform: rotateZ(8deg) rotateX(-3deg) rotateY(-10deg) translateX(130px);
     box-shadow: 6px 6px 0 ${({ theme }) => theme.colors.border};
-  }`
+  }
+`
 
 /* Shared surface styles — no border-radius, hard black border */
 const bookSurface = css`
@@ -250,12 +251,13 @@ const BookSpine = styled.div<{ $bg: string; $fg: string }>`
 
 const BookInner = styled.div`
   ${bookSurface}
-  background: ${({ theme }) => theme.colors.surface};
+  background: #ffffff;
+  color: #000000;
   box-shadow: ${({ theme }) => theme.shadows.sm};
   z-index: 1;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: 0.5rem;
+  padding: 0.65rem;
 `
 
 const BookInnerLine = styled.div<{ $width?: string; $color?: string }>`
@@ -265,49 +267,14 @@ const BookInnerLine = styled.div<{ $width?: string; $color?: string }>`
   border-radius: 0;
 `
 
-const BookCoverImageWrap = styled.div`
-  width: 100%;
-  height: 100%;
-  position: relative;
-  overflow: hidden;
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform 0.3s ease;
-  }
-
-  &:hover img {
-    transform: scale(1.05);
-  }
-`
-
-const BookCoverLabelBadge = styled.div<{ $bg: string; $fg: string }>`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: ${({ theme }) => theme.colors.border};
-  color: #ffffff;
-  padding: 0.35rem 0.5rem;
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: 0.55rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`
-
 const BookInnerImagePreview = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border: 1px solid ${({ theme }) => theme.colors.borderSubtle};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
+  background: #000000;
+  display: block;
 `
 
 const MobileProjectImage = styled.div`
@@ -572,22 +539,13 @@ function ProjectRow({
           </BookSpine>
 
           <BookCover $bg={bg} className="book-cover">
-            {project.image ? (
-              <BookCoverImageWrap>
-                <img src={project.image} alt={project.title} loading="lazy" />
-                <BookCoverLabelBadge $bg={bg} $fg={fg}>{project.title}</BookCoverLabelBadge>
-              </BookCoverImageWrap>
-            ) : (
-              <>
-                <BookCoverInitials $fg={fg}>{getInitials(project.title)}</BookCoverInitials>
-                <BookCoverLabel $fg={fg}>{project.title}</BookCoverLabel>
-              </>
-            )}
+            <BookCoverInitials $fg={fg}>{getInitials(project.title)}</BookCoverInitials>
+            <BookCoverLabel $fg={fg}>{project.title}</BookCoverLabel>
           </BookCover>
 
           <BookInner className="book-inner">
             {project.image ? (
-              <BookInnerImagePreview src={project.image} alt={project.title} />
+              <BookInnerImagePreview src={project.image} alt={project.title} loading="lazy" />
             ) : (
               <>
                 <BookInnerLine $width="90%" />

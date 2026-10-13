@@ -11,13 +11,15 @@ import {
   fsGetJourney, fsAddJourneyItem, fsUpdateJourneyItem, fsDeleteJourneyItem,
   fsGetSettings, fsSaveSettings,
   fsGetHeroContent, fsSaveHeroContent, HERO_DEFAULTS,
+  fsGetSectionVisibility, fsSaveSectionVisibility,
 } from '../../firebase/firestoreService'
 import { projects as defaultProjects } from '../../data/projects'
 import { certificates as defaultCertificates } from '../../data/certificates'
 import { skillGroups as defaultSkills }  from '../../data/skills'
 import { experience as defaultExperience } from '../../data/experience'
 import { seedAllDataToFirestore, type SeedResult } from '../../firebase/seedService'
-import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate } from '../../types'
+import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate, SectionVisibility } from '../../types'
+import { DEFAULT_SECTION_VISIBILITY } from '../../types'
 
 export interface Message {
   id: string; name: string; email: string; message: string; date: string; read: boolean
@@ -64,6 +66,9 @@ interface AdminCtx {
   heroContent:       HeroContent
   updateHeroContent: (h: HeroContent) => Promise<void>
 
+  sectionVisibility:       SectionVisibility
+  updateSectionVisibility: (v: SectionVisibility) => Promise<void>
+
   seedDatabase: () => Promise<SeedResult>
 }
 
@@ -79,15 +84,26 @@ const Ctx = createContext<AdminCtx>({} as AdminCtx)
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast()
-  const [isAuthed,     setAuthed]       = useState(false)
-  const [authLoading,  setAuthLoad]     = useState(true)
-  const [projects,     setProjects]     = useState<Project[]>(defaultProjects)
-  const [certificates, setCertificates] = useState<Certificate[]>(defaultCertificates)
-  const [skillGroups,  setSkills]       = useState<SkillGroup[]>(defaultSkills)
-  const [journey,      setJourney]      = useState<ExperienceItem[]>(defaultExperience)
-  const [messages,     setMessages]     = useState<Message[]>([])
-  const [settings,     setSettings]     = useState<AdminSettings>(DEFAULT_SETTINGS)
-  const [heroContent,  setHero]         = useState<HeroContent>(HERO_DEFAULTS)
+  const [isAuthed,           setAuthed]             = useState(false)
+  const [authLoading,        setAuthLoad]           = useState(true)
+  const [projects,           setProjects]           = useState<Project[]>(defaultProjects)
+  const [certificates,       setCertificates]       = useState<Certificate[]>(defaultCertificates)
+  const [skillGroups,        setSkills]             = useState<SkillGroup[]>(defaultSkills)
+  const [journey,            setJourney]            = useState<ExperienceItem[]>(defaultExperience)
+  const [messages,           setMessages]           = useState<Message[]>([])
+  const [settings,           setSettings]           = useState<AdminSettings>(DEFAULT_SETTINGS)
+  const [heroContent,        setHero]               = useState<HeroContent>(HERO_DEFAULTS)
+  const [sectionVisibility,  setSectionVisibility]  = useState<SectionVisibility>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem('portfolio_section_visibility')
+        if (raw) return { ...DEFAULT_SECTION_VISIBILITY, ...JSON.parse(raw) }
+      } catch (err) {
+        console.debug('[Admin] LocalStorage cache warning:', err)
+      }
+    }
+    return DEFAULT_SECTION_VISIBILITY
+  })
 
   useEffect(() => {
     return onAuthChange(u => { setAuthed(!!u); setAuthLoad(false) })
@@ -102,6 +118,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     fsGetMessages().then(m => setMessages(m)).catch(console.error)
     fsGetSettings().then(s => { if (s) setSettings(s) }).catch(console.error)
     fsGetHeroContent().then(h => setHero(h)).catch(console.error)
+    fsGetSectionVisibility().then(v => {
+      setSectionVisibility(v)
+      try {
+        localStorage.setItem('portfolio_section_visibility', JSON.stringify(v))
+      } catch (err) {
+        console.debug('[Admin] LocalStorage cache warning:', err)
+      }
+    }).catch(console.error)
   }, [isAuthed])
 
   const login  = useCallback(async (email: string, pw: string) => { 
@@ -454,6 +478,28 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [toast])
 
+  const updateSectionVisibility = useCallback(async (v: SectionVisibility) => {
+    setSectionVisibility(v)
+    try {
+      localStorage.setItem('portfolio_section_visibility', JSON.stringify(v))
+    } catch (err) {
+      console.debug('[Admin] LocalStorage cache warning:', err)
+    }
+    try {
+      await toast.promise(
+        fsSaveSectionVisibility(v),
+        {
+          loading: 'Saving section visibility to Firebase…',
+          success: 'Section visibility updated successfully!',
+          error: (err) => `Failed to save section visibility: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast])
+
   const seedDatabase = useCallback(async () => {
     try {
       const res = await toast.promise(
@@ -465,13 +511,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         }
       )
       // Refresh local states
-      const [p, c, s, j, st, hero] = await Promise.all([
+      const [p, c, s, j, st, hero, sec] = await Promise.all([
         fsGetProjects(),
         fsGetCertificates(),
         fsGetSkills(),
         fsGetJourney(),
         fsGetSettings(),
         fsGetHeroContent(),
+        fsGetSectionVisibility(),
       ])
       if (p.length) setProjects(p)
       if (c.length) setCertificates(c)
@@ -479,6 +526,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       if (j.length) setJourney(j)
       if (st) setSettings(st)
       setHero(hero)
+      setSectionVisibility(sec)
+      try {
+        localStorage.setItem('portfolio_section_visibility', JSON.stringify(sec))
+      } catch (err) {
+        console.debug('[Admin] LocalStorage cache warning:', err)
+      }
       return res
     } catch (err) {
       console.error(err)
@@ -496,6 +549,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       messages, addMessage, markRead, deleteMessage, markAllRead, deleteReadMessages,
       settings, updateSettings,
       heroContent, updateHeroContent,
+      sectionVisibility, updateSectionVisibility,
       seedDatabase,
     }}>
       {children}

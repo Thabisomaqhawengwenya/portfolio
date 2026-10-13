@@ -5,6 +5,7 @@ import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
 import { useAccent } from '../../styles/ThemeContext'
 import { usePublicData } from '../../styles/PublicDataContext'
+import { recordCvDownload } from '../../services/analyticsService'
 
 /* ─── Styled ─── */
 const HeroSection = styled.section`
@@ -345,7 +346,7 @@ export default function Hero() {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
 
   const { isMonoTheme, accent } = useAccent()
-  const { heroContent, settings } = usePublicData()
+  const { heroContent, settings, sectionVisibility } = usePublicData()
 
   /* Use admin-managed content with sensible fallbacks */
   const greeting  = heroContent.greeting  || 'Hello, World'
@@ -383,26 +384,40 @@ export default function Hero() {
           </HeroSubtitle>
 
           <HeroActions variants={heroItem}>
-            <PrimaryBtn
-              href="#contact"
-              onClick={e => { e.preventDefault(); scrollToContact() }}
-              whileHover={{ scale: 1.06, y: -4 }}
-              whileTap={{ scale: 0.94 }}
-              transition={popSpring}>
-              Get in Touch <FiArrowRight />
-            </PrimaryBtn>
-            <SecondaryBtn
-              href="#projects"
-              onClick={e => { e.preventDefault(); scrollToProjects() }}
-              whileHover={{ scale: 1.06, y: -4 }}
-              whileTap={{ scale: 0.94 }}
-              transition={popSpring}>
-              View Projects <FiArrowDown />
-            </SecondaryBtn>
+            {sectionVisibility.contact ? (
+              <PrimaryBtn
+                href="#contact"
+                onClick={e => { e.preventDefault(); scrollToContact() }}
+                whileHover={{ scale: 1.06, y: -4 }}
+                whileTap={{ scale: 0.94 }}
+                transition={popSpring}>
+                Get in Touch <FiArrowRight />
+              </PrimaryBtn>
+            ) : (
+              <PrimaryBtn
+                as="a"
+                href={`mailto:${settings.email}`}
+                whileHover={{ scale: 1.06, y: -4 }}
+                whileTap={{ scale: 0.94 }}
+                transition={popSpring}>
+                Email Me <FiArrowRight />
+              </PrimaryBtn>
+            )}
+            {sectionVisibility.projects && (
+              <SecondaryBtn
+                href="#projects"
+                onClick={e => { e.preventDefault(); scrollToProjects() }}
+                whileHover={{ scale: 1.06, y: -4 }}
+                whileTap={{ scale: 0.94 }}
+                transition={popSpring}>
+                View Projects <FiArrowDown />
+              </SecondaryBtn>
+            )}
             <SecondaryBtn
               as="a"
               href={cvUrl}
               download="Maqhawe-Ngwenya-CV.pdf"
+              onClick={() => recordCvDownload(cvUrl)}
               whileHover={{ scale: 1.06, y: -4 }}
               whileTap={{ scale: 0.94 }}
               transition={popSpring}

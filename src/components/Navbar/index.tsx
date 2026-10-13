@@ -1,19 +1,27 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
 import { staggerContainer, mobileMenuItem } from '../../styles/animations'
 import { popSpring } from '../UI'
 import ColorPicker from '../ColorPicker'
+import { usePublicData } from '../../styles/PublicDataContext'
+import type { SectionVisibility } from '../../types'
 
-const NAV_ITEMS = [
-  { label: 'Home',         href: '#home' },
-  { label: 'About',        href: '#about' },
-  { label: 'Journey',      href: '#journey' },
-  { label: 'Skills',       href: '#skills' },
-  { label: 'Projects',     href: '#projects' },
-  { label: 'Certificates', href: '#certificates' },
-  { label: 'FAQ',          href: '#faq' },
-  { label: 'Contact',      href: '#contact' },
+interface NavItemDef {
+  key:   keyof SectionVisibility
+  label: string
+  href:  string
+}
+
+const ALL_NAV_ITEMS: NavItemDef[] = [
+  { key: 'hero',         label: 'Home',         href: '#home' },
+  { key: 'about',        label: 'About',        href: '#about' },
+  { key: 'journey',      label: 'Journey',      href: '#journey' },
+  { key: 'skills',       label: 'Skills',       href: '#skills' },
+  { key: 'projects',     label: 'Projects',     href: '#projects' },
+  { key: 'certificates', label: 'Certificates', href: '#certificates' },
+  { key: 'faq',          label: 'FAQ',          href: '#faq' },
+  { key: 'contact',      label: 'Contact',      href: '#contact' },
 ]
 
 /* ─── Styled ─── */
@@ -245,13 +253,22 @@ const MobileClose = styled(motion.button)`
 
 /* ─── Component ─── */
 export default function Navbar() {
+  const { sectionVisibility } = usePublicData()
   const [activeSection, setActive]  = useState('home')
   const [menuOpen,      setMenuOpen] = useState(false)
   const { scrollYProgress } = useScroll()
 
+  const visibleNavItems = useMemo(() => {
+    return ALL_NAV_ITEMS.filter(item => sectionVisibility[item.key] !== false)
+  }, [sectionVisibility])
+
+  const desktopNavItems = useMemo(() => {
+    return visibleNavItems.filter(item => item.key !== 'contact')
+  }, [visibleNavItems])
+
   useEffect(() => {
     const handleScroll = () => {
-      const sections = NAV_ITEMS.map(n => n.href.slice(1))
+      const sections = visibleNavItems.map(n => n.href.slice(1))
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i])
         if (el && window.scrollY >= el.offsetTop - 120) {
@@ -261,7 +278,7 @@ export default function Navbar() {
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [visibleNavItems])
 
   useEffect(() => {
     const onResize = () => { if (window.innerWidth > 1100) setMenuOpen(false) }
@@ -279,12 +296,14 @@ export default function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [menuOpen])
 
+  const homeTarget = visibleNavItems[0]?.href || '#home'
+
   return (
     <>
       <NavBar>
         <ScrollProgress style={{ scaleX: scrollYProgress }} />
         <NavInner>
-          <Logo onClick={() => scrollTo('#home')}
+          <Logo onClick={() => scrollTo(homeTarget)}
             whileHover={{ scale: 1.08, y: -3 }}
             whileTap={{ scale: 0.93 }}
             transition={popSpring}>
@@ -292,7 +311,7 @@ export default function Navbar() {
           </Logo>
 
           <DesktopNav aria-label="Primary navigation">
-            {NAV_ITEMS.slice(0, -1).map(item => (
+            {desktopNavItems.map(item => (
               <NavLink key={item.href}
                 $active={activeSection === item.href.slice(1)}
                 onClick={() => scrollTo(item.href)}
@@ -310,13 +329,15 @@ export default function Navbar() {
               <ColorPicker />
             </DesktopPickerWrap>
 
-            <ContactBtn href="#contact"
-              onClick={e => { e.preventDefault(); scrollTo('#contact') }}
-              whileHover={{ scale: 1.06, y: -4 }}
-              whileTap={{ scale: 0.93 }}
-              transition={popSpring}>
-              Hire Me
-            </ContactBtn>
+            {sectionVisibility.contact && (
+              <ContactBtn href="#contact"
+                onClick={e => { e.preventDefault(); scrollTo('#contact') }}
+                whileHover={{ scale: 1.06, y: -4 }}
+                whileTap={{ scale: 0.93 }}
+                transition={popSpring}>
+                Hire Me
+              </ContactBtn>
+            )}
 
             <MenuBtn onClick={() => setMenuOpen(v => !v)}
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -348,7 +369,7 @@ export default function Navbar() {
             </MobileClose>
             <motion.div variants={staggerContainer} initial="hidden" animate="visible"
               style={{ display: 'flex', flexDirection: 'column' }}>
-              {NAV_ITEMS.map((item, i) => (
+              {visibleNavItems.map((item, i) => (
                 <MobileNavLink key={item.href}
                   variants={mobileMenuItem} custom={i}
                   onClick={() => scrollTo(item.href)}>

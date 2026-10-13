@@ -288,16 +288,30 @@ const AdminBtn = styled(motion(Link))`
   }
 `
 
-const LINKS = ['Home', 'About', 'Journey', 'Skills', 'Projects', 'Certificates', 'FAQ', 'Contact']
+import type { SectionVisibility } from '../../types'
+
+const ALL_LINKS: { key: keyof SectionVisibility; label: string }[] = [
+  { key: 'hero',         label: 'Home' },
+  { key: 'about',        label: 'About' },
+  { key: 'journey',      label: 'Journey' },
+  { key: 'skills',       label: 'Skills' },
+  { key: 'projects',     label: 'Projects' },
+  { key: 'certificates', label: 'Certificates' },
+  { key: 'faq',          label: 'FAQ' },
+  { key: 'contact',      label: 'Contact' },
+]
+
 const scrollTo = (id: string) =>
   document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: 'smooth' })
 
 /* ─── Component ─── */
 export default function Footer() {
-  const { settings } = usePublicData()
+  const { settings, sectionVisibility } = usePublicData()
   const { accent, isMonoTheme } = useAccent()
   const hoverBg = accent.primary
   const hoverFg = isMonoTheme ? '#000000' : accent.textColor
+
+  const visibleLinks = ALL_LINKS.filter(l => sectionVisibility[l.key] !== false)
 
   return (
     <FooterEl>
@@ -319,13 +333,13 @@ export default function Footer() {
           <FooterCell>
             <CellLabel>// NAVIGATION</CellLabel>
             <FooterNav aria-label="Footer navigation">
-              {LINKS.map(l => (
+              {visibleLinks.map(l => (
                 <FooterLink
-                  key={l}
-                  onClick={() => scrollTo(l)}
+                  key={l.label}
+                  onClick={() => scrollTo(l.label)}
                   whileTap={{ scale: 0.95 }}
                   transition={popSpring}>
-                  <FiArrowRight size={12} /> {l}
+                  <FiArrowRight size={12} /> {l.label}
                 </FooterLink>
               ))}
             </FooterNav>

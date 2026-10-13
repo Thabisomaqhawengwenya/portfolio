@@ -7,7 +7,8 @@ import Lenis from 'lenis'
 import { theme as baseTheme } from './styles/theme'
 import { GlobalStyles }       from './styles/GlobalStyles'
 import { ThemeAccentProvider, useAccent } from './styles/ThemeContext'
-import { PublicDataProvider } from './styles/PublicDataContext'
+import { PublicDataProvider, usePublicData } from './styles/PublicDataContext'
+import { recordPageView } from './services/analyticsService'
 import Navbar   from './components/Navbar'
 import Hero     from './components/Hero'
 import Marquee  from './components/Marquee'
@@ -26,6 +27,7 @@ const AdminLayout       = lazy(() => import('./admin/components/AdminLayout'))
 const Login             = lazy(() => import('./admin/pages/Login'))
 const Setup             = lazy(() => import('./admin/pages/Setup'))
 const Overview          = lazy(() => import('./admin/pages/Overview'))
+const AdminSections     = lazy(() => import('./admin/pages/AdminSections'))
 const AdminProjects     = lazy(() => import('./admin/pages/AdminProjects'))
 const AdminCertificates = lazy(() => import('./admin/pages/AdminCertificates'))
 const AdminJourney      = lazy(() => import('./admin/pages/AdminJourney'))
@@ -43,6 +45,7 @@ const AdminLoadingFallback = () => (
 /* ─── Portfolio wrapper ─── */
 function PortfolioApp() {
   const { accent } = useAccent()
+  const { sectionVisibility } = usePublicData()
 
   const activeTheme = useMemo(() => {
     const ov = accent.overrides ?? {}
@@ -89,6 +92,11 @@ function PortfolioApp() {
     return () => { cancelAnimationFrame(raf); lenis.destroy() }
   }, [])
 
+  // Telemetry: record page views and unique visitors
+  useEffect(() => {
+    recordPageView()
+  }, [])
+
   return (
     <ThemeProvider theme={activeTheme}>
       <GlobalStyles />
@@ -106,15 +114,15 @@ function PortfolioApp() {
       </a>
       <Navbar />
       <main id="main-content">
-        <Hero />
-        <Marquee />
-        <About />
-        <Journey />
-        <Skills />
-        <Projects />
-        <Certificates />
-        <FAQ />
-        <Contact />
+        {sectionVisibility.hero && <Hero />}
+        {sectionVisibility.marquee && <Marquee />}
+        {sectionVisibility.about && <About />}
+        {sectionVisibility.journey && <Journey />}
+        {sectionVisibility.skills && <Skills />}
+        {sectionVisibility.projects && <Projects />}
+        {sectionVisibility.certificates && <Certificates />}
+        {sectionVisibility.faq && <FAQ />}
+        {sectionVisibility.contact && <Contact />}
       </main>
       <Footer />
     </ThemeProvider>
@@ -165,7 +173,8 @@ export default function App() {
           </ThemeProvider>
         </Suspense>
       }>
-        <Route index       element={<Suspense fallback={<AdminLoadingFallback />}><Overview /></Suspense>}          />
+        <Route index               element={<Suspense fallback={<AdminLoadingFallback />}><Overview /></Suspense>}          />
+        <Route path="sections"     element={<Suspense fallback={<AdminLoadingFallback />}><AdminSections /></Suspense>}     />
         <Route path="projects"     element={<Suspense fallback={<AdminLoadingFallback />}><AdminProjects /></Suspense>}     />
         <Route path="certificates" element={<Suspense fallback={<AdminLoadingFallback />}><AdminCertificates /></Suspense>} />
         <Route path="journey"      element={<Suspense fallback={<AdminLoadingFallback />}><AdminJourney /></Suspense>}      />

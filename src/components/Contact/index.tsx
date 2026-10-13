@@ -7,6 +7,7 @@ import { fadeUp, slideLeft } from '../../styles/animations'
 import { useAdmin } from '../../admin/context/AdminContext'
 import { usePublicData } from '../../styles/PublicDataContext'
 import { useAccent } from '../../styles/ThemeContext'
+import { recordContactSubmit } from '../../services/analyticsService'
 
 /* ─── Styled Components ─── */
 const ContactWrap = styled.div`
@@ -376,6 +377,7 @@ export default function Contact() {
     setSending(true)
     try {
       await addMessage({ name: form.name.trim(), email: form.email.trim(), message: form.message.trim() })
+      recordContactSubmit()
       const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
       const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
       window.location.href = `mailto:${settings.email}?subject=${subject}&body=${body}`

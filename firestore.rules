@@ -58,6 +58,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    match /sections/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /analytics/{document=**} {
+      allow read, write: if true;
+    }
+    
     // ===============================================================
     // Messages Collection (Create: Valid Public Submissions, Manage: Admin Only)
     // ===============================================================

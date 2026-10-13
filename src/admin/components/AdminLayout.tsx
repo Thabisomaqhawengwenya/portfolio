@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import {
   FiGrid, FiFolder, FiCode, FiMail, FiSettings,
-  FiLogOut, FiExternalLink, FiMenu, FiX, FiActivity, FiLayout, FiAward,
+  FiLogOut, FiExternalLink, FiMenu, FiX, FiActivity, FiLayout, FiAward, FiSliders,
 } from 'react-icons/fi'
 import { useState } from 'react'
 import { useAdmin } from '../context/AdminContext'
@@ -221,6 +221,7 @@ const Overlay = styled.div<{ $visible: boolean }>`
 /* ─── Nav items config ─── */
 const NAV = [
   { to: '/admin',              label: 'Overview',     icon: <FiGrid />     },
+  { to: '/admin/sections',     label: 'Sections',     icon: <FiSliders />  },
   { to: '/admin/projects',     label: 'Projects',     icon: <FiFolder />   },
   { to: '/admin/certificates', label: 'Certificates', icon: <FiAward />    },
   { to: '/admin/journey',      label: 'Journey',      icon: <FiActivity /> },
@@ -234,6 +235,7 @@ const NAV = [
 const pageLabel = (pathname: string) => {
   const map: Record<string, string> = {
     '/admin':              'Overview',
+    '/admin/sections':     'Section Visibility',
     '/admin/projects':     'Projects',
     '/admin/certificates': 'Certificates',
     '/admin/journey':      'Journey',

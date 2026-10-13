@@ -10,7 +10,8 @@ import {
   query, orderBy,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate } from '../types'
+import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate, SectionVisibility } from '../types'
+import { DEFAULT_SECTION_VISIBILITY } from '../types'
 import type { AdminSettings } from '../admin/context/AdminContext'
 import { HERO_DEFAULTS } from './firestoreService'
 
@@ -86,6 +87,13 @@ export async function publicGetCertificates(): Promise<Certificate[]> {
       return ordA - ordB
     })
   }, staticCertificates)
+}
+
+export async function publicGetSectionVisibility(): Promise<SectionVisibility> {
+  return tryFetch(async () => {
+    const snap = await getDoc(doc(db, 'settings', 'sections'))
+    return snap.exists() ? { ...DEFAULT_SECTION_VISIBILITY, ...snap.data() } as SectionVisibility : DEFAULT_SECTION_VISIBILITY
+  }, DEFAULT_SECTION_VISIBILITY)
 }
 
 

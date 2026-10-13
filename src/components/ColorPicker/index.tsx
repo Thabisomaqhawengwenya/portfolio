@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiChevronDown, FiCheck } from 'react-icons/fi'
 import { ACCENT_OPTIONS, useAccent } from '../../styles/ThemeContext'
 import type { AccentOption } from '../../styles/ThemeContext'
+import { recordThemeChange } from '../../services/analyticsService'
 
 /* ──────────────────────────────────────────────
    NEO-BRUTALIST THEME DROPDOWN
@@ -158,6 +159,7 @@ export default function ColorPicker({ mobile = false }: ColorPickerProps) {
 
   const handleSelect = (opt: AccentOption) => {
     setAccent(opt)
+    recordThemeChange(opt.label)
     setIsOpen(false)
   }
 

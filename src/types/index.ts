@@ -107,3 +107,47 @@ export interface GitHubStats {
   commitCount:  number   // total authored commits from GitHub
   lastUpdated:  number   // timestamp in milliseconds
 }
+
+/* ─── Section Visibility ─── */
+export interface SectionVisibility {
+  hero: boolean
+  marquee: boolean
+  about: boolean
+  journey: boolean
+  skills: boolean
+  projects: boolean
+  certificates: boolean
+  faq: boolean
+  contact: boolean
+}
+
+export const DEFAULT_SECTION_VISIBILITY: SectionVisibility = {
+  hero: true,
+  marquee: true,
+  about: true,
+  journey: true,
+  skills: true,
+  projects: true,
+  certificates: true,
+  faq: true,
+  contact: true,
+}
+
+/* ─── Analytics Summary ─── */
+export interface AnalyticsSummary {
+  pageViews: number
+  uniqueVisitors: number
+  cvDownloads: number
+  projectClicks: number
+  contactSubmissions: number
+  lastUpdated: number
+}
+
+export const DEFAULT_ANALYTICS_SUMMARY: AnalyticsSummary = {
+  pageViews: 0,
+  uniqueVisitors: 0,
+  cvDownloads: 0,
+  projectClicks: 0,
+  contactSubmissions: 0,
+  lastUpdated: 0,
+}

@@ -163,6 +163,7 @@ export default function AdminSettings() {
   const {
     settings, updateSettings,
     projects, certificates, skillGroups, journey, messages, heroContent,
+    sectionVisibility,
     seedDatabase,
   } = useAdmin()
   const [form,  setForm]  = useState<AdminSettings>({ ...settings })
@@ -199,6 +200,7 @@ export default function AdminSettings() {
       portfolioOwner: 'Maqhawe Thabiso Ngwenya',
       settings: form,
       heroContent,
+      sectionVisibility,
       projects,
       certificates,
       skills: skillGroups,

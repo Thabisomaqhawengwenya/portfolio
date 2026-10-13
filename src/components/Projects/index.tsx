@@ -11,6 +11,7 @@ import { fadeUp, slideLeft } from '../../styles/animations'
 import { projects as staticProjects } from '../../data/projects'
 import { useAccent }     from '../../styles/ThemeContext'
 import { usePublicData } from '../../styles/PublicDataContext'
+import { recordProjectClick } from '../../services/analyticsService'
 import type { Project } from '../../types'
 
 /* Multi-colour palette for non-mono themes */
@@ -590,6 +591,7 @@ function ProjectRow({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${project.title} GitHub repository`}
+              onClick={() => recordProjectClick(project.title, 'github')}
               whileHover={{ scale: 1.06, y: -4 }}
               whileTap={{ scale: 0.94 }}
               transition={popSpring}>
@@ -603,6 +605,7 @@ function ProjectRow({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${project.title} live site`}
+              onClick={() => recordProjectClick(project.title, 'live')}
               whileHover={{ scale: 1.06, y: -4 }}
               whileTap={{ scale: 0.94 }}
               transition={popSpring}>
@@ -616,6 +619,7 @@ function ProjectRow({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`View ${project.title}`}
+              onClick={() => recordProjectClick(project.title, 'github')}
               whileHover={{ scale: 1.06, y: -4 }}
               whileTap={{ scale: 0.94 }}
               transition={popSpring}>

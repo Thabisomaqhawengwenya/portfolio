@@ -4,7 +4,8 @@ import {
   query, orderBy, serverTimestamp, Timestamp,
 } from 'firebase/firestore'
 import { db } from './config'
-import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate } from '../types'
+import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate, SectionVisibility } from '../types'
+import { DEFAULT_SECTION_VISIBILITY } from '../types'
 import type { Message, AdminSettings } from '../admin/context/AdminContext'
 
 const COL = {
@@ -207,4 +208,19 @@ export async function fsSaveHeroContent(h: HeroContent): Promise<void> {
   await setDoc(doc(db, COL.hero, HERO_ID), cleanFirestoreData(h), { merge: true })
 }
 export { HERO_DEFAULTS }
+
+/* ──────────────── SECTION VISIBILITY ──────────────── */
+const SECTIONS_ID = 'sections'
+export async function fsGetSectionVisibility(): Promise<SectionVisibility> {
+  try {
+    const snap = await getDoc(doc(db, COL.settings, SECTIONS_ID))
+    return snap.exists() ? { ...DEFAULT_SECTION_VISIBILITY, ...snap.data() } as SectionVisibility : DEFAULT_SECTION_VISIBILITY
+  } catch (err) {
+    console.error('Error fetching section visibility from Firestore:', err)
+    return DEFAULT_SECTION_VISIBILITY
+  }
+}
+export async function fsSaveSectionVisibility(v: SectionVisibility): Promise<void> {
+  await setDoc(doc(db, COL.settings, SECTIONS_ID), cleanFirestoreData(v), { merge: true })
+}
 

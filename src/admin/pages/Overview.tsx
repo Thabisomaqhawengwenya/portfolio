@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { FiFolder, FiCode, FiMail, FiTrendingUp, FiActivity, FiArrowRight, FiGlobe, FiAward, FiGithub } from 'react-icons/fi'
+import { FiFolder, FiCode, FiMail, FiTrendingUp, FiActivity, FiArrowRight, FiGlobe, FiAward, FiGithub, FiSliders } from 'react-icons/fi'
 import { Link } from 'react-router-dom'
 import { useAdmin } from '../context/AdminContext'
 import { analyticsPromise } from '../../firebase/config'
@@ -11,7 +11,12 @@ import {
   DEFAULT_GITHUB_STATS,
   extractGitHubUsername,
 } from '../../services/githubService'
-import type { GitHubStats } from '../../types'
+import {
+  subscribeToAnalytics,
+  getAnalyticsSummary,
+} from '../../services/analyticsService'
+import type { GitHubStats, AnalyticsSummary } from '../../types'
+import { DEFAULT_ANALYTICS_SUMMARY } from '../../types'
 
 /* ─── Styled ─── */
 const PageTitle = styled.h1`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['3xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.03em;margin-bottom:0.5rem;`
@@ -34,25 +39,44 @@ const QuickLink = styled(motion(Link))`display:inline-flex;align-items:center;ga
 
 /* Analytics card */
 const AnalyticsCard = styled.div`border:3px solid ${({theme})=>theme.colors.border};box-shadow:${({theme})=>theme.shadows.md};background:${({theme})=>theme.colors.surface};margin-bottom:2.5rem;`
-const AnalyticsHead = styled.div`display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1.25rem;border-bottom:3px solid ${({theme})=>theme.colors.border};background:${({theme})=>theme.colors.surfaceAlt};`
+const AnalyticsHead = styled.div`display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1.25rem;border-bottom:3px solid ${({theme})=>theme.colors.border};background:${({theme})=>theme.colors.surfaceAlt};gap:1rem;flex-wrap:wrap;`
 const AnalyticsLabel = styled.p`font-family:'Space Mono',monospace;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${({theme})=>theme.colors.textMuted};`
-const AnalyticsBody = styled.div`padding:1.25rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;`
+const AnalyticsBody = styled.div`padding:1.25rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:1rem;`
 const AMetric = styled.div`display:flex;flex-direction:column;gap:0.25rem;`
-const AValue = styled.p`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['2xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.03em;line-height:1;`
+const AValue = styled.p`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['2xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.03em;line-height:1;font-variant-numeric:tabular-nums;`
 const ALabel = styled.p`font-family:'Space Mono',monospace;font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:${({theme})=>theme.colors.textFaint};`
 const AnalyticsNote = styled.p`font-family:'Space Mono',monospace;font-size:0.65rem;color:${({theme})=>theme.colors.textFaint};padding:0 1.25rem 1rem;line-height:1.6;`
 const GaLink = styled.a`color:${({theme})=>theme.colors.primary};text-decoration:none;&:hover{text-decoration:underline;}`
+const ActionButton = styled.button`background:none;border:1px solid currentColor;padding:2px 8px;font-size:0.65rem;font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;text-transform:uppercase;color:${({theme})=>theme.colors.text};transition:background 0.15s, transform 0.1s;&:hover{background:${({theme})=>theme.colors.surface};}&:active{transform:scale(0.97);}&:disabled{cursor:not-allowed;opacity:0.6;}`
+const LiveIndicator = styled.span`display:inline-flex;align-items:center;gap:0.35rem;font-family:'Space Mono',monospace;font-size:0.65rem;font-weight:700;color:#00C853;text-transform:uppercase;letter-spacing:0.05em;span{width:7px;height:7px;border-radius:50%;background:#00C853;box-shadow:0 0 6px rgba(0,200,83,0.7);}`
 
 export default function Overview() {
-  const { projects, certificates, skillGroups, messages, journey, settings } = useAdmin()
+  const { projects, certificates, skillGroups, messages, journey, settings, sectionVisibility } = useAdmin()
   const unread = messages.filter(m => !m.read).length
   const totalSkills = skillGroups.reduce((a,g)=>a+g.skills.length, 0)
+  const activeSectionsCount = Object.values(sectionVisibility).filter(Boolean).length
   const [gaReady, setGaReady] = useState(false)
+  const [analyticsSummary, setAnalyticsSummary] = useState<AnalyticsSummary>(DEFAULT_ANALYTICS_SUMMARY)
+  const [refreshingAnalytics, setRefreshingAnalytics] = useState(false)
   const [ghStats, setGhStats] = useState<GitHubStats>(() => getCachedGitHubStats() || DEFAULT_GITHUB_STATS)
   const [syncingGh, setSyncingGh] = useState(false)
 
   useEffect(() => {
     analyticsPromise.then(a => setGaReady(!!a)).catch(() => setGaReady(false))
+  }, [])
+
+  useEffect(() => {
+    const unsub = subscribeToAnalytics(summary => {
+      setAnalyticsSummary(summary)
+    })
+    return () => unsub()
+  }, [])
+
+  const handleRefreshAnalytics = useCallback(async () => {
+    setRefreshingAnalytics(true)
+    const fresh = await getAnalyticsSummary()
+    setAnalyticsSummary(fresh)
+    setRefreshingAnalytics(false)
   }, [])
 
   useEffect(() => {
@@ -69,12 +93,13 @@ export default function Overview() {
   }
 
   const stats = [
-    { label:'Projects',     value:projects.length,     icon:<FiFolder/>,     color:'#FFE500', to:'/admin/projects'     },
-    { label:'Certificates', value:certificates.length, icon:<FiAward/>,      color:'#FF6B9D', to:'/admin/certificates' },
-    { label:'Skill Groups', value:skillGroups.length,  icon:<FiCode/>,       color:'#0047FF', to:'/admin/skills'       },
-    { label:'Total Skills', value:totalSkills,          icon:<FiTrendingUp/>, color:'#00C853', to:'/admin/skills'       },
-    { label:'Journey',      value:journey.length,      icon:<FiActivity/>,   color:'#FFA500', to:'/admin/journey'      },
-    { label:'Messages',     value:messages.length,     icon:<FiMail/>,       color:'#FF3C2F', to:'/admin/messages'     },
+    { label:'Sections Active', value:`${activeSectionsCount}/9`, icon:<FiSliders/>, color:'#FFE500', to:'/admin/sections' },
+    { label:'Projects',        value:projects.length,            icon:<FiFolder/>,  color:'#FFE500', to:'/admin/projects' },
+    { label:'Certificates',    value:certificates.length,        icon:<FiAward/>,   color:'#FF6B9D', to:'/admin/certificates' },
+    { label:'Skill Groups',    value:skillGroups.length,         icon:<FiCode/>,    color:'#0047FF', to:'/admin/skills' },
+    { label:'Total Skills',    value:totalSkills,                 icon:<FiTrendingUp/>, color:'#00C853', to:'/admin/skills' },
+    { label:'Journey',         value:journey.length,             icon:<FiActivity/>,   color:'#FFA500', to:'/admin/journey' },
+    { label:'Messages',        value:messages.length,            icon:<FiMail/>,       color:'#FF3C2F', to:'/admin/messages' },
   ]
 
   return (
@@ -102,22 +127,12 @@ export default function Overview() {
         <AnalyticsHead>
           <AnalyticsLabel>GitHub Automation (12h Sync)</AnalyticsLabel>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <button
+            <ActionButton
               onClick={handleManualSync}
               disabled={syncingGh}
-              style={{
-                background: 'none',
-                border: '1px solid currentColor',
-                padding: '2px 8px',
-                fontSize: '0.65rem',
-                fontFamily: "'Space Mono', monospace",
-                fontWeight: 700,
-                cursor: syncingGh ? 'not-allowed' : 'pointer',
-                textTransform: 'uppercase',
-              }}
             >
               {syncingGh ? 'Syncing…' : 'Sync Now'}
-            </button>
+            </ActionButton>
             <FiGithub style={{ fontSize: '1.1rem' }} />
           </div>
         </AnalyticsHead>
@@ -141,31 +156,61 @@ export default function Overview() {
         </AnalyticsNote>
       </AnalyticsCard>
 
-      {/* Analytics */}
+      {/* Live Telemetry & Analytics */}
       <AnalyticsCard>
         <AnalyticsHead>
-          <AnalyticsLabel>Analytics (Google Analytics)</AnalyticsLabel>
-          <FiGlobe style={{color:'var(--primary)',fontSize:'1rem'}}/>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <AnalyticsLabel>Live Telemetry & GA4 Analytics</AnalyticsLabel>
+            <LiveIndicator>
+              <span /> Live
+            </LiveIndicator>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <ActionButton
+              onClick={handleRefreshAnalytics}
+              disabled={refreshingAnalytics}
+              title="Refresh live telemetry stats"
+            >
+              {refreshingAnalytics ? 'Refreshing…' : 'Refresh'}
+            </ActionButton>
+            <FiGlobe style={{ color: 'var(--primary)', fontSize: '1.1rem' }} />
+          </div>
         </AnalyticsHead>
         <AnalyticsBody>
           <AMetric>
-            <AValue>–</AValue>
+            <AValue>{analyticsSummary.pageViews}</AValue>
             <ALabel>Page Views</ALabel>
           </AMetric>
           <AMetric>
-            <AValue>–</AValue>
+            <AValue>{analyticsSummary.uniqueVisitors}</AValue>
             <ALabel>Unique Visitors</ALabel>
           </AMetric>
           <AMetric>
-            <AValue>{gaReady ? 'Active' : 'Loading…'}</AValue>
-            <ALabel>GA Status</ALabel>
+            <AValue>{analyticsSummary.projectClicks}</AValue>
+            <ALabel>Project Clicks</ALabel>
+          </AMetric>
+          <AMetric>
+            <AValue>{analyticsSummary.cvDownloads}</AValue>
+            <ALabel>CV Downloads</ALabel>
+          </AMetric>
+          <AMetric>
+            <AValue>{analyticsSummary.contactSubmissions}</AValue>
+            <ALabel>Inquiries Sent</ALabel>
+          </AMetric>
+          <AMetric>
+            <AValue>{gaReady ? 'Active' : 'Connecting…'}</AValue>
+            <ALabel>GA4 Telemetry</ALabel>
           </AMetric>
         </AnalyticsBody>
         <AnalyticsNote>
-          Real-time metrics are not available via the client SDK.{' '}
-          View full analytics in the{' '}
-          <GaLink href={`https://analytics.google.com/analytics/web/#/p${import.meta.env.VITE_GA_PROPERTY_ID??''}/reports/reportinghub`}
-            target="_blank" rel="noopener noreferrer">
+          Dual telemetry: real-time in-app visitor interactions recorded directly to Firestore and Google Analytics 4.
+          {analyticsSummary.lastUpdated > 0 && ` Last event recorded: ${new Date(analyticsSummary.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`}
+          {' '}View comprehensive traffic graphs in the{' '}
+          <GaLink
+            href={`https://analytics.google.com/analytics/web/#/p${import.meta.env.VITE_GA_PROPERTY_ID ?? ''}/reports/reportinghub`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Google Analytics Console
           </GaLink>{' '}
           using Measurement ID <strong>G-WYTDKSMD0G</strong>.

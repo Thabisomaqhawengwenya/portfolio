@@ -5,6 +5,7 @@ import { certificates } from '../data/certificates'
 import { experience } from '../data/experience'
 import { skillGroups } from '../data/skills'
 import { HERO_DEFAULTS } from './firestoreService'
+import { DEFAULT_SECTION_VISIBILITY } from '../types'
 import type { AdminSettings } from '../admin/context/AdminContext'
 
 const DEFAULT_SETTINGS: AdminSettings = {
@@ -61,8 +62,9 @@ export async function seedAllDataToFirestore(): Promise<SeedResult> {
     details.skills++
   }
 
-  // 4. Settings
+  // 4. Settings & Section Visibility
   await setDoc(doc(db, 'settings', 'main'), DEFAULT_SETTINGS)
+  await setDoc(doc(db, 'settings', 'sections'), DEFAULT_SECTION_VISIBILITY)
   details.settings = true
 
   // 5. Hero Content

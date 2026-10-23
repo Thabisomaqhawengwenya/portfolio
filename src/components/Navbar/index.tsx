@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence, useScroll } from 'framer-motion'
 import { staggerContainer, mobileMenuItem } from '../../styles/animations'
@@ -26,7 +26,7 @@ const ALL_NAV_ITEMS: NavItemDef[] = [
 ]
 
 /* ─── Styled ─── */
-const NavOuter = styled.header`
+const NavOuter = styled(motion.header)`
   position: fixed;
   top: 1.15rem;
   left: 0;
@@ -41,8 +41,8 @@ const NavOuter = styled.header`
   }
 `
 
-const NavBar = styled.div`
-  pointer-events: auto;
+const NavBar = styled.div<{ $hidden?: boolean }>`
+  pointer-events: ${({ $hidden }) => ($hidden ? 'none' : 'auto')};
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -57,12 +57,22 @@ const NavBar = styled.div`
   justify-content: space-between;
   gap: 1rem;
   position: relative;
-  transition: background 0.12s ease, box-shadow 0.12s ease;
+  transition: background 0.12s ease, box-shadow 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0px ${({ theme }) => theme.colors.border};
+  }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     min-height: 60px;
     padding: 0.45rem 0.85rem;
     box-shadow: 4px 4px 0px ${({ theme }) => theme.colors.border};
+
+    &:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 5px 5px 0px ${({ theme }) => theme.colors.border};
+    }
   }
 `
 
@@ -364,8 +374,10 @@ function FlameBadgeIcon() {
 /* ─── Component ─── */
 export default function Navbar() {
   const { sectionVisibility } = usePublicData()
-  const [activeSection, setActive]  = useState('home')
-  const [menuOpen,      setMenuOpen] = useState(false)
+  const [activeSection, setActive]    = useState('home')
+  const [menuOpen,      setMenuOpen]  = useState(false)
+  const [navHidden,     setNavHidden] = useState(false)
+  const lastScrollY = useRef(0)
   const { scrollYProgress } = useScroll()
 
   const visibleNavItems = useMemo(() => {
@@ -382,11 +394,25 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => {
+      const currentY = window.scrollY
+      const delta = currentY - lastScrollY.current
+
+      // Hide when scrolling down past 60px; show immediately when scrolling up
+      if (currentY <= 60) {
+        setNavHidden(false)
+      } else if (delta > 6) {
+        setNavHidden(true)
+      } else if (delta < -6) {
+        setNavHidden(false)
+      }
+      lastScrollY.current = currentY
+
       const sections = visibleNavItems.map(n => n.href.slice(1))
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i])
-        if (el && window.scrollY >= el.offsetTop - 130) {
-          setActive(sections[i]); break
+        if (el && currentY >= el.offsetTop - 130) {
+          setActive(sections[i])
+          break
         }
       }
     }
@@ -411,11 +437,18 @@ export default function Navbar() {
   }, [menuOpen])
 
   const homeTarget = visibleNavItems[0]?.href || '#home'
+  const isHidden = navHidden && !menuOpen
 
   return (
     <>
-      <NavOuter>
-        <NavBar>
+      <NavOuter
+        initial={{ y: 0, opacity: 1 }}
+        animate={{
+          y: isHidden ? -115 : 0,
+          opacity: isHidden ? 0 : 1,
+        }}
+        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
+        <NavBar $hidden={isHidden}>
           <ScrollProgress style={{ scaleX: scrollYProgress }} />
 
           <Logo

@@ -1,13 +1,14 @@
-import { useRef, useState, useMemo } from 'react'
+import { useRef, useState, useMemo, useCallback } from 'react'
 import styled, { css } from 'styled-components'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { motion, useInView, AnimatePresence, useReducedMotion, type Variants } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiArrowRight, FiArrowLeft } from 'react-icons/fi'
+import type Lenis from 'lenis'
 import {
   Container, Section, SectionHeader,
   SectionEyebrow, SectionTitle, SectionSubtitle, Tag,
   popSpring,
 } from '../UI'
-import { fadeUp, slideLeft } from '../../styles/animations'
+import { fadeUp } from '../../styles/animations'
 import { projects as staticProjects } from '../../data/projects'
 import { useAccent }     from '../../styles/ThemeContext'
 import { usePublicData } from '../../styles/PublicDataContext'
@@ -21,6 +22,73 @@ const ITEMS_PER_PAGE = 3
 
 const getInitials = (title: string) =>
   title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+
+/* ──────────────────────────────────────────────
+   3D BOOK PAGE-TURN VARIANTS (Overlapping Spine Hinge)
+   Slightly slower, deliberate physical book-turn feel
+────────────────────────────────────────────── */
+const bookPageVariants: Variants = {
+  enter: (dir: number) =>
+    dir >= 0
+      ? {
+          rotateY: 26,
+          scale: 0.975,
+          opacity: 0,
+          zIndex: 2,
+          transformOrigin: 'left center',
+        }
+      : {
+          rotateY: -108,
+          scale: 0.99,
+          opacity: 0,
+          zIndex: 3,
+          transformOrigin: 'left center',
+        },
+  center: {
+    rotateY: 0,
+    scale: 1,
+    opacity: 1,
+    zIndex: 2,
+    transformOrigin: 'left center',
+    transition: {
+      rotateY: { duration: 0.88, ease: [0.22, 1, 0.36, 1] },
+      scale:   { duration: 0.88, ease: [0.22, 1, 0.36, 1] },
+      opacity: { duration: 0.45, ease: 'easeOut' },
+    },
+  },
+  exit: (dir: number) =>
+    dir >= 0
+      ? {
+          rotateY: -108,
+          scale: 0.985,
+          opacity: 0,
+          zIndex: 3,
+          transformOrigin: 'left center',
+          transition: {
+            rotateY: { duration: 0.85, ease: [0.32, 0.04, 0.24, 1] },
+            scale:   { duration: 0.85, ease: 'easeInOut' },
+            opacity: { duration: 0.45, delay: 0.32, ease: 'easeIn' },
+          },
+        }
+      : {
+          rotateY: 24,
+          scale: 0.968,
+          opacity: 0,
+          zIndex: 1,
+          transformOrigin: 'left center',
+          transition: {
+            rotateY: { duration: 0.82, ease: [0.22, 1, 0.36, 1] },
+            scale:   { duration: 0.82, ease: [0.22, 1, 0.36, 1] },
+            opacity: { duration: 0.55, delay: 0.18, ease: 'easeIn' },
+          },
+        },
+}
+
+const reducedPageVariants: Variants = {
+  enter:  { opacity: 0 },
+  center: { opacity: 1, transition: { duration: 0.2 } },
+  exit:   { opacity: 0, transition: { duration: 0.2 } },
+}
 
 /* ──────────────────────────────────────────────
    FILTER BAR — centered, matches Skills tab style
@@ -64,13 +132,47 @@ const FilterTab = styled(motion.button)<{ $active: boolean }>`
 `
 
 /* ──────────────────────────────────────────────
-   LAYOUT — stacked rows
+   LAYOUT — 3D Book Stage & Stacked Rows
 ────────────────────────────────────────────── */
+const BookStage = styled.div`
+  position: relative;
+  display: grid;
+  grid-template-columns: 100%;
+  align-items: start;
+  perspective: 2400px;
+  perspective-origin: 12% 50%;
+  transform-style: preserve-3d;
+  overflow-anchor: none;
+`
+
 const RowList = styled(motion.div)`
+  grid-area: 1 / 1;
+  position: relative;
   display: flex;
   flex-direction: column;
   border: 3px solid ${({ theme }) => theme.colors.border};
   box-shadow: ${({ theme }) => theme.shadows.xl};
+  background: ${({ theme }) => theme.colors.surface};
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  overflow-anchor: none;
+`
+
+/* Spine crease & page-curl shading overlay during 3D page turns */
+const PageTurnCrease = styled(motion.div)`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 12;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.36) 0%,
+    rgba(0, 0, 0, 0.14) 16%,
+    rgba(0, 0, 0, 0.03) 42%,
+    rgba(0, 0, 0, 0) 70%,
+    rgba(0, 0, 0, 0.18) 100%
+  );
 `
 
 const Row = styled(motion.div)`
@@ -427,6 +529,7 @@ const PaginationWrap = styled(motion.div)`
   justify-content: center;
   gap: ${({ theme }) => theme.spacing['4']};
   margin-top: ${({ theme }) => theme.spacing['10']};
+  overflow-anchor: none;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
     gap: ${({ theme }) => theme.spacing['2']};
@@ -487,13 +590,16 @@ const PageIndicator = styled.div`
   text-transform: uppercase;
   color: ${({ theme }) => theme.colors.text};
   user-select: none;
+  perspective: 400px;
 
   .page-num {
+    display: inline-block;
     background: ${({ theme }) => theme.colors.primary};
     color: ${({ theme }) => theme.accentText ?? theme.colors.text};
     padding: 0.15rem 0.5rem;
     border: 2px solid ${({ theme }) => theme.colors.border};
     font-weight: 900;
+    transform-origin: left center;
   }
 
   .total-num {
@@ -513,21 +619,18 @@ function ProjectRow({
   index: number
   overallIndex: number
 }) {
-  const ref    = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
   const { isMonoTheme, accent } = useAccent()
-  const num    = String(overallIndex + 1).padStart(2, '0')
+  const num = String(overallIndex + 1).padStart(2, '0')
 
   /* Colour selection: multi-colour in normal themes, mono in Black */
   const bg = isMonoTheme ? accent.primary           : ROW_ACCENTS[overallIndex % ROW_ACCENTS.length]
   const fg = isMonoTheme ? accent.textColor         : ROW_TEXT[overallIndex % ROW_TEXT.length]
 
   return (
-    <Row ref={ref}
-      variants={slideLeft}
-      initial="hidden"
-      animate={inView ? 'visible' : 'hidden'}
-      transition={{ delay: index * 0.08 }}>
+    <Row
+      initial={{ opacity: 0, x: -16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.08, ease: [0.16, 1, 0.3, 1] }}>
 
       <RowNumber $bg={bg} $fg={fg}>
         <span>Project {num}</span>
@@ -636,8 +739,10 @@ function ProjectRow({
    SECTION
 ────────────────────────────────────────────── */
 export default function Projects() {
-  const ref    = useRef(null)
-  const inView = useInView(ref, { once: true })
+  const ref      = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const inView   = useInView(ref, { once: true })
+  const prefersReducedMotion = Boolean(useReducedMotion())
   const { isMonoTheme, accent } = useAccent()
   /* Use public Firestore data when available, fall back to static */
   const { projects: adminProjects } = usePublicData()
@@ -656,8 +761,57 @@ export default function Projects() {
   const [selectedCategory, setSelectedCategory] = useState<Project['category'] | null>(null)
   const active = selectedCategory && categories.includes(selectedCategory) ? selectedCategory : (categories[0] ?? 'Business')
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [flipDirection, setFlipDirection] = useState<number>(1)
+
+  const scrollToProjectsStage = useCallback((immediate = false) => {
+    const el = stageRef.current ?? document.getElementById('projects')
+    if (!el) return
+
+    const rect = el.getBoundingClientRect()
+    const targetTop = Math.max(0, rect.top + window.scrollY - 96)
+
+    // Only scroll up if the top of the book stage is above the comfortable viewport header zone
+    if (rect.top < 72 || rect.top > window.innerHeight * 0.6) {
+      const lenis = (window as Window & { __lenis?: Lenis }).__lenis
+      if (lenis) {
+        lenis.resize()
+        lenis.scrollTo(targetTop, {
+          immediate: immediate || prefersReducedMotion,
+          duration: 0.75,
+          force: true,
+        })
+      } else {
+        window.scrollTo({
+          top: targetTop,
+          behavior: immediate || prefersReducedMotion ? 'auto' : 'smooth',
+        })
+      }
+    }
+  }, [prefersReducedMotion])
+
+  const handleFlipExitComplete = useCallback(() => {
+    const lenis = (window as Window & { __lenis?: Lenis }).__lenis
+    if (lenis) {
+      lenis.resize()
+    }
+    const el = stageRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    // Guarantee the book remains in view even after a taller Page 1 unmounts into a shorter Page 2
+    if (rect.bottom < 160 || rect.top < -80) {
+      const targetTop = Math.max(0, rect.top + window.scrollY - 96)
+      if (lenis) {
+        lenis.scrollTo(targetTop, { immediate: true, force: true })
+      } else {
+        window.scrollTo({ top: targetTop, behavior: 'auto' })
+      }
+    }
+  }, [])
 
   const handleSelectCategory = (cat: Project['category']) => {
+    const prevIdx = categories.indexOf(active)
+    const nextIdx = categories.indexOf(cat)
+    setFlipDirection(nextIdx >= prevIdx ? 1 : -1)
     setSelectedCategory(cat)
     setCurrentPage(1)
   }
@@ -671,27 +825,17 @@ export default function Projects() {
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
+      setFlipDirection(-1)
       setCurrentPage(prev => prev - 1)
-      const el = document.getElementById('projects')
-      if (el) {
-        const top = el.getBoundingClientRect().top + window.scrollY - 80
-        if (window.scrollY > top) {
-          window.scrollTo({ top, behavior: 'smooth' })
-        }
-      }
+      scrollToProjectsStage()
     }
   }
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
+      setFlipDirection(1)
       setCurrentPage(prev => prev + 1)
-      const el = document.getElementById('projects')
-      if (el) {
-        const top = el.getBoundingClientRect().top + window.scrollY - 80
-        if (window.scrollY > top) {
-          window.scrollTo({ top, behavior: 'smooth' })
-        }
-      }
+      scrollToProjectsStage()
     }
   }
 
@@ -706,8 +850,10 @@ export default function Projects() {
         { bg: '#FFE500', fg: '#000' },
       ]
 
+  const activeVariants = prefersReducedMotion ? reducedPageVariants : bookPageVariants
+
   return (
-    <Section id="projects">
+    <Section id="projects" style={{ overflowAnchor: 'none' }}>
       <Container>
         <motion.div ref={ref}
           variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
@@ -759,19 +905,40 @@ export default function Projects() {
           </FilterBar>
         </FilterWrap>
 
-        {/* ── Project rows ── */}
-        <AnimatePresence mode="wait">
-          <RowList key={`${active}-page-${safePage}`}>
-            {displayedProjects.map((p, i) => (
-              <ProjectRow
-                key={p.id}
-                project={p}
-                index={i}
-                overallIndex={startIndex + i}
-              />
-            ))}
-          </RowList>
-        </AnimatePresence>
+        {/* ── 3D Book-Flip Project Rows ── */}
+        <BookStage ref={stageRef}>
+          <AnimatePresence
+            initial={false}
+            custom={flipDirection}
+            onExitComplete={handleFlipExitComplete}
+          >
+            <RowList
+              key={`${active}-page-${safePage}`}
+              custom={flipDirection}
+              variants={activeVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+            >
+              {!prefersReducedMotion && (
+                <PageTurnCrease
+                  initial={{ opacity: 0.85 }}
+                  animate={{ opacity: 0 }}
+                  exit={{ opacity: 0.9 }}
+                  transition={{ duration: 0.82, ease: 'easeOut' }}
+                />
+              )}
+              {displayedProjects.map((p, i) => (
+                <ProjectRow
+                  key={p.id}
+                  project={p}
+                  index={i}
+                  overallIndex={startIndex + i}
+                />
+              ))}
+            </RowList>
+          </AnimatePresence>
+        </BookStage>
 
         {/* ── Pagination Navigation Controls ── */}
         {totalPages > 1 && (
@@ -790,7 +957,28 @@ export default function Projects() {
             </PageBtn>
 
             <PageIndicator aria-label={`Page ${safePage} of ${totalPages}`}>
-              PAGE <span className="page-num">{String(safePage).padStart(2, '0')}</span> <span className="total-num">/ {String(totalPages).padStart(2, '0')}</span>
+              PAGE{' '}
+              <AnimatePresence mode="wait" initial={false} custom={flipDirection}>
+                <motion.span
+                  key={safePage}
+                  className="page-num"
+                  initial={
+                    prefersReducedMotion
+                      ? { opacity: 0 }
+                      : { rotateY: flipDirection >= 0 ? 90 : -90, opacity: 0 }
+                  }
+                  animate={{ rotateY: 0, opacity: 1 }}
+                  exit={
+                    prefersReducedMotion
+                      ? { opacity: 0 }
+                      : { rotateY: flipDirection >= 0 ? -90 : 90, opacity: 0 }
+                  }
+                  transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {String(safePage).padStart(2, '0')}
+                </motion.span>
+              </AnimatePresence>{' '}
+              <span className="total-num">/ {String(totalPages).padStart(2, '0')}</span>
             </PageIndicator>
 
             <PageBtn
@@ -808,4 +996,3 @@ export default function Projects() {
     </Section>
   )
 }
-

@@ -38,7 +38,7 @@ const AdminSettings     = lazy(() => import('./admin/pages/AdminSettings'))
 
 const AdminLoadingFallback = () => (
   <div style={{ minHeight: '100vh', background: '#0a0a0a', color: '#FFE500', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Space Mono, monospace' }}>
-    LOADING ADMIN CONSOLE…
+    LOADING ADMIN CONSOLE...
   </div>
 )
 
@@ -79,17 +79,22 @@ function PortfolioApp() {
     }
   }, [accent])
 
-  // Initialize smooth scrolling immediately on mount
+  // Initialize smooth scrolling immediately on mount and expose instance for programmatic scroll sync
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
     })
+    ;(window as Window & { __lenis?: Lenis }).__lenis = lenis
     let raf: number
     const animate = (time: number) => { lenis.raf(time); raf = requestAnimationFrame(animate) }
     raf = requestAnimationFrame(animate)
-    return () => { cancelAnimationFrame(raf); lenis.destroy() }
+    return () => {
+      cancelAnimationFrame(raf)
+      delete (window as Window & { __lenis?: Lenis }).__lenis
+      lenis.destroy()
+    }
   }, [])
 
   // Telemetry: record page views and unique visitors

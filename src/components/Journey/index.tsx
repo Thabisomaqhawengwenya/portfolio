@@ -1,39 +1,28 @@
 import { useRef } from 'react'
 import styled from 'styled-components'
 import { motion, useInView } from 'framer-motion'
-import { FiMapPin } from 'react-icons/fi'
-import {
-  Container,
-  Section,
-  SectionTitle,
-  SectionSubtitle,
-  BannerHeaderBar,
-  Tag,
-} from '../UI'
+import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, Tag } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
 import { experience as staticExperience } from '../../data/experience'
 import { useAccent }     from '../../styles/ThemeContext'
 import { usePublicData } from '../../styles/PublicDataContext'
 import type { ExperienceItem } from '../../types'
 
-/* ─── Styled ─── */
-const BannerBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.xs};
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-  border: 2px solid ${({ theme }) => theme.colors.background};
-  padding: 0.25rem 0.65rem;
-  margin-bottom: ${({ theme }) => theme.spacing['3']};
-  width: fit-content;
-`
+/* Per-type accent colours used in non-mono themes */
+const TYPE_ACCENT: Record<ExperienceItem['type'], string> = {
+  education: '#FFE500',
+  project:   '#FF3C2F',
+  work:      '#0047FF',
+  milestone: '#00C853',
+}
+const TYPE_TEXT: Record<ExperienceItem['type'], string> = {
+  education: '#000000',
+  project:   '#ffffff',
+  work:      '#ffffff',
+  milestone: '#000000',
+}
 
+/* ─── Styled ─── */
 const TimelineWrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -43,26 +32,23 @@ const TimelineWrapper = styled.div`
 
 const Item = styled(motion.div)`
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 200px 1fr;
   border-bottom: 3px solid ${({ theme }) => theme.colors.border};
   background: ${({ theme }) => theme.colors.surface};
   transition: background 0.2s ease;
 
   &:last-child { border-bottom: none; }
-  @media (hover: hover) and (pointer: fine) {
-    &:hover { background: ${({ theme }) => theme.colors.surfaceAlt}; }
-  }
+  &:hover { background: ${({ theme }) => theme.colors.surfaceAlt}; }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     grid-template-columns: 1fr;
   }
 `
 
-const ItemSide = styled.div<{ $isPrimary: boolean }>`
+const ItemSide = styled.div<{ $bg: string }>`
   padding: ${({ theme }) => theme.spacing['6']};
   border-right: 3px solid ${({ theme }) => theme.colors.border};
-  background: ${({ $isPrimary, theme }) => ($isPrimary ? theme.colors.primary : theme.colors.surfaceAlt)};
-  color: ${({ $isPrimary, theme }) => ($isPrimary ? (theme.accentText ?? theme.colors.text) : theme.colors.text)};
+  background: ${({ $bg }) => $bg};
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -74,27 +60,13 @@ const ItemSide = styled.div<{ $isPrimary: boolean }>`
   }
 `
 
-const ItemDate = styled.span`
+const ItemDate = styled.span<{ $color: string }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: inherit;
+  color: ${({ $color }) => $color};
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-variant-numeric: tabular-nums;
-`
-
-const LocationMeta = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: 0.7rem;
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: inherit;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 0.5rem;
 `
 
 const TypePill = styled.span<{ $isMono?: boolean }>`
@@ -184,20 +156,15 @@ export default function Journey() {
   return (
     <Section id="journey">
       <Container>
-        <motion.div
-          ref={headerRef}
-          variants={fadeUp}
-          initial="hidden"
-          animate={headerView ? 'visible' : 'hidden'}>
-          <BannerHeaderBar>
-            <div>
-              <BannerBadge>02 // CHRONOLOGY</BannerBadge>
-              <SectionTitle>Where I've been, what I've built.</SectionTitle>
-            </div>
+        <motion.div ref={headerRef}
+          variants={fadeUp} initial="hidden" animate={headerView ? 'visible' : 'hidden'}>
+          <SectionHeader>
+            <SectionEyebrow>Journey</SectionEyebrow>
+            <SectionTitle>Where I've been,<br />what I've built.</SectionTitle>
             <SectionSubtitle>
-              Education, engineering capstones, and production milestones.
+              My development journey — education, projects, and milestones.
             </SectionSubtitle>
-          </BannerHeaderBar>
+          </SectionHeader>
         </motion.div>
 
         <TimelineWrapper>
@@ -213,46 +180,42 @@ export default function Journey() {
 function TimelineItem({ item, index }: { item: ExperienceItem; index: number }) {
   const ref          = useRef(null)
   const inView       = useInView(ref, { once: true, margin: '-60px' })
-  const { isMonoTheme } = useAccent()
+  const { isMonoTheme, accent } = useAccent()
 
-  /* Single-accent discipline: alternate active theme primary and structural surfaceAlt */
-  const isPrimary = index % 2 === 0
-  const dateLabel = `${item.startDate}${!item.endDate ? ' / PRESENT' : ` / ${item.endDate}`}`
-  const cleanTitle = item.title.replace(/\s*—\s*/g, ': ')
-  const cleanDesc  = item.description.replace(/\s*—\s*/g, ': ')
+  /* In mono: use theme primary (white) + accentText (#000)
+     Otherwise: use the per-type colour palette */
+  const sideBg    = isMonoTheme ? accent.primary   : TYPE_ACCENT[item.type]
+  const dateColor = isMonoTheme ? accent.textColor : TYPE_TEXT[item.type]
+  const dateLabel = `${item.startDate}${!item.endDate ? ' – Present' : ''}`
 
   return (
-    <Item
-      ref={ref}
-      variants={slideLeft}
-      initial="hidden"
+    <Item ref={ref}
+      variants={slideLeft} initial="hidden"
       animate={inView ? 'visible' : 'hidden'}
       transition={{ delay: index * 0.06 }}>
 
-      <ItemSide $isPrimary={isPrimary}>
-        <ItemDate>{dateLabel}</ItemDate>
+      <ItemSide $bg={sideBg}>
+        <ItemDate $color={dateColor}>{dateLabel}</ItemDate>
         <div>
           <TypePill $isMono={isMonoTheme}>
             {item.type}
           </TypePill>
           {item.location && (
-            <div>
-              <LocationMeta>
-                <FiMapPin aria-hidden="true" /> {item.location}
-              </LocationMeta>
-            </div>
+            <ItemDate $color={dateColor} style={{ marginTop: '0.5rem', display: 'block', fontSize: '0.7rem' }}>
+              📍 {item.location}
+            </ItemDate>
           )}
         </div>
       </ItemSide>
 
       <ItemBody>
-        <ItemTitle>{cleanTitle}</ItemTitle>
+        <ItemTitle>{item.title}</ItemTitle>
         <ItemOrg>{item.organization}</ItemOrg>
-        <ItemDesc>{cleanDesc}</ItemDesc>
+        <ItemDesc>{item.description}</ItemDesc>
 
         {item.highlights && item.highlights.length > 0 && (
           <Highlights>
-            {item.highlights.map((h, i) => <HL key={i}>{h.replace(/\s*—\s*/g, ': ')}</HL>)}
+            {item.highlights.map((h, i) => <HL key={i}>{h}</HL>)}
           </Highlights>
         )}
 

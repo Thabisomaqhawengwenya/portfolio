@@ -1,40 +1,15 @@
 import { useRef, useState } from 'react'
 import styled from 'styled-components'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiMail, FiArrowRight, FiDownload, FiCheck, FiSend, FiCopy, FiAlertCircle } from 'react-icons/fi'
-import {
-  Container,
-  Section,
-  SectionTitle,
-  SectionSubtitle,
-  BannerHeaderBar,
-  popSpring,
-} from '../UI'
+import { FiGithub, FiLinkedin, FiMail, FiArrowRight, FiDownload, FiCheck, FiSend, FiCopy } from 'react-icons/fi'
+import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, popSpring } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
-import { fsAddMessage } from '../../firebase/firestoreService'
-import { useToast } from '../../context/ToastContext'
+import { useAdmin } from '../../admin/context/AdminContext'
 import { usePublicData } from '../../styles/PublicDataContext'
 import { useAccent } from '../../styles/ThemeContext'
-import { recordContactSubmit, recordCvDownload } from '../../services/analyticsService'
+import { recordContactSubmit } from '../../services/analyticsService'
 
 /* ─── Styled Components ─── */
-const BannerBadge = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.xs};
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-  border: 2px solid ${({ theme }) => theme.colors.background};
-  padding: 0.25rem 0.65rem;
-  margin-bottom: ${({ theme }) => theme.spacing['3']};
-  width: fit-content;
-`
-
 const ContactWrap = styled.div`
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
@@ -96,13 +71,13 @@ const Label = styled.label`
   color: ${({ theme }) => theme.colors.text};
 `
 
-const Input = styled.input<{ $hasError?: boolean }>`
+const Input = styled.input`
   font-family: ${({ theme }) => theme.typography.fontBody};
   font-size: ${({ theme }) => theme.typography.sizes.base};
   font-weight: ${({ theme }) => theme.typography.weights.medium};
   color: ${({ theme }) => theme.colors.text};
   background: ${({ theme }) => theme.colors.background};
-  border: 2px solid ${({ $hasError, theme }) => ($hasError ? theme.colors.error : theme.colors.border)};
+  border: 2px solid ${({ theme }) => theme.colors.border};
   border-radius: 0;
   padding: 0.75rem 1rem;
   outline: none;
@@ -114,18 +89,18 @@ const Input = styled.input<{ $hasError?: boolean }>`
   }
 
   &:focus {
-    border-color: ${({ $hasError, theme }) => ($hasError ? theme.colors.error : theme.colors.text)};
-    box-shadow: 3px 3px 0 ${({ $hasError, theme }) => ($hasError ? theme.colors.error : theme.colors.primary)};
+    border-color: ${({ theme }) => theme.colors.text};
+    box-shadow: 3px 3px 0 ${({ theme }) => theme.colors.primary};
   }
 `
 
-const Textarea = styled.textarea<{ $hasError?: boolean }>`
+const Textarea = styled.textarea`
   font-family: ${({ theme }) => theme.typography.fontBody};
   font-size: ${({ theme }) => theme.typography.sizes.base};
   font-weight: ${({ theme }) => theme.typography.weights.medium};
   color: ${({ theme }) => theme.colors.text};
   background: ${({ theme }) => theme.colors.background};
-  border: 2px solid ${({ $hasError, theme }) => ($hasError ? theme.colors.error : theme.colors.border)};
+  border: 2px solid ${({ theme }) => theme.colors.border};
   border-radius: 0;
   padding: 0.75rem 1rem;
   outline: none;
@@ -140,19 +115,9 @@ const Textarea = styled.textarea<{ $hasError?: boolean }>`
   }
 
   &:focus {
-    border-color: ${({ $hasError, theme }) => ($hasError ? theme.colors.error : theme.colors.text)};
-    box-shadow: 3px 3px 0 ${({ $hasError, theme }) => ($hasError ? theme.colors.error : theme.colors.primary)};
+    border-color: ${({ theme }) => theme.colors.text};
+    box-shadow: 3px 3px 0 ${({ theme }) => theme.colors.primary};
   }
-`
-
-const FieldError = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.xs};
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.colors.error};
 `
 
 const SubmitBtn = styled(motion.button)<{ $fg: string }>`
@@ -179,13 +144,11 @@ const SubmitBtn = styled(motion.button)<{ $fg: string }>`
     transition: transform 0.15s ease;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      transform: translate(-2px, -2px);
-      box-shadow: ${({ theme }) => theme.shadows.hover};
-      svg {
-        transform: translateX(4px);
-      }
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: ${({ theme }) => theme.shadows.hover};
+    svg {
+      transform: translateX(4px);
     }
   }
 
@@ -248,8 +211,7 @@ const StatusPill = styled.div`
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: ${({ theme }) => theme.colors.primary};
-    border: 1.5px solid ${({ theme }) => theme.colors.border};
+    background: #00C853;
     display: inline-block;
   }
 `
@@ -285,13 +247,11 @@ const EmailCard = styled(motion.button)<{ $hoverBg: string; $hoverFg: string; $c
   box-shadow: ${({ theme }) => theme.shadows.sm};
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease, color 0.15s ease;
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background: ${({ $hoverBg }) => $hoverBg};
-      color: ${({ $hoverFg }) => $hoverFg};
-      transform: translate(-2px, -2px);
-      box-shadow: ${({ theme }) => theme.shadows.md};
-    }
+  &:hover {
+    background: ${({ $hoverBg }) => $hoverBg};
+    color: ${({ $hoverFg }) => $hoverFg};
+    transform: translate(-2px, -2px);
+    box-shadow: ${({ theme }) => theme.shadows.md};
   }
 
   &:active {
@@ -329,12 +289,10 @@ const SocialLink = styled(motion.a)<{ $hoverBg: string; $hoverFg: string }>`
     border-bottom: none;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background: ${({ $hoverBg }) => $hoverBg};
-      color: ${({ $hoverFg }) => $hoverFg};
-      padding-left: ${({ theme }) => theme.spacing['10']};
-    }
+  &:hover {
+    background: ${({ $hoverBg }) => $hoverBg};
+    color: ${({ $hoverFg }) => $hoverFg};
+    padding-left: ${({ theme }) => theme.spacing['10']};
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
@@ -382,20 +340,14 @@ const SocialHandle = styled.span`
 /* ─── Component ─── */
 export default function Contact() {
   const ref = useRef(null)
-  const nameRef = useRef<HTMLInputElement>(null)
-  const emailRef = useRef<HTMLInputElement>(null)
-  const messageRef = useRef<HTMLTextAreaElement>(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
-  const { toast } = useToast()
-  const { settings, heroContent } = usePublicData()
+  const { addMessage } = useAdmin()
+  const { settings } = usePublicData()
   const { accent, isMonoTheme } = useAccent()
   const [form, setForm] = useState({ name: '', email: '', message: '' })
-  const [errors, setErrors] = useState<{ name?: string; email?: string; message?: string }>({})
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
   const [copied, setCopied] = useState(false)
-
-  const cvUrl = heroContent.cvUrl || '/Maqhawe-Ngwenya-CV.pdf'
 
   const handleCopyEmail = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -412,81 +364,27 @@ export default function Contact() {
   }
 
   const btnFg = isMonoTheme ? '#000000' : (accent.textColor || '#000000')
-  const hoverBg = accent.primary
-  const hoverFg = accent.textColor
+  const hoverBg = isMonoTheme ? accent.primary : accent.primary
+  const hoverFg = isMonoTheme ? accent.textColor : accent.textColor
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setForm(f => ({ ...f, [name]: value }))
-    if (errors[name as keyof typeof errors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }))
-    }
-  }
-
-  const validateForm = () => {
-    const nextErrors: { name?: string; email?: string; message?: string } = {}
-    const trimmedName = form.name.trim()
-    const trimmedEmail = form.email.trim()
-    const trimmedMsg = form.message.trim()
-
-    if (!trimmedName) {
-      nextErrors.name = 'Please enter your name.'
-    }
-    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      nextErrors.email = 'Please enter a valid email address.'
-    }
-    if (!trimmedMsg) {
-      nextErrors.message = 'Please enter a message.'
-    }
-
-    setErrors(nextErrors)
-
-    if (nextErrors.name) {
-      nameRef.current?.focus()
-      return false
-    }
-    if (nextErrors.email) {
-      emailRef.current?.focus()
-      return false
-    }
-    if (nextErrors.message) {
-      messageRef.current?.focus()
-      return false
-    }
-    return true
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!validateForm()) return
-
-    const payload = {
-      name: form.name.trim(),
-      email: form.email.trim(),
-      message: form.message.trim(),
-    }
-
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) return
     setSending(true)
     try {
-      await toast.promise(
-        fsAddMessage(payload),
-        {
-          loading: 'Sending message…',
-          success: 'Message sent & saved!',
-          error: (err) => `Firestore unavailable (${(err as Error)?.message || 'Network error'}): opening mail client…`,
-        }
-      )
+      await addMessage({ name: form.name.trim(), email: form.email.trim(), message: form.message.trim() })
       recordContactSubmit()
+      const subject = encodeURIComponent(`Portfolio contact from ${form.name}`)
+      const body = encodeURIComponent(`Name: ${form.name}\nEmail: ${form.email}\n\n${form.message}`)
+      window.location.href = `mailto:${settings.email}?subject=${subject}&body=${body}`
       setSent(true)
       setForm({ name: '', email: '', message: '' })
     } catch (err) {
       console.error(err)
-      // Fallback to mailto so public visitors can still reach out if Firestore is unreachable
-      const subject = encodeURIComponent(`Portfolio contact from ${payload.name}`)
-      const body = encodeURIComponent(`Name: ${payload.name}\nEmail: ${payload.email}\n\n${payload.message}`)
-      window.location.href = `mailto:${settings.email}?subject=${subject}&body=${body}`
-      setSent(true)
-      setForm({ name: '', email: '', message: '' })
     } finally {
       setSending(false)
     }
@@ -500,15 +398,13 @@ export default function Contact() {
           variants={fadeUp}
           initial="hidden"
           animate={inView ? 'visible' : 'hidden'}>
-          <BannerHeaderBar>
-            <div>
-              <BannerBadge>07 // DIRECT DISPATCH</BannerBadge>
-              <SectionTitle>Let's Build Together.</SectionTitle>
-            </div>
+          <SectionHeader>
+            <SectionEyebrow>Contact & Inquiries</SectionEyebrow>
+            <SectionTitle>Let's Build Together.</SectionTitle>
             <SectionSubtitle>
-              Have a project in mind, an engineering role to discuss, or want to collaborate? Reach out below.
+              Have a project in mind, an opportunity to discuss, or just want to connect? Reach out below.
             </SectionSubtitle>
-          </BannerHeaderBar>
+          </SectionHeader>
         </motion.div>
 
         <ContactWrap>
@@ -521,73 +417,45 @@ export default function Contact() {
             <FormPane>
               <div>
                 <FormTitle>
-                  <FiSend aria-hidden="true" /> Send a Direct Message
+                  <FiSend /> Send a Direct Message
                 </FormTitle>
                 <Form onSubmit={handleSubmit} noValidate>
                   <Field>
                     <Label htmlFor="name">Your Name *</Label>
                     <Input
-                      ref={nameRef}
                       id="name"
                       name="name"
                       type="text"
-                      placeholder="e.g. Alex Morgan…"
+                      placeholder="e.g. Alex Morgan"
                       value={form.name}
                       onChange={handleChange}
                       required
                       autoComplete="name"
-                      $hasError={!!errors.name}
-                      aria-invalid={!!errors.name}
-                      aria-describedby={errors.name ? 'contact-name-error' : undefined}
                     />
-                    {errors.name && (
-                      <FieldError id="contact-name-error" role="alert">
-                        <FiAlertCircle aria-hidden="true" /> {errors.name}
-                      </FieldError>
-                    )}
                   </Field>
                   <Field>
                     <Label htmlFor="email">Email Address *</Label>
                     <Input
-                      ref={emailRef}
                       id="email"
                       name="email"
                       type="email"
-                      placeholder="e.g. alex@example.com…"
+                      placeholder="e.g. alex@example.com"
                       value={form.email}
                       onChange={handleChange}
                       required
                       autoComplete="email"
-                      spellCheck={false}
-                      $hasError={!!errors.email}
-                      aria-invalid={!!errors.email}
-                      aria-describedby={errors.email ? 'contact-email-error' : undefined}
                     />
-                    {errors.email && (
-                      <FieldError id="contact-email-error" role="alert">
-                        <FiAlertCircle aria-hidden="true" /> {errors.email}
-                      </FieldError>
-                    )}
                   </Field>
                   <Field>
                     <Label htmlFor="message">Message *</Label>
                     <Textarea
-                      ref={messageRef}
                       id="message"
                       name="message"
-                      placeholder="Tell me about your project, timeline, or inquiry…"
+                      placeholder="Tell me about your project, timeline, or inquiry..."
                       value={form.message}
                       onChange={handleChange}
                       required
-                      $hasError={!!errors.message}
-                      aria-invalid={!!errors.message}
-                      aria-describedby={errors.message ? 'contact-message-error' : undefined}
                     />
-                    {errors.message && (
-                      <FieldError id="contact-message-error" role="alert">
-                        <FiAlertCircle aria-hidden="true" /> {errors.message}
-                      </FieldError>
-                    )}
                   </Field>
                   <SubmitBtn
                     type="submit"
@@ -596,15 +464,13 @@ export default function Contact() {
                     whileHover={{ scale: 1.04 }}
                     whileTap={{ scale: 0.96 }}
                     transition={popSpring}>
-                    {sending ? 'Sending Message…' : 'Send Message'} <FiArrowRight aria-hidden="true" />
+                    {sending ? 'Opening Mail Client…' : 'Send Message'} <FiArrowRight />
                   </SubmitBtn>
-                  <div aria-live="polite">
-                    {sent && (
-                      <SuccessMsg initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                        <FiCheck size={16} aria-hidden="true" /> Your message has been sent and recorded.
-                      </SuccessMsg>
-                    )}
-                  </div>
+                  {sent && (
+                    <SuccessMsg initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                      <FiCheck size={16} /> Your message was recorded and mail client opened.
+                    </SuccessMsg>
+                  )}
                 </Form>
               </div>
             </FormPane>
@@ -636,7 +502,7 @@ export default function Contact() {
                   whileTap={{ scale: 0.98 }}
                   title="Click to copy email address">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <FiMail aria-hidden="true" />
+                    <FiMail />
                     <EmailText>{copied ? 'COPIED TO CLIPBOARD!' : settings.email}</EmailText>
                   </div>
                   <AnimatePresence mode="wait">
@@ -648,7 +514,7 @@ export default function Contact() {
                         exit={{ scale: 0.6, opacity: 0 }}
                         transition={{ duration: 0.15 }}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 700, fontSize: '0.75rem' }}>
-                        <FiCheck size={16} aria-hidden="true" /> COPIED!
+                        <FiCheck size={16} /> COPIED!
                       </motion.span>
                     ) : (
                       <motion.span
@@ -657,7 +523,7 @@ export default function Contact() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', opacity: 0.8, fontSize: '0.75rem' }}>
-                        <FiCopy size={13} aria-hidden="true" /> COPY
+                        <FiCopy size={13} /> COPY
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -667,24 +533,23 @@ export default function Contact() {
               <SocialList>
                 {[
                   {
-                    icon: <FiGithub aria-hidden="true" />,
+                    icon: <FiGithub />,
                     label: 'GitHub',
                     handle: settings.githubUrl.replace('https://', ''),
                     href: settings.githubUrl,
                   },
                   {
-                    icon: <FiLinkedin aria-hidden="true" />,
+                    icon: <FiLinkedin />,
                     label: 'LinkedIn',
                     handle: settings.linkedinUrl.replace('https://', ''),
                     href: settings.linkedinUrl,
                   },
                   {
-                    icon: <FiDownload aria-hidden="true" />,
+                    icon: <FiDownload />,
                     label: 'Download CV',
                     handle: 'Maqhawe-Ngwenya-CV.pdf',
-                    href: cvUrl,
+                    href: '/Maqhawe-Ngwenya-CV.pdf',
                     download: true,
-                    onClick: () => recordCvDownload(cvUrl),
                   },
                 ].map(s => (
                   <SocialLink
@@ -693,7 +558,6 @@ export default function Contact() {
                     target={s.href.startsWith('http') ? '_blank' : undefined}
                     rel="noopener noreferrer"
                     download={'download' in s && s.download ? s.handle : undefined}
-                    onClick={'onClick' in s ? s.onClick : undefined}
                     $hoverBg={hoverBg}
                     $hoverFg={hoverFg}
                     whileTap={{ scale: 0.98 }}
@@ -705,7 +569,7 @@ export default function Contact() {
                         <SocialHandle>{s.handle}</SocialHandle>
                       </SocialMeta>
                     </SocialLeft>
-                    <FiArrowRight size={14} aria-hidden="true" />
+                    <FiArrowRight size={14} />
                   </SocialLink>
                 ))}
               </SocialList>

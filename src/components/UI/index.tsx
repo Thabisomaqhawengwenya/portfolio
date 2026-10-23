@@ -31,7 +31,7 @@ export const Section = styled.section`
   }
 `
 
-/* ─── Section header primitives (Swiss Neo-Brutalist Rhythm) ─── */
+/* ─── Section header ─── */
 export const SectionHeader = styled.div`
   margin-bottom: ${({ theme }) => theme.spacing['12']};
 
@@ -48,13 +48,10 @@ export const SectionEyebrow = styled.p`
   text-transform: uppercase;
   color: ${({ theme }) => theme.accentText ?? theme.colors.text};
   background: ${({ theme }) => theme.colors.primary};
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.25rem 0.65rem;
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
   margin-bottom: ${({ theme }) => theme.spacing['4']};
   border: 2px solid ${({ theme }) => theme.colors.border};
-  box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
 `
 
 export const SectionTitle = styled.h2`
@@ -64,7 +61,6 @@ export const SectionTitle = styled.h2`
   line-height: ${({ theme }) => theme.typography.lineHeights.tight};
   color: ${({ theme }) => theme.colors.text};
   letter-spacing: ${({ theme }) => theme.typography.letterSpacings.tight};
-  text-wrap: balance;
 `
 
 export const SectionSubtitle = styled.p`
@@ -74,151 +70,6 @@ export const SectionSubtitle = styled.p`
   max-width: 540px;
   line-height: ${({ theme }) => theme.typography.lineHeights.relaxed};
   font-weight: ${({ theme }) => theme.typography.weights.medium};
-  text-wrap: pretty;
-`
-
-/* Variant 1: Swiss Index Split Grid Header (Used in About / Projects) */
-export const SwissHeaderGrid = styled.div`
-  display: grid;
-  grid-template-columns: 110px 1fr auto;
-  border: 3px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surface};
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  margin-bottom: ${({ theme }) => theme.spacing['10']};
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
-    grid-template-columns: 84px 1fr;
-  }
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
-    grid-template-columns: 1fr;
-  }
-`
-
-export const SwissIndexCell = styled.div`
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-  border-right: 3px solid ${({ theme }) => theme.colors.border};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: ${({ theme }) => theme.spacing['5']};
-  font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  line-height: 1;
-  letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
-
-  span {
-    font-family: ${({ theme }) => theme.typography.fontMono};
-    font-size: 0.625rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    margin-top: 0.35rem;
-  }
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
-    flex-direction: row;
-    justify-content: space-between;
-    border-right: none;
-    border-bottom: 3px solid ${({ theme }) => theme.colors.border};
-    padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['5']};
-
-    span {
-      margin-top: 0;
-    }
-  }
-`
-
-export const SwissTitleCell = styled.div`
-  padding: ${({ theme }) => theme.spacing['6']} ${({ theme }) => theme.spacing['8']};
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: ${({ theme }) => theme.spacing['2']};
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-    padding: ${({ theme }) => theme.spacing['5']};
-  }
-`
-
-export const SwissMetaCell = styled.div`
-  border-left: 3px solid ${({ theme }) => theme.colors.border};
-  background: ${({ theme }) => theme.colors.surfaceAlt};
-  padding: ${({ theme }) => theme.spacing['6']};
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  gap: 0.35rem;
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
-    display: none;
-  }
-`
-
-/* Variant 2: Inverted Brutalist Banner Header (Used in Journey / Contact) */
-export const BannerHeaderBar = styled.div`
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing['6']};
-  flex-wrap: wrap;
-  padding: ${({ theme }) => theme.spacing['8']};
-  background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.background};
-  border: 3px solid ${({ theme }) => theme.colors.border};
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  margin-bottom: ${({ theme }) => theme.spacing['10']};
-
-  h2 {
-    color: ${({ theme }) => theme.colors.background};
-  }
-
-  p {
-    color: ${({ theme }) => theme.colors.background};
-    opacity: 0.82;
-    margin-top: 0;
-  }
-
-  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-    padding: ${({ theme }) => theme.spacing['6']};
-  }
-`
-
-/* Variant 3: Split Editorial Rule Header (Used in Skills / Certificates / FAQ) */
-export const SplitSectionHeader = styled.div`
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: ${({ theme }) => theme.spacing['6']};
-  flex-wrap: wrap;
-  padding-bottom: ${({ theme }) => theme.spacing['6']};
-  margin-bottom: ${({ theme }) => theme.spacing['10']};
-  border-bottom: 3px solid ${({ theme }) => theme.colors.border};
-`
-
-export const SectionIndexRule = styled.div`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.xs};
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: ${({ theme }) => theme.colors.text};
-  margin-bottom: ${({ theme }) => theme.spacing['3']};
-
-  .num {
-    background: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-    border: 2px solid ${({ theme }) => theme.colors.border};
-    padding: 0.1rem 0.45rem;
-    font-variant-numeric: tabular-nums;
-  }
 `
 
 /* ─── Divider ─── */
@@ -259,6 +110,7 @@ const buttonBase = css`
   white-space: nowrap;
   text-decoration: none;
   border: 3px solid ${({ theme }) => theme.colors.border};
+  /* shadow transition only — scale/translate come from Framer */
   transition: box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
 
   &:active {

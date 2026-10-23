@@ -1,20 +1,32 @@
 import { useRef, useState } from 'react'
 import styled from 'styled-components'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
-import {
-  Container,
-  Section,
-  SectionTitle,
-  SectionSubtitle,
-  SplitSectionHeader,
-  SectionIndexRule,
-  popSpring,
-} from '../UI'
+import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle, SectionSubtitle, popSpring } from '../UI'
 import { fadeUp } from '../../styles/animations'
 import { skillGroups as staticSkills } from '../../data/skills'
 import { useAccent }     from '../../styles/ThemeContext'
 import { usePublicData } from '../../styles/PublicDataContext'
 import type { SkillCategory } from '../../types'
+
+/* Category colour palette for non-mono themes */
+const CAT_COLORS: Record<string, string> = {
+  Frontend:     '#FFE500',
+  Backend:      '#FF3C2F',
+  Database:     '#0047FF',
+  Tools:        '#00C853',
+  Design:       '#FF6B9D',
+  Other:        '#FFE500',
+  All:          '#FFE500',
+}
+const CAT_TEXT: Record<string, string> = {
+  Frontend:     '#000000',
+  Backend:      '#ffffff',
+  Database:     '#ffffff',
+  Tools:        '#000000',
+  Design:       '#ffffff',
+  Other:        '#000000',
+  All:          '#000000',
+}
 
 /* ─── Styled ─── */
 const FilterRow = styled(motion.div)`
@@ -22,6 +34,7 @@ const FilterRow = styled(motion.div)`
   align-items: center;
   gap: 0;
   flex-wrap: wrap;
+  margin-bottom: ${({ theme }) => theme.spacing['8']};
   border: 3px solid ${({ theme }) => theme.colors.border};
   width: fit-content;
   box-shadow: ${({ theme }) => theme.shadows.sm};
@@ -63,38 +76,21 @@ const GroupCard = styled(motion.div)`
   padding: ${({ theme }) => theme.spacing['6']};
   transition: background 0.15s ease;
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover { background: ${({ theme }) => theme.colors.surfaceAlt}; }
-  }
+  &:hover { background: ${({ theme }) => theme.colors.surfaceAlt}; }
 `
 
-const GroupHeaderRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: ${({ theme }) => theme.spacing['4']};
-  gap: 0.5rem;
-`
-
-const GroupLabel = styled.div<{ $isPrimary: boolean }>`
+const GroupLabel = styled.div<{ $bg: string; $fg: string }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: ${({ $isPrimary, theme }) => ($isPrimary ? (theme.accentText ?? theme.colors.text) : theme.colors.background)};
-  background: ${({ $isPrimary, theme }) => ($isPrimary ? theme.colors.primary : theme.colors.text)};
-  padding: 0.2rem 0.55rem;
+  color: ${({ $fg }) => $fg};
+  background: ${({ $bg }) => $bg};
+  padding: 0.2rem 0.5rem;
   border: 2px solid ${({ theme }) => theme.colors.border};
   display: inline-block;
-`
-
-const GroupCount = styled.span`
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.colors.textFaint};
-  font-variant-numeric: tabular-nums;
+  margin-bottom: ${({ theme }) => theme.spacing['4']};
 `
 
 const SkillsWrap = styled.div`
@@ -113,15 +109,14 @@ const SkillPill = styled(motion.span)`
   border-radius: 0;
   padding: 0.35rem 0.75rem;
   cursor: default;
+  /* shadow + colour transitions via CSS; scale/y via Framer */
   transition: background 0.1s ease, color 0.1s ease, box-shadow 0.1s ease;
   box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background: ${({ theme }) => theme.colors.primary};
-      color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-      box-shadow: 4px 4px 0 ${({ theme }) => theme.colors.border};
-    }
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.text};
+    box-shadow: 4px 4px 0 ${({ theme }) => theme.colors.border};
   }
 `
 
@@ -132,102 +127,84 @@ export default function Skills() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-80px' })
   const [active, setActive] = useState<Filter>(ALL)
-  const { accent } = useAccent()
+  const { isMonoTheme, accent } = useAccent()
   const { skillGroups: adminSkills } = usePublicData()
   const skillGroups = adminSkills.length ? adminSkills : staticSkills
 
   const categories: Filter[] = [ALL, ...skillGroups.map(g => g.category)]
   const filtered = active === ALL ? skillGroups : skillGroups.filter(g => g.category === active)
 
+  /* Resolve label colour for a given category */
+  const labelBg = (cat: string) => isMonoTheme ? accent.primary    : (CAT_COLORS[cat] ?? accent.primary)
+  const labelFg = (cat: string) => isMonoTheme ? accent.textColor  : (CAT_TEXT[cat]   ?? accent.textColor)
+
   return (
     <Section id="skills">
       <Container>
-        <motion.div
-          ref={ref}
-          variants={fadeUp}
-          initial="hidden"
-          animate={inView ? 'visible' : 'hidden'}>
-          <SplitSectionHeader>
-            <div>
-              <SectionIndexRule>
-                <span className="num">03</span> // CAPABILITIES &amp; STACK
-              </SectionIndexRule>
-              <SectionTitle>Technologies I work with.</SectionTitle>
-              <SectionSubtitle>
-                A focused engineering stack honed through production project work.
-              </SectionSubtitle>
-            </div>
-
-            {/* Integrated Filter Bar in Split Header */}
-            <FilterRow
-              role="group"
-              aria-label="Filter skills by category"
-              initial={{ opacity: 0, y: 12 }}
-              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
-              transition={{ delay: 0.15 }}>
-              {categories.map(cat => {
-                const isCatActive = active === cat
-                return (
-                  <FilterBtn
-                    key={cat}
-                    $active={isCatActive}
-                    data-active={isCatActive ? 'true' : 'false'}
-                    onClick={() => setActive(cat)}
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    transition={popSpring}>
-                    {isCatActive && (
-                      <motion.div
-                        layoutId="activeSkillCategoryPill"
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          background: accent.primary,
-                          zIndex: 0,
-                        }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                      />
-                    )}
-                    <span
-                      style={{
-                        position: 'relative',
-                        zIndex: 1,
-                        color: isCatActive ? accent.textColor : undefined,
-                      }}>
-                      {cat}
-                    </span>
-                  </FilterBtn>
-                )
-              })}
-            </FilterRow>
-          </SplitSectionHeader>
+        <motion.div ref={ref}
+          variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
+          <SectionHeader>
+            <SectionEyebrow>Skills</SectionEyebrow>
+            <SectionTitle>Technologies I work with.</SectionTitle>
+            <SectionSubtitle>
+              A focused stack built through real project work.
+            </SectionSubtitle>
+          </SectionHeader>
         </motion.div>
+
+        {/* Filter tabs */}
+        <FilterRow initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ delay: 0.15 }}>
+          {categories.map(cat => {
+            const isCatActive = active === cat
+            return (
+              <FilterBtn key={cat} $active={isCatActive}
+                data-active={isCatActive ? 'true' : 'false'}
+                onClick={() => setActive(cat)}
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                transition={popSpring}>
+                {isCatActive && (
+                  <motion.div
+                    layoutId="activeSkillCategoryPill"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      background: labelBg(cat),
+                      zIndex: 0,
+                    }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                  />
+                )}
+                <span style={{ position: 'relative', zIndex: 1, color: isCatActive ? labelFg(cat) : undefined }}>
+                  {cat}
+                </span>
+              </FilterBtn>
+            )
+          })}
+        </FilterRow>
 
         {/* Cards */}
         <AnimatePresence mode="wait">
           <GroupsGrid key={active}>
             {filtered.map((group, gi) => (
-              <GroupCard
-                key={group.category}
+              <GroupCard key={group.category}
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.25, delay: gi * 0.05 }}>
-                <GroupHeaderRow>
-                  <GroupLabel $isPrimary={gi % 2 === 0}>
-                    {group.category}
-                  </GroupLabel>
-                  <GroupCount>{String(group.skills.length).padStart(2, '0')} ITEMS</GroupCount>
-                </GroupHeaderRow>
+                transition={{ duration: 0.3, delay: gi * 0.05 }}>
+                <GroupLabel $bg={labelBg(group.category)} $fg={labelFg(group.category)}>
+                  {group.category}
+                </GroupLabel>
                 <SkillsWrap>
                   {group.skills.map((skill, si) => (
-                    <SkillPill
-                      key={skill.name}
-                      initial={{ opacity: 0, scale: 0.96 }}
+                    <SkillPill key={skill.name}
+                      initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: si * 0.03 }}
-                      whileHover={{ scale: 1.08, y: -4 }}
-                      whileTap={{ scale: 0.95 }}>
+                      transition={{ delay: si * 0.04 }}
+                      whileHover={{ scale: 1.12, y: -5 }}
+                      whileTap={{ scale: 0.93 }}>
                       {skill.name}
                     </SkillPill>
                   ))}

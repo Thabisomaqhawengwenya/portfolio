@@ -5,7 +5,7 @@ export const projects: Project[] = [
   {
     id:          'island-child',
     title:       'Island Child Apparel',
-    description: 'Full-stack e-commerce platform for a local fashion brand with product catalogue, cart, and checkout flow.',
+    description: 'Full-stack e-commerce platform for a local fashion brand — product catalogue, cart, and checkout flow.',
     longDescription:
       'A complete e-commerce solution built from the ground up. Features a responsive storefront, product management, shopping cart, and a RESTful API backend. Designed to feel clean and editorial while remaining fully functional.',
     image:       '/images/projects/island-child.webp',
@@ -18,7 +18,7 @@ export const projects: Project[] = [
   {
     id:          'toyota-zimbabwe',
     title:       'Toyota Zimbabwe',
-    description: 'Professional website rebuild for Toyota Zimbabwe: responsive, performant, and brand-aligned.',
+    description: 'Professional website rebuild for Toyota Zimbabwe — responsive, performant, and brand-aligned.',
     longDescription:
       'A collaborative rebuild of the Toyota Zimbabwe web presence. Focused on responsive design, performance optimisation, and delivering a polished, on-brand user experience across all device sizes.',
     image:       '/images/projects/toyota.webp',
@@ -57,7 +57,7 @@ export const projects: Project[] = [
   {
     id:          'portfolio',
     title:       'Personal Portfolio',
-    description: 'This portfolio, built with React 19, TypeScript, Styled Components, and Framer Motion.',
+    description: 'This portfolio — built with React, TypeScript, Styled Components and Framer Motion.',
     longDescription:
       'Designed and developed to showcase my work and communicate my approach to software development. Prioritises clean typography, purposeful animation, and accessibility.',
     technologies: ['React', 'TypeScript', 'Styled Components', 'Framer Motion', 'Vite', 'Lenis'],
@@ -193,10 +193,10 @@ export const projects: Project[] = [
   {
     id:          'present-pal',
     title:       'PresentPal Reminders',
-    description: 'Smart gift idea organizer and recurring anniversary reminder engine.',
+    description: 'AI-assisted gift idea generator and recurring anniversary reminder engine.',
     longDescription:
       'Intelligent occasion calendar that tracks recipient interests, suggests curated gifts within budget, and sends timely reminders before milestones.',
-    technologies: ['React', 'TypeScript', 'Styled Components', 'Node.js'],
+    technologies: ['React', 'TypeScript', 'Styled Components', 'OpenAI API', 'Node.js'],
     github:      'https://github.com/Thabisomaqhawengwenya',
     featured:    false,
     status:      'wip',

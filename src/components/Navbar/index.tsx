@@ -28,7 +28,7 @@ const ALL_NAV_ITEMS: NavItemDef[] = [
 /* ─── Styled ─── */
 const NavOuter = styled(motion.header)`
   position: fixed;
-  top: 1.15rem;
+  top: 1.25rem;
   left: 0;
   right: 0;
   z-index: ${({ theme }) => theme.zIndex.nav};
@@ -36,12 +36,12 @@ const NavOuter = styled(motion.header)`
   pointer-events: none;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-    top: 0.75rem;
+    top: 0.85rem;
     padding: 0 0.85rem;
   }
 `
 
-const NavBar = styled.div<{ $hidden?: boolean }>`
+const NavBar = styled(motion.div)<{ $hidden?: boolean }>`
   pointer-events: ${({ $hidden }) => ($hidden ? 'none' : 'auto')};
   width: 100%;
   max-width: 1200px;
@@ -57,11 +57,11 @@ const NavBar = styled.div<{ $hidden?: boolean }>`
   justify-content: space-between;
   gap: 1rem;
   position: relative;
-  transition: background 0.12s ease, box-shadow 0.18s ease, transform 0.18s ease;
+  will-change: transform;
+  transition: background 0.12s ease, box-shadow 0.25s ease;
 
   &:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 8px 8px 0px ${({ theme }) => theme.colors.border};
+    box-shadow: 9px 9px 0px ${({ theme }) => theme.colors.border};
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
@@ -70,8 +70,7 @@ const NavBar = styled.div<{ $hidden?: boolean }>`
     box-shadow: 4px 4px 0px ${({ theme }) => theme.colors.border};
 
     &:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 5px 5px 0px ${({ theme }) => theme.colors.border};
+      box-shadow: 6px 6px 0px ${({ theme }) => theme.colors.border};
     }
   }
 `
@@ -444,11 +443,22 @@ export default function Navbar() {
       <NavOuter
         initial={{ y: 0, opacity: 1 }}
         animate={{
-          y: isHidden ? -115 : 0,
+          y: isHidden ? -120 : 0,
           opacity: isHidden ? 0 : 1,
         }}
         transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
-        <NavBar $hidden={isHidden}>
+        <NavBar
+          $hidden={isHidden}
+          animate={isHidden ? { y: 0 } : { y: [0, -6, 0] }}
+          transition={
+            isHidden
+              ? { duration: 0.2 }
+              : {
+                  duration: 3.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }
+          }>
           <ScrollProgress style={{ scaleX: scrollYProgress }} />
 
           <Logo

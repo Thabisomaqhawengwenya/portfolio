@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiArrowDown, FiArrowRight, FiDownload } from 'react-icons/fi'
+import { FiArrowDown, FiArrowRight, FiDownload } from 'react-icons/fi'
 import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
 import { useAccent } from '../../styles/ThemeContext'
@@ -158,45 +158,6 @@ const SecondaryBtn = styled(motion.a)`
     transform: translate(1px, 1px);
     box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
   }
-`
-
-const SocialRow = styled(motion.div)`
-  display: flex;
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing['3']};
-`
-
-const SocialLink = styled(motion.a)`
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 3px solid ${({ theme }) => theme.colors.border};
-  color: ${({ theme }) => theme.colors.text};
-  font-size: 1.125rem;
-  text-decoration: none;
-  box-shadow: ${({ theme }) => theme.shadows.sm};
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
-
-  &:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: ${({ theme }) => theme.shadows.md};
-    background: ${({ theme }) => theme.colors.text};
-    color: ${({ theme }) => theme.colors.background};
-  }
-`
-
-const SocialNote = styled.span`
-  font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.xs};
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.colors.textFaint};
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  border-left: 2px solid ${({ theme }) => theme.colors.border};
-  padding-left: ${({ theme }) => theme.spacing['3']};
 `
 
 /* ─── Visual / Avatar card ─── */
@@ -414,28 +375,6 @@ export default function Hero() {
               <FiDownload /> Download CV
             </SecondaryBtn>
           </HeroActions>
-
-          <SocialRow variants={heroItem}>
-            <SocialLink
-              href="https://github.com/Thabisomaqhawengwenya"
-              target="_blank" rel="noopener noreferrer"
-              aria-label="GitHub Profile - Thabisomaqhawengwenya"
-              whileHover={{ scale: 1.15, y: -5 }}
-              whileTap={{ scale: 0.9 }}
-              transition={popSpring}>
-              <FiGithub />
-            </SocialLink>
-            <SocialLink
-              href="https://www.linkedin.com/in/maqhawe-ngwenya/"
-              target="_blank" rel="noopener noreferrer"
-              aria-label="LinkedIn Profile - Maqhawe Ngwenya"
-              whileHover={{ scale: 1.15, y: -5 }}
-              whileTap={{ scale: 0.9 }}
-              transition={popSpring}>
-              <FiLinkedin />
-            </SocialLink>
-            <SocialNote>{settings.location || 'Zimbabwe'}</SocialNote>
-          </SocialRow>
         </HeroContent>
 
         {/* Visual */}

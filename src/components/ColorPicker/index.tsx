@@ -12,6 +12,9 @@ import { recordThemeChange } from '../../services/analyticsService'
    while preserving full 5-theme switching.
 ────────────────────────────────────────────── */
 
+const btnShadowColor = (theme: { navBg?: string }) =>
+  theme.navBg === '#000000' ? '#FFFFFF' : '#000000'
+
 const DropdownWrapper = styled.div`
   position: relative;
   display: inline-flex;
@@ -32,8 +35,8 @@ const TriggerBtn = styled(motion.button)<{ $isOpen: boolean; $mobile?: boolean }
   font-weight: 700;
   border-radius: 6px;
   border: 2.5px solid #000000;
-  box-shadow: ${({ $isOpen }) =>
-    $isOpen ? '1px 1px 0px #000000' : '3px 3px 0px #000000'};
+  box-shadow: ${({ $isOpen, theme }) =>
+    $isOpen ? `1px 1px 0px ${btnShadowColor(theme)}` : `3px 3px 0px ${btnShadowColor(theme)}`};
   transform: ${({ $isOpen }) => ($isOpen ? 'translate(2px, 2px)' : 'none')};
   cursor: pointer;
   user-select: none;
@@ -41,13 +44,13 @@ const TriggerBtn = styled(motion.button)<{ $isOpen: boolean; $mobile?: boolean }
 
   &:hover {
     transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px #000000;
+    box-shadow: 5px 5px 0px ${({ theme }) => btnShadowColor(theme)};
     background: #7ce3ff;
   }
 
   &:active {
     transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px #000000;
+    box-shadow: 1px 1px 0px ${({ theme }) => btnShadowColor(theme)};
   }
 `
 

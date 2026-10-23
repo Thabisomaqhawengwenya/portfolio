@@ -25,6 +25,10 @@ const ALL_NAV_ITEMS: NavItemDef[] = [
   { key: 'contact',      label: 'Contact',      href: '#contact' },
 ]
 
+/* Helper for dark-mode navbar checks */
+const isDarkNav = (theme: { navBg?: string }) => theme.navBg === '#000000'
+const btnShadowColor = (theme: { navBg?: string }) => (isDarkNav(theme) ? '#FFFFFF' : '#000000')
+
 /* ─── Styled ─── */
 const NavOuter = styled(motion.header)`
   position: fixed;
@@ -50,7 +54,11 @@ const NavBar = styled.div`
   min-height: 68px;
   padding: 0.55rem 1.25rem;
   background: ${({ theme }) =>
-    theme.navBg === '#FFE500' ? '#FFDC26' : (theme.navBg ?? theme.colors.primary)};
+    isDarkNav(theme)
+      ? '#141414'
+      : theme.navBg === '#FFE500'
+        ? '#FFDC26'
+        : (theme.navBg ?? theme.colors.primary)};
   border: 3px solid ${({ theme }) => theme.colors.border};
   box-shadow: 6px 6px 0px ${({ theme }) => theme.colors.border};
   display: flex;
@@ -105,19 +113,19 @@ const Logo = styled(motion.button)`
   letter-spacing: -0.02em;
   border-radius: 6px;
   border: 2.5px solid #000000;
-  box-shadow: 3px 3px 0px #000000;
+  box-shadow: 3px 3px 0px ${({ theme }) => btnShadowColor(theme)};
   flex-shrink: 0;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.12s ease;
 
   &:hover {
     background: #7ce3ff;
     transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px #000000;
+    box-shadow: 5px 5px 0px ${({ theme }) => btnShadowColor(theme)};
   }
 
   &:active {
     transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
+    box-shadow: 1px 1px 0px ${({ theme }) => btnShadowColor(theme)};
   }
 `
 
@@ -143,13 +151,13 @@ const TextNavLink = styled(motion.button)<{ $active: boolean }>`
   font-size: 0.9rem;
   font-weight: 700;
   background: transparent;
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  color: ${({ theme }) => (isDarkNav(theme) ? '#FFFFFF' : (theme.accentText ?? theme.colors.text))};
   border: none;
   cursor: pointer;
   padding: 0.4rem 0.65rem;
   position: relative;
   letter-spacing: -0.01em;
-  transition: opacity 0.12s ease;
+  transition: color 0.12s ease, opacity 0.12s ease;
 
   &::after {
     content: '';
@@ -158,10 +166,14 @@ const TextNavLink = styled(motion.button)<{ $active: boolean }>`
     right: 0.65rem;
     bottom: 2px;
     height: 2.5px;
-    background: currentColor;
+    background: ${({ theme }) => (isDarkNav(theme) ? '#62D8F9' : 'currentColor')};
     transform: scaleX(${({ $active }) => ($active ? 1 : 0)});
     transform-origin: left center;
     transition: transform 0.18s ease;
+  }
+
+  &:hover {
+    color: ${({ theme }) => (isDarkNav(theme) ? '#62D8F9' : (theme.accentText ?? theme.colors.text))};
   }
 
   &:hover::after {
@@ -187,7 +199,7 @@ const BoxedNavBtn = styled(motion.button)<{ $active: boolean }>`
   color: #000000;
   border: 2.5px solid #000000;
   border-radius: 2px;
-  box-shadow: 3px 3px 0px #000000;
+  box-shadow: 3px 3px 0px ${({ theme }) => btnShadowColor(theme)};
   cursor: pointer;
   font-family: Georgia, 'Playfair Display', serif;
   font-style: italic;
@@ -199,13 +211,13 @@ const BoxedNavBtn = styled(motion.button)<{ $active: boolean }>`
 
   &:hover {
     transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px #000000;
+    box-shadow: 5px 5px 0px ${({ theme }) => btnShadowColor(theme)};
     background: #FFFDF2;
   }
 
   &:active {
     transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
+    box-shadow: 1px 1px 0px ${({ theme }) => btnShadowColor(theme)};
   }
 `
 
@@ -241,18 +253,18 @@ const ContactBtn = styled(motion.a)`
   text-decoration: none;
   letter-spacing: -0.01em;
   white-space: nowrap;
-  box-shadow: 3px 3px 0px #000000;
+  box-shadow: 3px 3px 0px ${({ theme }) => btnShadowColor(theme)};
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.12s ease;
 
   &:hover {
     background: #7ce3ff;
     transform: translate(-2px, -2px);
-    box-shadow: 5px 5px 0px #000000;
+    box-shadow: 5px 5px 0px ${({ theme }) => btnShadowColor(theme)};
   }
 
   &:active {
     transform: translate(1px, 1px);
-    box-shadow: 1px 1px 0px #000000;
+    box-shadow: 1px 1px 0px ${({ theme }) => btnShadowColor(theme)};
   }
 
   @media (max-width: 520px) {
@@ -271,7 +283,7 @@ const MenuBtn = styled(motion.button)`
   background: #62D8F9;
   border-radius: 6px;
   border: 2.5px solid #000000;
-  box-shadow: 3px 3px 0px #000000;
+  box-shadow: 3px 3px 0px ${({ theme }) => btnShadowColor(theme)};
   cursor: pointer;
   padding: 0;
 
@@ -294,7 +306,11 @@ const MobileOverlay = styled(motion.div)`
   inset: 0;
   z-index: ${({ theme }) => theme.zIndex.overlay};
   background: ${({ theme }) =>
-    theme.navBg === '#FFE500' ? '#FFDC26' : (theme.navBg ?? theme.colors.primary)};
+    isDarkNav(theme)
+      ? '#141414'
+      : theme.navBg === '#FFE500'
+        ? '#FFDC26'
+        : (theme.navBg ?? theme.colors.primary)};
   border: 3px solid ${({ theme }) => theme.colors.border};
   display: flex;
   flex-direction: column;
@@ -307,7 +323,7 @@ const MobileNavLink = styled(motion.button)`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
   font-size: clamp(2rem, 8vw, 3.5rem);
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => (isDarkNav(theme) ? '#FFFFFF' : (theme.accentText ?? theme.colors.text))};
   background: none;
   border: none;
   cursor: pointer;
@@ -320,7 +336,7 @@ const MobileNavLink = styled(motion.button)`
   text-transform: uppercase;
 
   &:last-of-type { border-bottom: none; }
-  &:hover { color: ${({ theme }) => theme.colors.background}; }
+  &:hover { color: #62D8F9; }
 `
 
 const MobileThemeSection = styled.div`
@@ -338,7 +354,7 @@ const MobileThemeTitle = styled.p`
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => (isDarkNav(theme) ? '#FFFFFF' : (theme.accentText ?? theme.colors.text))};
 `
 
 const MobileClose = styled(motion.button)`
@@ -354,7 +370,7 @@ const MobileClose = styled(motion.button)`
   font-weight: 700;
   line-height: 1;
   padding: 0.45rem 0.75rem;
-  box-shadow: 3px 3px 0px #000000;
+  box-shadow: 3px 3px 0px ${({ theme }) => btnShadowColor(theme)};
 `
 
 function FlameBadgeIcon() {

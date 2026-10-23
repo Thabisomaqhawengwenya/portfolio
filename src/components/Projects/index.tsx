@@ -3,8 +3,15 @@ import styled, { css } from 'styled-components'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiArrowRight, FiArrowLeft } from 'react-icons/fi'
 import {
-  Container, Section, SectionHeader,
-  SectionEyebrow, SectionTitle, SectionSubtitle, Tag,
+  Container,
+  Section,
+  SectionTitle,
+  SectionSubtitle,
+  SwissHeaderGrid,
+  SwissIndexCell,
+  SwissTitleCell,
+  SwissMetaCell,
+  Tag,
   popSpring,
 } from '../UI'
 import { fadeUp, slideLeft } from '../../styles/animations'
@@ -14,30 +21,30 @@ import { usePublicData } from '../../styles/PublicDataContext'
 import { recordProjectClick } from '../../services/analyticsService'
 import type { Project } from '../../types'
 
-/* Multi-colour palette for non-mono themes */
-const ROW_ACCENTS   = ['#FFE500', '#FF3C2F', '#0047FF']
-const ROW_TEXT      = ['#000000', '#ffffff', '#ffffff']
 const ITEMS_PER_PAGE = 3
 
 const getInitials = (title: string) =>
   title.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 
 /* ──────────────────────────────────────────────
-   FILTER BAR — centered, matches Skills tab style
+   FILTER BAR
 ────────────────────────────────────────────── */
 const FilterWrap = styled(motion.div)`
   display: flex;
-  justify-content: center;
-  margin-bottom: ${({ theme }) => theme.spacing['10']};
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing['4']};
+  flex-wrap: wrap;
+  margin-bottom: ${({ theme }) => theme.spacing['8']};
 `
 
 const FilterBar = styled.div`
   display: flex;
   align-items: stretch;
+  flex-wrap: wrap;
   border: 3px solid ${({ theme }) => theme.colors.border};
   box-shadow: ${({ theme }) => theme.shadows.md};
   width: fit-content;
-  /* no gap — tabs share borders */
 `
 
 const FilterTab = styled(motion.button)<{ $active: boolean }>`
@@ -61,6 +68,26 @@ const FilterTab = styled(motion.button)<{ $active: boolean }>`
   &:hover {
     color: ${({ theme }) => theme.colors.text};
   }
+`
+
+const FilterSummary = styled.span`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textFaint};
+  font-variant-numeric: tabular-nums;
+`
+
+const MastheadCount = styled.div`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-variant-numeric: tabular-nums;
 `
 
 /* ──────────────────────────────────────────────
@@ -100,24 +127,25 @@ const Row = styled(motion.div)`
   }
 `
 
-/* Left gutter — project number, always uses theme primary */
-const RowNumber = styled.div<{ $bg: string; $fg: string }>`
+/* Left gutter — project number, single-accent or inverted monochrome */
+const RowNumber = styled.div<{ $isPrimary: boolean }>`
   border-right: 3px solid ${({ theme }) => theme.colors.border};
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding-top: ${({ theme }) => theme.spacing['6']};
-  background: ${({ $bg }) => $bg};
+  background: ${({ $isPrimary, theme }) => ($isPrimary ? theme.colors.primary : theme.colors.text)};
 
   span {
     font-family: ${({ theme }) => theme.typography.fontMono};
     font-size: ${({ theme }) => theme.typography.sizes.xs};
     font-weight: ${({ theme }) => theme.typography.weights.bold};
     letter-spacing: 0.12em;
-    color: ${({ $fg }) => $fg};
+    color: ${({ $isPrimary, theme }) => ($isPrimary ? (theme.accentText ?? theme.colors.text) : theme.colors.background)};
     text-transform: uppercase;
     writing-mode: vertical-rl;
     transform: rotate(180deg);
+    font-variant-numeric: tabular-nums;
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
@@ -139,9 +167,7 @@ const RowNumber = styled.div<{ $bg: string; $fg: string }>`
 `
 
 /* ──────────────────────────────────────────────
-   BOOK CARD — 3-D CSS flip effect,
-   adapted to neo-brutalism: no border-radius,
-   hard offset shadow, thick black borders.
+   BOOK CARD — 3-D CSS flip effect
 ────────────────────────────────────────────── */
 const BookWrap = styled.div`
   border-right: 3px solid ${({ theme }) => theme.colors.border};
@@ -156,7 +182,6 @@ const BookWrap = styled.div`
   }
 `
 
-/* The outer container holds perspective */
 const Book = styled.div`
   position: relative;
   width: 185px;
@@ -169,15 +194,16 @@ const Book = styled.div`
   transition: transform 0.45s ease;
   cursor: default;
 
-  &:hover { transform: rotateZ(-8deg); }
-  &:hover .book-cover { transform: rotateY(-65deg); }
-  &:hover .book-inner {
-    transform: rotateZ(8deg) rotateX(-3deg) rotateY(-10deg) translateX(130px);
-    box-shadow: 6px 6px 0 ${({ theme }) => theme.colors.border};
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { transform: rotateZ(-8deg); }
+    &:hover .book-cover { transform: rotateY(-65deg); }
+    &:hover .book-inner {
+      transform: rotateZ(8deg) rotateX(-3deg) rotateY(-10deg) translateX(130px);
+      box-shadow: 6px 6px 0 ${({ theme }) => theme.colors.border};
+    }
   }
 `
 
-/* Shared surface styles — no border-radius, hard black border */
 const bookSurface = css`
   position: absolute;
   top: 0;
@@ -192,44 +218,43 @@ const bookSurface = css`
   transition: transform 0.45s ease, box-shadow 0.45s ease;
 `
 
-const BookCover = styled.div<{ $bg: string }>`
+const BookCover = styled.div<{ $isPrimary: boolean }>`
   ${bookSurface}
-  background: ${({ $bg }) => $bg};
+  background: ${({ $isPrimary, theme }) => ($isPrimary ? theme.colors.primary : theme.colors.text)};
   box-shadow: ${({ theme }) => theme.shadows.md};
   z-index: 2;
   flex-direction: column;
   gap: 0.5rem;
 `
 
-const BookCoverInitials = styled.span<{ $fg: string }>`
+const BookCoverInitials = styled.span<{ $isPrimary: boolean }>`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
   font-size: 3rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ $fg }) => $fg};
+  color: ${({ $isPrimary, theme }) => ($isPrimary ? (theme.accentText ?? theme.colors.text) : theme.colors.background)};
   letter-spacing: -0.04em;
   line-height: 1;
 `
 
-const BookCoverLabel = styled.span<{ $fg: string }>`
+const BookCoverLabel = styled.span<{ $isPrimary: boolean }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: 0.55rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: ${({ $fg }) => $fg};
-  opacity: 0.7;
+  color: ${({ $isPrimary, theme }) => ($isPrimary ? (theme.accentText ?? theme.colors.text) : theme.colors.background)};
+  opacity: 0.8;
   padding: 0 0.5rem;
   text-align: center;
 `
 
-/* Spine — left edge */
-const BookSpine = styled.div<{ $bg: string; $fg: string }>`
+const BookSpine = styled.div<{ $isPrimary: boolean }>`
   position: absolute;
   top: 0;
   left: -14px;
   width: 14px;
   height: 100%;
-  background: ${({ $bg }) => $bg};
+  background: ${({ $isPrimary, theme }) => ($isPrimary ? theme.colors.primary : theme.colors.text)};
   border: 3px solid ${({ theme }) => theme.colors.border};
   border-right: none;
   display: flex;
@@ -241,19 +266,19 @@ const BookSpine = styled.div<{ $bg: string; $fg: string }>`
     font-family: ${({ theme }) => theme.typography.fontMono};
     font-size: 0.5rem;
     font-weight: 700;
-    color: ${({ $fg }) => $fg};
+    color: ${({ $isPrimary, theme }) => ($isPrimary ? (theme.accentText ?? theme.colors.text) : theme.colors.background)};
     writing-mode: vertical-rl;
     transform: rotate(180deg);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    opacity: 0.7;
+    opacity: 0.75;
   }
 `
 
 const BookInner = styled.div`
   ${bookSurface}
-  background: #ffffff;
-  color: #000000;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
   box-shadow: ${({ theme }) => theme.shadows.sm};
   z-index: 1;
   flex-direction: column;
@@ -261,10 +286,10 @@ const BookInner = styled.div`
   padding: 0.65rem;
 `
 
-const BookInnerLine = styled.div<{ $width?: string; $color?: string }>`
+const BookInnerLine = styled.div<{ $width?: string; $accent?: boolean }>`
   height: 2px;
   width: ${({ $width = '80%' }) => $width};
-  background: ${({ $color, theme }) => $color ?? theme.colors.border};
+  background: ${({ $accent, theme }) => ($accent ? theme.colors.primary : theme.colors.border)};
   border-radius: 0;
 `
 
@@ -336,13 +361,20 @@ const StatusBadge = styled.span<{ $status: Project['status'] }>`
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  padding: 0.2rem 0.5rem;
+  padding: 0.2rem 0.55rem;
   border: 2px solid ${({ theme }) => theme.colors.border};
   background: ${({ $status, theme }) =>
-    $status === 'live' ? theme.colors.primary :
-    $status === 'wip'  ? theme.colors.accent1 :
-    theme.colors.surfaceAlt};
-  color: ${({ theme }) => theme.colors.text};
+    $status === 'live'
+      ? theme.colors.primary
+      : $status === 'wip'
+      ? theme.colors.text
+      : theme.colors.surfaceAlt};
+  color: ${({ $status, theme }) =>
+    $status === 'live'
+      ? (theme.accentText ?? theme.colors.text)
+      : $status === 'wip'
+      ? theme.colors.background
+      : theme.colors.text};
   width: fit-content;
 `
 
@@ -363,14 +395,12 @@ const TechRow = styled.div`
 const InfoBottom = styled.div`
   display: flex;
   align-items: center;
-  gap: 0;
   padding-top: ${({ theme }) => theme.spacing['5']};
   border-top: 3px solid ${({ theme }) => theme.colors.border};
   flex-wrap: wrap;
   gap: ${({ theme }) => theme.spacing['3']};
 `
 
-/* Chunky action buttons matching site style */
 const ActionBtn = styled(motion.a)<{ $primary?: boolean }>`
   display: inline-flex;
   align-items: center;
@@ -384,6 +414,7 @@ const ActionBtn = styled(motion.a)<{ $primary?: boolean }>`
   border: 3px solid ${({ theme }) => theme.colors.border};
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
 
   ${({ $primary, theme }) => $primary
@@ -391,20 +422,24 @@ const ActionBtn = styled(motion.a)<{ $primary?: boolean }>`
         background: ${theme.colors.primary};
         color: ${theme.accentText ?? theme.colors.text};
         box-shadow: ${theme.shadows.md};
-        &:hover {
-          transform: translate(-2px, -2px);
-          box-shadow: ${theme.shadows.hover};
+        @media (hover: hover) and (pointer: fine) {
+          &:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: ${theme.shadows.hover};
+          }
         }
       `
     : css`
         background: ${theme.colors.surface};
         color: ${theme.colors.text};
         box-shadow: ${theme.shadows.sm};
-        &:hover {
-          background: ${theme.colors.text};
-          color: ${theme.colors.background};
-          transform: translate(-2px, -2px);
-          box-shadow: ${theme.shadows.md};
+        @media (hover: hover) and (pointer: fine) {
+          &:hover {
+            background: ${theme.colors.text};
+            color: ${theme.colors.background};
+            transform: translate(-2px, -2px);
+            box-shadow: ${theme.shadows.md};
+          }
         }
       `
   }
@@ -454,11 +489,13 @@ const PageBtn = styled(motion.button)<{ $disabled?: boolean }>`
   user-select: none;
   transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, color 0.12s ease;
 
-  &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.colors.primary};
-    color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-    transform: translate(-2px, -2px);
-    box-shadow: ${({ theme }) => theme.shadows.hover};
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background: ${({ theme }) => theme.colors.primary};
+      color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+      transform: translate(-2px, -2px);
+      box-shadow: ${({ theme }) => theme.shadows.hover};
+    }
   }
 
   &:active:not(:disabled) {
@@ -487,6 +524,7 @@ const PageIndicator = styled.div`
   text-transform: uppercase;
   color: ${({ theme }) => theme.colors.text};
   user-select: none;
+  font-variant-numeric: tabular-nums;
 
   .page-num {
     background: ${({ theme }) => theme.colors.primary};
@@ -515,45 +553,55 @@ function ProjectRow({
 }) {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
-  const { isMonoTheme, accent } = useAccent()
+  const [imgFailed, setImgFailed] = useState(false)
   const num    = String(overallIndex + 1).padStart(2, '0')
 
-  /* Colour selection: multi-colour in normal themes, mono in Black */
-  const bg = isMonoTheme ? accent.primary           : ROW_ACCENTS[overallIndex % ROW_ACCENTS.length]
-  const fg = isMonoTheme ? accent.textColor         : ROW_TEXT[overallIndex % ROW_TEXT.length]
+  /* Single-accent discipline: alternate active theme primary and high-contrast inverse */
+  const isPrimary = overallIndex % 2 === 0
+  const showImage = Boolean(project.image) && !imgFailed
+  const rawDescription = project.longDescription ?? project.description
+  const cleanDescription = rawDescription.replace(/\s*—\s*/g, ': ')
 
   return (
-    <Row ref={ref}
+    <Row
+      ref={ref}
       variants={slideLeft}
       initial="hidden"
       animate={inView ? 'visible' : 'hidden'}
       transition={{ delay: index * 0.08 }}>
 
-      <RowNumber $bg={bg} $fg={fg}>
+      <RowNumber $isPrimary={isPrimary}>
         <span>Project {num}</span>
       </RowNumber>
 
       <BookWrap>
         <Book className="book-host">
-          <BookSpine $bg={bg} $fg={fg}>
+          <BookSpine $isPrimary={isPrimary}>
             <span>{project.title}</span>
           </BookSpine>
 
-          <BookCover $bg={bg} className="book-cover">
-            <BookCoverInitials $fg={fg}>{getInitials(project.title)}</BookCoverInitials>
-            <BookCoverLabel $fg={fg}>{project.title}</BookCoverLabel>
+          <BookCover $isPrimary={isPrimary} className="book-cover">
+            <BookCoverInitials $isPrimary={isPrimary}>{getInitials(project.title)}</BookCoverInitials>
+            <BookCoverLabel $isPrimary={isPrimary}>{project.title}</BookCoverLabel>
           </BookCover>
 
           <BookInner className="book-inner">
-            {project.image ? (
-              <BookInnerImagePreview src={project.image} alt={project.title} loading="lazy" />
+            {showImage ? (
+              <BookInnerImagePreview
+                src={project.image}
+                alt={project.title}
+                width={165}
+                height={215}
+                loading="lazy"
+                onError={() => setImgFailed(true)}
+              />
             ) : (
               <>
-                <BookInnerLine $width="90%" />
+                <BookInnerLine $width="90%" $accent />
                 <BookInnerLine $width="70%" />
                 <BookInnerLine $width="80%" />
                 <BookInnerLine $width="50%" />
-                <BookInnerLine $width="65%" />
+                <BookInnerLine $width="65%" $accent />
                 <BookInnerLine $width="75%" />
                 <BookInnerLine $width="40%" />
               </>
@@ -565,18 +613,25 @@ function ProjectRow({
       {/* Description pane */}
       <InfoPane>
         <InfoTop>
-          {project.image && (
+          {showImage && (
             <MobileProjectImage>
-              <img src={project.image} alt={project.title} loading="lazy" />
+              <img
+                src={project.image}
+                alt={project.title}
+                width={600}
+                height={220}
+                loading="lazy"
+                onError={() => setImgFailed(true)}
+              />
             </MobileProjectImage>
           )}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <ProjectTitle>{project.title}</ProjectTitle>
+            <ProjectTitle>{project.title.replace(/\s*—\s*/g, ': ')}</ProjectTitle>
             <StatusBadge $status={project.status}>{project.status}</StatusBadge>
           </div>
 
           <Description>
-            {project.longDescription ?? project.description}
+            {cleanDescription}
           </Description>
 
           <TechRow>
@@ -592,10 +647,10 @@ function ProjectRow({
               rel="noopener noreferrer"
               aria-label={`${project.title} GitHub repository`}
               onClick={() => recordProjectClick(project.title, 'github')}
-              whileHover={{ scale: 1.06, y: -4 }}
-              whileTap={{ scale: 0.94 }}
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.95 }}
               transition={popSpring}>
-              <FiGithub /> GitHub
+              <FiGithub aria-hidden="true" /> GitHub
             </ActionBtn>
           )}
           {project.liveUrl && (
@@ -606,10 +661,10 @@ function ProjectRow({
               rel="noopener noreferrer"
               aria-label={`${project.title} live site`}
               onClick={() => recordProjectClick(project.title, 'live')}
-              whileHover={{ scale: 1.06, y: -4 }}
-              whileTap={{ scale: 0.94 }}
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.95 }}
               transition={popSpring}>
-              Live Site <FiExternalLink />
+              Live Site <FiExternalLink aria-hidden="true" />
             </ActionBtn>
           )}
           {!project.liveUrl && (
@@ -620,10 +675,10 @@ function ProjectRow({
               rel="noopener noreferrer"
               aria-label={`View ${project.title}`}
               onClick={() => recordProjectClick(project.title, 'github')}
-              whileHover={{ scale: 1.06, y: -4 }}
-              whileTap={{ scale: 0.94 }}
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.95 }}
               transition={popSpring}>
-              View Project <FiArrowRight />
+              Inspect Code <FiArrowRight aria-hidden="true" />
             </ActionBtn>
           )}
         </InfoBottom>
@@ -638,12 +693,10 @@ function ProjectRow({
 export default function Projects() {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true })
-  const { isMonoTheme, accent } = useAccent()
-  /* Use public Firestore data when available, fall back to static */
+  const { accent } = useAccent()
   const { projects: adminProjects } = usePublicData()
   const projects = adminProjects.length ? adminProjects : staticProjects
 
-  /* Derive unique categories from data while respecting canonical order */
   const categories = useMemo(() => {
     const ORDERED_CATEGORIES: Project['category'][] = ['Business', 'Personal', 'Mobile', 'Gift']
     const rawCategories = Array.from(new Set(projects.map(p => p.category))) as Project['category'][]
@@ -695,39 +748,39 @@ export default function Projects() {
     }
   }
 
-  /* Tab active colours cycle through the accent palette */
-  const TAB_COLORS = isMonoTheme
-    ? categories.map(() => ({ bg: accent.primary, fg: accent.textColor }))
-    : [
-        { bg: '#FFE500', fg: '#000' },
-        { bg: '#FF3C2F', fg: '#fff' },
-        { bg: '#0047FF', fg: '#fff' },
-        { bg: '#00C853', fg: '#000' },
-        { bg: '#FFE500', fg: '#000' },
-      ]
-
   return (
     <Section id="projects">
       <Container>
-        <motion.div ref={ref}
-          variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
-          <SectionHeader>
-            <SectionEyebrow>Projects</SectionEyebrow>
-            <SectionTitle>Things I've built.</SectionTitle>
-            <SectionSubtitle>
-              A selection of projects from my training and personal development.
-            </SectionSubtitle>
-          </SectionHeader>
+        <motion.div
+          ref={ref}
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? 'visible' : 'hidden'}>
+          <SwissHeaderGrid>
+            <SwissIndexCell>
+              04
+              <span>Work</span>
+            </SwissIndexCell>
+            <SwissTitleCell>
+              <SectionTitle>Things I've built.</SectionTitle>
+              <SectionSubtitle style={{ marginTop: '0.25rem' }}>
+                Production web applications, developer tools, and full-stack capstones.
+              </SectionSubtitle>
+            </SwissTitleCell>
+            <SwissMetaCell>
+              <MastheadCount>// TOTAL ARCHIVE: {String(projects.length).padStart(2, '0')} PROJECTS</MastheadCount>
+              <MastheadCount>// CATEGORY: {active.toUpperCase()}</MastheadCount>
+            </SwissMetaCell>
+          </SwissHeaderGrid>
         </motion.div>
 
-        {/* ── Centered filter tab bar ── */}
+        {/* ── Filter tab bar ── */}
         <FilterWrap
           initial={{ opacity: 0, y: 12 }}
           animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
           transition={{ delay: 0.15 }}>
           <FilterBar role="group" aria-label="Filter projects by category">
-            {categories.map((cat, i) => {
-              const { bg, fg } = TAB_COLORS[i % TAB_COLORS.length]
+            {categories.map(cat => {
               const isCatActive = active === cat
               return (
                 <FilterTab
@@ -744,19 +797,23 @@ export default function Projects() {
                       style={{
                         position: 'absolute',
                         inset: 0,
-                        background: bg,
+                        background: accent.primary,
                         zIndex: 0,
                       }}
                       transition={{ type: 'spring', stiffness: 500, damping: 32 }}
                     />
                   )}
-                  <span style={{ position: 'relative', zIndex: 1, color: isCatActive ? fg : undefined }}>
+                  <span style={{ position: 'relative', zIndex: 1, color: isCatActive ? accent.textColor : undefined }}>
                     {cat}
                   </span>
                 </FilterTab>
               )
             })}
           </FilterBar>
+
+          <FilterSummary>
+            SHOWING {String(startIndex + 1).padStart(2, '0')}–{String(Math.min(startIndex + ITEMS_PER_PAGE, filtered.length)).padStart(2, '0')} OF {String(filtered.length).padStart(2, '0')} IN {active.toUpperCase()}
+          </FilterSummary>
         </FilterWrap>
 
         {/* ── Project rows ── */}
@@ -786,7 +843,7 @@ export default function Projects() {
               aria-label="Previous Projects Page"
               whileHover={currentPage > 1 ? { scale: 1.04, y: -2 } : {}}
               whileTap={currentPage > 1 ? { scale: 0.96 } : {}}>
-              <FiArrowLeft /> Prev
+              <FiArrowLeft aria-hidden="true" /> Prev
             </PageBtn>
 
             <PageIndicator aria-label={`Page ${safePage} of ${totalPages}`}>
@@ -800,7 +857,7 @@ export default function Projects() {
               aria-label="Next Projects Page"
               whileHover={currentPage < totalPages ? { scale: 1.04, y: -2 } : {}}
               whileTap={currentPage < totalPages ? { scale: 0.96 } : {}}>
-              Next <FiArrowRight />
+              Next <FiArrowRight aria-hidden="true" />
             </PageBtn>
           </PaginationWrap>
         )}
@@ -808,4 +865,3 @@ export default function Projects() {
     </Section>
   )
 }
-

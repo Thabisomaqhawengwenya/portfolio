@@ -1,14 +1,14 @@
 import { useState, useRef } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { FiChevronDown, FiHelpCircle } from 'react-icons/fi'
+import { FiChevronDown } from 'react-icons/fi'
 import {
   Container,
   Section,
-  SectionHeader,
-  SectionEyebrow,
   SectionTitle,
   SectionSubtitle,
+  SplitSectionHeader,
+  SectionIndexRule,
 } from '../UI'
 import { fadeUp, staggerContainer, staggerItem } from '../../styles/animations'
 
@@ -62,8 +62,7 @@ const FAQList = styled(motion.div)`
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing['4']};
-  max-width: 900px;
-  margin: 0 auto;
+  width: 100%;
 `
 
 const AccordionCard = styled(motion.div)<{ $isOpen: boolean }>`
@@ -109,12 +108,12 @@ const QuestionInfo = styled.div`
   gap: ${({ theme }) => theme.spacing['2']};
 `
 
-const CategoryBadge = styled.span`
+const CategoryBadge = styled.span<{ $isOpen: boolean }>`
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ $isOpen, theme }) => ($isOpen ? (theme.accentText ?? theme.colors.text) : theme.colors.background)};
+  background: ${({ $isOpen, theme }) => ($isOpen ? theme.colors.primary : theme.colors.text)};
   padding: 0.15rem 0.5rem;
   border: 2px solid ${({ theme }) => theme.colors.border};
   width: fit-content;
@@ -186,16 +185,17 @@ export default function FAQ() {
           initial="hidden"
           animate={inView ? 'visible' : 'hidden'}
         >
-          <SectionHeader style={{ textAlign: 'center', maxWidth: 680, margin: '0 auto 3rem auto' }}>
-            <SectionEyebrow style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-              <FiHelpCircle aria-hidden="true" />
-              Frequently Asked Questions
-            </SectionEyebrow>
-            <SectionTitle>Clear answers on background, capabilities & availability.</SectionTitle>
-            <SectionSubtitle style={{ margin: '0.75rem auto 0 auto' }}>
-              Everything hiring managers, recruiters, and engineering partners want to know before reaching out.
+          <SplitSectionHeader>
+            <div>
+              <SectionIndexRule>
+                <span className="num">06</span> // TECHNICAL FAQ
+              </SectionIndexRule>
+              <SectionTitle>Clear answers on capabilities &amp; availability.</SectionTitle>
+            </div>
+            <SectionSubtitle style={{ marginTop: 0 }}>
+              Key details for hiring managers, recruiters, and engineering partners before reaching out.
             </SectionSubtitle>
-          </SectionHeader>
+          </SplitSectionHeader>
         </motion.div>
 
         <FAQList
@@ -218,7 +218,7 @@ export default function FAQ() {
                   id={`faq-question-${item.id}`}
                 >
                   <QuestionInfo>
-                    <CategoryBadge>{item.category}</CategoryBadge>
+                    <CategoryBadge $isOpen={isOpen}>{item.category}</CategoryBadge>
                     <QuestionText>{item.question}</QuestionText>
                   </QuestionInfo>
                   <IconBox $isOpen={isOpen} aria-hidden="true">

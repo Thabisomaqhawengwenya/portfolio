@@ -6,7 +6,7 @@ export const experience: ExperienceItem[] = [
     type:         'education',
     title:        'Software Development Programme',
     organization: 'Uncommon.org',
-    location:     'Zimbabwe',
+    location:     'Bulawayo, Zimbabwe',
     startDate:    '2025',
     description:
       'Intensive full-stack software development training. Building real-world applications from scratch using modern web technologies, with a strong focus on JavaScript, React, Node.js, and professional engineering practices.',
@@ -22,9 +22,9 @@ export const experience: ExperienceItem[] = [
   {
     id:           'island-child-2025',
     type:         'project',
-    title:        'Lead Developer — Island Child Apparel',
+    title:        'Lead Developer: Island Child Apparel',
     organization: 'Capstone Project',
-    location:     'Zimbabwe',
+    location:     'Bulawayo, Zimbabwe',
     startDate:    '2025',
     description:
       'Designed and built a full-stack e-commerce platform for a local fashion brand. Responsible for architecture decisions, frontend implementation, and backend API development.',
@@ -39,9 +39,9 @@ export const experience: ExperienceItem[] = [
   {
     id:           'toyota-2025',
     type:         'project',
-    title:        'Developer — Toyota Zimbabwe Website',
+    title:        'Developer: Toyota Zimbabwe Website',
     organization: 'Capstone Project',
-    location:     'Zimbabwe',
+    location:     'Bulawayo, Zimbabwe',
     startDate:    '2025',
     description:
       'Collaborated on a professional website rebuild for Toyota Zimbabwe. Focused on responsive design, performance, and delivering a high-quality user experience.',
@@ -55,8 +55,9 @@ export const experience: ExperienceItem[] = [
   {
     id:           'portfolio-2026',
     type:         'project',
-    title:        'Personal Portfolio — v1',
+    title:        'Personal Portfolio (v1)',
     organization: 'Personal Project',
+    location:     'Bulawayo, Zimbabwe',
     startDate:    '2026',
     description:
       'Designed and developed this portfolio from scratch. Practised animation, theming, accessibility, and production build optimization.',

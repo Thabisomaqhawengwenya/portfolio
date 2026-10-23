@@ -193,7 +193,7 @@ export async function fsSaveSettings(s: AdminSettings): Promise<void> {
 const HERO_ID = 'main'
 const HERO_DEFAULTS: HeroContent = {
   greeting:  'Hello, World',
-  role:      'Front-End Software Developer. Building modern, useful, and engaging digital experiences — from Zimbabwe to the world.',
+  role:      'Front-End Software Developer building high-performance web applications, responsive interfaces, and scalable digital products from Bulawayo, Zimbabwe.',
   available: true,
   sticker1:  'React + TS',
   sticker2:  'Node.js',
@@ -223,4 +223,3 @@ export async function fsGetSectionVisibility(): Promise<SectionVisibility> {
 export async function fsSaveSectionVisibility(v: SectionVisibility): Promise<void> {
   await setDoc(doc(db, COL.settings, SECTIONS_ID), cleanFirestoreData(v), { merge: true })
 }
-

@@ -23,6 +23,7 @@ import Footer       from './components/Footer'
 
 /* Admin (Lazy Loaded for performance & SEO) */
 import { adminTheme }    from './admin/adminTheme'
+import { AdminProvider } from './admin/context/AdminContext'
 const AdminLayout       = lazy(() => import('./admin/components/AdminLayout'))
 const Login             = lazy(() => import('./admin/pages/Login'))
 const Setup             = lazy(() => import('./admin/pages/Setup'))
@@ -155,23 +156,27 @@ export default function App() {
       } />
 
       <Route path="/admin/login" element={
-        <Suspense fallback={<AdminLoadingFallback />}>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <ThemeProvider theme={adminTheme as any}>
-            <GlobalStyles />
-            <Login />
-          </ThemeProvider>
-        </Suspense>
+        <AdminProvider>
+          <Suspense fallback={<AdminLoadingFallback />}>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <ThemeProvider theme={adminTheme as any}>
+              <GlobalStyles />
+              <Login />
+            </ThemeProvider>
+          </Suspense>
+        </AdminProvider>
       } />
 
       <Route path="/admin" element={
-        <Suspense fallback={<AdminLoadingFallback />}>
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <ThemeProvider theme={adminTheme as any}>
-            <GlobalStyles />
-            <AdminLayout />
-          </ThemeProvider>
-        </Suspense>
+        <AdminProvider>
+          <Suspense fallback={<AdminLoadingFallback />}>
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            <ThemeProvider theme={adminTheme as any}>
+              <GlobalStyles />
+              <AdminLayout />
+            </ThemeProvider>
+          </Suspense>
+        </AdminProvider>
       }>
         <Route index               element={<Suspense fallback={<AdminLoadingFallback />}><Overview /></Suspense>}          />
         <Route path="sections"     element={<Suspense fallback={<AdminLoadingFallback />}><AdminSections /></Suspense>}     />

@@ -1,6 +1,18 @@
+import { useState, useEffect } from 'react'
 import styled from 'styled-components'
-import { motion } from 'framer-motion'
-import { FiGithub, FiLinkedin, FiArrowDown, FiArrowRight, FiDownload } from 'react-icons/fi'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  FiGithub,
+  FiLinkedin,
+  FiArrowDown,
+  FiArrowRight,
+  FiDownload,
+  FiTerminal,
+  FiCpu,
+  FiClock,
+  FiActivity,
+  FiMapPin,
+} from 'react-icons/fi'
 import { heroContainer, heroItem, scaleIn } from '../../styles/animations'
 import { popSpring } from '../UI'
 import { useAccent } from '../../styles/ThemeContext'
@@ -19,7 +31,7 @@ const HeroSection = styled.section`
   position: relative;
   overflow: hidden;
 
-  /* Decorative corner marks */
+  /* Top architectural rule */
   &::before {
     content: '';
     position: absolute;
@@ -37,16 +49,16 @@ const HeroInner = styled.div`
   margin: 0 auto;
   padding: ${({ theme }) => theme.spacing['16']} ${({ theme }) => theme.spacing['8']};
   display: grid;
-  grid-template-columns: 1fr 400px;
+  grid-template-columns: 1fr 440px;
   gap: ${({ theme }) => theme.spacing['12']};
   align-items: center;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.xl}) {
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 390px;
   }
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
     grid-template-columns: 1fr;
-    gap: ${({ theme }) => theme.spacing['10']};
+    gap: ${({ theme }) => theme.spacing['12']};
   }
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     padding: ${({ theme }) => theme.spacing['10']} ${({ theme }) => theme.spacing['6']};
@@ -61,44 +73,50 @@ const HeroContent = styled(motion.div)`
 
 const Greeting = styled(motion.p)`
   font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.sm};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   color: ${({ theme }) => theme.accentText ?? theme.colors.text};
   background: ${({ theme }) => theme.colors.primary};
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.3rem 0.75rem;
+  padding: 0.35rem 0.8rem;
   border: 3px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
   width: fit-content;
   text-transform: uppercase;
   letter-spacing: 0.1em;
+
+  svg {
+    font-size: 0.95rem;
+    stroke-width: 2.5;
+  }
 `
 
 const HeroTitle = styled(motion.h1)`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: clamp(3.5rem, 8vw, 6.5rem);
+  font-size: clamp(3.25rem, 7.5vw, 6.25rem);
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  line-height: 0.95;
+  line-height: 1.02;
   letter-spacing: -0.03em;
   color: ${({ theme }) => theme.colors.text};
+  padding-bottom: 0.25rem;
 
   em {
     font-style: normal;
     display: block;
     color: ${({ theme }) => theme.colors.text};
-    /* underlined with yellow */
     text-decoration: underline;
     text-decoration-color: ${({ theme }) => theme.colors.primary};
     text-decoration-thickness: 6px;
-    text-underline-offset: 6px;
+    text-underline-offset: 8px;
   }
 `
 
 const HeroSubtitle = styled(motion.p)`
   font-size: clamp(1rem, 1.5vw, 1.125rem);
   color: ${({ theme }) => theme.colors.textMuted};
-  max-width: 480px;
+  max-width: 500px;
   line-height: ${({ theme }) => theme.typography.lineHeights.relaxed};
   font-weight: ${({ theme }) => theme.typography.weights.medium};
   border-left: 4px solid ${({ theme }) => theme.colors.primary};
@@ -127,15 +145,18 @@ const PrimaryBtn = styled(motion.a)`
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
   box-shadow: ${({ theme }) => theme.shadows.md};
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 
   svg { transition: transform 0.15s ease; }
 
-  &:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: ${({ theme }) => theme.shadows.hover};
-    svg { transform: translateX(4px); }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: ${({ theme }) => theme.shadows.hover};
+      svg { transform: translateX(4px); }
+    }
   }
   &:active {
     transform: translate(1px, 1px);
@@ -158,12 +179,15 @@ const SecondaryBtn = styled(motion.a)`
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
   box-shadow: ${({ theme }) => theme.shadows.md};
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 
-  &:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: ${({ theme }) => theme.shadows.hover};
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: ${({ theme }) => theme.shadows.hover};
+    }
   }
   &:active {
     transform: translate(1px, 1px);
@@ -189,17 +213,22 @@ const SocialLink = styled(motion.a)`
   font-size: 1.125rem;
   text-decoration: none;
   box-shadow: ${({ theme }) => theme.shadows.sm};
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, color 0.1s ease;
 
-  &:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: ${({ theme }) => theme.shadows.md};
-    background: ${({ theme }) => theme.colors.text};
-    color: ${({ theme }) => theme.colors.background};
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: ${({ theme }) => theme.shadows.md};
+      background: ${({ theme }) => theme.colors.text};
+      color: ${({ theme }) => theme.colors.background};
+    }
   }
 `
 
 const SocialNote = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
@@ -210,121 +239,338 @@ const SocialNote = styled.span`
   padding-left: ${({ theme }) => theme.spacing['3']};
 `
 
-/* ─── Visual / Avatar card ─── */
+/* ─── Interactive Brutalist Engineering ID / System Card ─── */
 const HeroVisual = styled(motion.div)`
   position: relative;
+  width: 100%;
+  max-width: 460px;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
-    display: none;
+    max-width: 100%;
   }
 `
 
-const AvatarCard = styled(motion.div)`
+const SystemCard = styled(motion.div)`
   background: ${({ theme }) => theme.colors.surface};
   border: 3px solid ${({ theme }) => theme.colors.border};
   box-shadow: ${({ theme }) => theme.shadows.xl};
-  overflow: hidden;
-  position: relative;
-  aspect-ratio: 3/4;
-  max-height: 480px;
   display: flex;
   flex-direction: column;
-`
-
-const AvatarBody = styled.div`
-  flex: 1;
-  background: ${({ theme }) => theme.colors.surfaceAlt};
-  border-bottom: 3px solid ${({ theme }) => theme.colors.border};
-  display: flex;
-  align-items: center;
-  justify-content: center;
   position: relative;
   overflow: hidden;
+`
 
-  /* Dot-grid pattern — visible on both light and dark themes */
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(
-      circle,
-      ${({ theme }) => theme.colors.border} 1px,
-      transparent 1px
-    );
-    background-size: 20px 20px;
-    opacity: 0.18;
+const SystemTopBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.9rem;
+  background: ${({ theme }) => theme.colors.text};
+  color: ${({ theme }) => theme.colors.background};
+  border-bottom: 3px solid ${({ theme }) => theme.colors.border};
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+`
+
+const WindowSquares = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+
+  span {
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid ${({ theme }) => theme.colors.background};
+    display: inline-block;
+  }
+
+  span:first-child {
+    background: ${({ theme }) => theme.colors.primary};
   }
 `
 
-const AvatarMonogram = styled.div`
+const IdentitySection = styled.div`
+  padding: 1.25rem;
+  background: ${({ theme }) => theme.colors.surfaceAlt};
+  border-bottom: 3px solid ${({ theme }) => theme.colors.border};
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 1rem;
+  align-items: center;
   position: relative;
-  z-index: 1;
-  font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: 8rem;
-  font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-  letter-spacing: -0.05em;
-  line-height: 1;
-  background: ${({ theme }) => theme.colors.primary};
-  border: 3px solid ${({ theme }) => theme.colors.border};
-  padding: 1rem 1.5rem;
-  box-shadow: ${({ theme }) => theme.shadows.lg};
+
+  /* Subtle architectural dot grid */
+  background-image: radial-gradient(
+    circle,
+    ${({ theme }) => theme.colors.border} 1px,
+    transparent 1px
+  );
+  background-size: 18px 18px;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    grid-template-columns: 68px 1fr;
+    padding: 1rem;
+  }
 `
 
-/* AvatarFooter background is theme.primary so text uses accentText for contrast */
-const AvatarFooter = styled.div`
-  padding: ${({ theme }) => theme.spacing['4']};
+const MonogramBadge = styled.div`
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ${({ theme }) => theme.typography.fontDisplay};
+  font-size: 2.5rem;
+  font-weight: ${({ theme }) => theme.typography.weights.bold};
+  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  background: ${({ theme }) => theme.colors.primary};
+  border: 3px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  letter-spacing: -0.05em;
+  line-height: 1;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    width: 68px;
+    height: 68px;
+    font-size: 2rem;
+  }
+`
+
+const IdentityInfo = styled.div`
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  padding: 0.65rem 0.85rem;
+  box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`
+
+const IdentityRole = styled.span`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
+const IdentityName = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontDisplay};
+  font-size: 1.1rem;
+  font-weight: ${({ theme }) => theme.typography.weights.bold};
+  color: ${({ theme }) => theme.colors.text};
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+`
+
+const IdentityAlumnus = styled.span`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  border: 1.5px solid ${({ theme }) => theme.colors.border};
+  padding: 0.1rem 0.4rem;
+  width: fit-content;
+  margin-top: 0.15rem;
+`
+
+/* Interactive Tab Switcher inside System Card */
+const SystemTabs = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 3px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.background};
+`
+
+const SystemTabBtn = styled.button<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.6rem 0.4rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  border-right: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ $active, theme }) => ($active ? theme.colors.primary : theme.colors.surface)};
+  color: ${({ $active, theme }) => ($active ? (theme.accentText ?? theme.colors.text) : theme.colors.text)};
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+`
+
+const ConsoleBody = styled.div`
+  padding: 1.15rem 1.25rem;
+  background: ${({ theme }) => theme.colors.surface};
+  min-height: 172px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`
+
+const TelemetryGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+`
+
+const TelemetryBox = styled.div`
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.background};
+  padding: 0.65rem 0.75rem;
+  box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
+`
+
+const TelemetryValue = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontDisplay};
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+`
+
+const TelemetryLabel = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.textFaint};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 0.25rem;
+`
+
+const SpecList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`
+
+const SpecRow = styled.div`
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.68rem;
+  border-bottom: 1.5px solid ${({ theme }) => theme.colors.borderSubtle};
+  padding-bottom: 0.4rem;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .key {
+    font-weight: 700;
+    color: ${({ theme }) => theme.colors.text};
+    text-transform: uppercase;
+  }
+
+  .val {
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-weight: 700;
+  }
+`
+
+const ClockDisplay = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+`
+
+const ClockTime = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+  background: ${({ theme }) => theme.colors.background};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  padding: 0.5rem 0.75rem;
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 2px 2px 0 ${({ theme }) => theme.colors.border};
+`
+
+const SystemFooter = styled.div`
+  padding: 0.85rem 1.25rem;
   background: ${({ theme }) => theme.colors.primary};
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-top: 3px solid ${({ theme }) => theme.colors.border};
+  gap: 0.5rem;
+  flex-wrap: wrap;
 `
 
-const AvatarNameText = styled.p`
-  font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: ${({ theme }) => theme.typography.sizes.lg};
+const FooterSpecText = styled.p`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.68rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   color: ${({ theme }) => theme.accentText ?? theme.colors.text};
-  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 `
 
 const AvailableDot = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-size: 0.68rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
   color: ${({ theme }) => theme.accentText ?? theme.colors.text};
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  padding: 0.2rem 0.55rem;
 
   span {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: ${({ theme }) => theme.accentText ?? theme.colors.text};
+    background: ${({ theme }) => theme.colors.primary};
+    border: 1.5px solid ${({ theme }) => theme.colors.border};
     animation: pulse 2s infinite;
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
+      50%       { opacity: 0.35; }
     }
   }
 `
 
-/* Floating sticker badges */
-const Sticker = styled(motion.div)`
+/* Floating sticker badges — locked to single-accent + monochrome discipline */
+const Sticker = styled(motion.div)<{ $bg: string; $fg: string }>`
   position: absolute;
-  background: ${({ theme }) => theme.colors.primary};
+  background: ${({ $bg }) => $bg};
+  color: ${({ $fg }) => $fg};
   border: 3px solid ${({ theme }) => theme.colors.border};
   box-shadow: ${({ theme }) => theme.shadows.sm};
-  padding: 0.4rem 0.875rem;
+  padding: 0.35rem 0.75rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
   text-transform: uppercase;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -336,7 +582,13 @@ const Sticker = styled(motion.div)`
   &:active {
     cursor: grabbing;
   }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    display: none;
+  }
 `
+
+type CardTab = 'telemetry' | 'stack' | 'node'
 
 /* ─── Component ─── */
 export default function Hero() {
@@ -345,33 +597,49 @@ export default function Hero() {
   const scrollToContact = () =>
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
 
-  const { isMonoTheme, accent } = useAccent()
-  const { heroContent, settings, sectionVisibility } = usePublicData()
+  const { accent } = useAccent()
+  const { heroContent, settings, sectionVisibility, githubStats } = usePublicData()
+  const [activeTab, setActiveTab] = useState<CardTab>('telemetry')
+  const [catTime, setCatTime] = useState<string>('')
 
-  /* Use admin-managed content with sensible fallbacks */
-  const greeting  = heroContent.greeting  || 'Hello, World'
-  const role      = heroContent.role      || 'Front-End Software Developer from Zimbabwe. Building modern, performant, and engaging web experiences.'
-  const cvUrl     = heroContent.cvUrl     || '/Maqhawe-Ngwenya-CV.pdf'
+  useEffect(() => {
+    const updateClock = () => {
+      try {
+        const now = new Date()
+        const formatted = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Africa/Harare',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        }).format(now)
+        setCatTime(`${formatted} CAT`)
+      } catch {
+        setCatTime('UTC+02:00 CAT')
+      }
+    }
+    updateClock()
+    const timer = setInterval(updateClock, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  /* Use admin-managed content with em-dash sanitization */
+  const greeting  = (heroContent.greeting || 'Hello, World').replace(/\s*—\s*/g, ' // ')
+  const rawRole   = heroContent.role || 'Front-End Software Developer building modern, high-performance web applications from Bulawayo, Zimbabwe.'
+  const role      = rawRole.replace(/\s*—\s*/g, '. ')
+  const cvUrl     = heroContent.cvUrl || '/Maqhawe-Ngwenya-CV.pdf'
   const available = heroContent.available !== false
-  const stick1    = heroContent.sticker1  || 'React + TS'
-  const stick2    = heroContent.sticker2  || 'Node.js'
-  const stick3    = heroContent.sticker3  || 'Front-End'
-
-  /* Sticker colours: vivid in normal themes, mono in Black */
-  const s1 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
-                         : { bg: '#FFE500', fg: '#000000' }
-  const s2 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
-                         : { bg: '#FF3C2F', fg: '#ffffff' }
-  const s3 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
-                         : { bg: '#0047FF', fg: '#ffffff' }
+  const stick1    = heroContent.sticker1 || 'React + TS'
+  const stick2    = heroContent.sticker2 || 'Node.js'
+  const stick3    = heroContent.sticker3 || 'Front-End'
 
   return (
     <HeroSection id="home">
       <HeroInner>
-        {/* Content */}
+        {/* Left Column: Copy & CTAs */}
         <HeroContent variants={heroContainer} initial="hidden" animate="visible">
           <Greeting variants={heroItem}>
-            👋 {greeting}
+            <FiTerminal aria-hidden="true" /> {greeting}
           </Greeting>
 
           <HeroTitle variants={heroItem} aria-label="Maqhawe Thabiso Ngwenya">
@@ -388,29 +656,29 @@ export default function Hero() {
               <PrimaryBtn
                 href="#contact"
                 onClick={e => { e.preventDefault(); scrollToContact() }}
-                whileHover={{ scale: 1.06, y: -4 }}
-                whileTap={{ scale: 0.94 }}
+                whileHover={{ scale: 1.05, y: -3 }}
+                whileTap={{ scale: 0.96 }}
                 transition={popSpring}>
-                Get in Touch <FiArrowRight />
+                Get in Touch <FiArrowRight aria-hidden="true" />
               </PrimaryBtn>
             ) : (
               <PrimaryBtn
                 as="a"
                 href={`mailto:${settings.email}`}
-                whileHover={{ scale: 1.06, y: -4 }}
-                whileTap={{ scale: 0.94 }}
+                whileHover={{ scale: 1.05, y: -3 }}
+                whileTap={{ scale: 0.96 }}
                 transition={popSpring}>
-                Email Me <FiArrowRight />
+                Email Me <FiArrowRight aria-hidden="true" />
               </PrimaryBtn>
             )}
             {sectionVisibility.projects && (
               <SecondaryBtn
                 href="#projects"
                 onClick={e => { e.preventDefault(); scrollToProjects() }}
-                whileHover={{ scale: 1.06, y: -4 }}
-                whileTap={{ scale: 0.94 }}
+                whileHover={{ scale: 1.05, y: -3 }}
+                whileTap={{ scale: 0.96 }}
                 transition={popSpring}>
-                View Projects <FiArrowDown />
+                View Work <FiArrowDown aria-hidden="true" />
               </SecondaryBtn>
             )}
             <SecondaryBtn
@@ -418,60 +686,188 @@ export default function Hero() {
               href={cvUrl}
               download="Maqhawe-Ngwenya-CV.pdf"
               onClick={() => recordCvDownload(cvUrl)}
-              whileHover={{ scale: 1.06, y: -4 }}
-              whileTap={{ scale: 0.94 }}
-              transition={popSpring}
-              style={{ cursor: 'pointer' }}>
-              <FiDownload /> Download CV
+              whileHover={{ scale: 1.05, y: -3 }}
+              whileTap={{ scale: 0.96 }}
+              transition={popSpring}>
+              <FiDownload aria-hidden="true" /> Resume PDF
             </SecondaryBtn>
           </HeroActions>
 
           <SocialRow variants={heroItem}>
             <SocialLink
-              href="https://github.com/Thabisomaqhawengwenya"
-              target="_blank" rel="noopener noreferrer"
+              href={settings.githubUrl || 'https://github.com/Thabisomaqhawengwenya'}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="GitHub Profile - Thabisomaqhawengwenya"
-              whileHover={{ scale: 1.15, y: -5 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.12, y: -4 }}
+              whileTap={{ scale: 0.94 }}
               transition={popSpring}>
-              <FiGithub />
+              <FiGithub aria-hidden="true" />
             </SocialLink>
             <SocialLink
-              href="https://www.linkedin.com/in/maqhawe-ngwenya/"
-              target="_blank" rel="noopener noreferrer"
+              href={settings.linkedinUrl || 'https://www.linkedin.com/in/maqhawe-ngwenya/'}
+              target="_blank"
+              rel="noopener noreferrer"
               aria-label="LinkedIn Profile - Maqhawe Ngwenya"
-              whileHover={{ scale: 1.15, y: -5 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.12, y: -4 }}
+              whileTap={{ scale: 0.94 }}
               transition={popSpring}>
-              <FiLinkedin />
+              <FiLinkedin aria-hidden="true" />
             </SocialLink>
-            <SocialNote>{settings.location || 'Zimbabwe'}</SocialNote>
+            <SocialNote>
+              <FiMapPin aria-hidden="true" /> {settings.location || 'Bulawayo, Zimbabwe'}
+            </SocialNote>
           </SocialRow>
         </HeroContent>
 
-        {/* Visual */}
+        {/* Right Column: Interactive Brutalist Engineering ID Card */}
         <HeroVisual
           variants={scaleIn}
           initial="hidden"
           animate="visible"
-          transition={{ delay: 0.4, duration: 0.6 }}>
+          transition={{ delay: 0.35, duration: 0.55 }}>
 
-          <AvatarCard>
-            <AvatarBody>
-              <AvatarMonogram>MN</AvatarMonogram>
-            </AvatarBody>
-            <AvatarFooter>
-              <AvatarNameText>Maqhawe Thabiso Ngwenya</AvatarNameText>
+          <SystemCard>
+            <SystemTopBar>
+              <span>SYS.ID // MT-NGWENYA</span>
+              <WindowSquares aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </WindowSquares>
+            </SystemTopBar>
+
+            <IdentitySection>
+              <MonogramBadge aria-hidden="true">MN</MonogramBadge>
+              <IdentityInfo>
+                <IdentityRole>Front-End Software Engineer</IdentityRole>
+                <IdentityName>Maqhawe T. Ngwenya</IdentityName>
+                <IdentityAlumnus>Uncommon.org Alumnus</IdentityAlumnus>
+              </IdentityInfo>
+            </IdentitySection>
+
+            <SystemTabs role="tablist" aria-label="Engineering telemetry tabs">
+              <SystemTabBtn
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'telemetry'}
+                $active={activeTab === 'telemetry'}
+                onClick={() => setActiveTab('telemetry')}>
+                <FiActivity aria-hidden="true" /> Telemetry
+              </SystemTabBtn>
+              <SystemTabBtn
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'stack'}
+                $active={activeTab === 'stack'}
+                onClick={() => setActiveTab('stack')}>
+                <FiCpu aria-hidden="true" /> Spec
+              </SystemTabBtn>
+              <SystemTabBtn
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'node'}
+                $active={activeTab === 'node'}
+                onClick={() => setActiveTab('node')}>
+                <FiClock aria-hidden="true" /> Node
+              </SystemTabBtn>
+            </SystemTabs>
+
+            <ConsoleBody role="tabpanel">
+              <AnimatePresence mode="wait">
+                {activeTab === 'telemetry' && (
+                  <motion.div
+                    key="telemetry"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.16 }}>
+                    <TelemetryGrid>
+                      <TelemetryBox>
+                        <TelemetryValue>{githubStats?.projectCount || 94}+</TelemetryValue>
+                        <TelemetryLabel>Public Repositories</TelemetryLabel>
+                      </TelemetryBox>
+                      <TelemetryBox>
+                        <TelemetryValue>{githubStats?.commitCount || 312}+</TelemetryValue>
+                        <TelemetryLabel>Authored Commits</TelemetryLabel>
+                      </TelemetryBox>
+                      <TelemetryBox>
+                        <TelemetryValue>React 19</TelemetryValue>
+                        <TelemetryLabel>Core UI Engine</TelemetryLabel>
+                      </TelemetryBox>
+                      <TelemetryBox>
+                        <TelemetryValue>TypeScript</TelemetryValue>
+                        <TelemetryLabel>Strict Type Safety</TelemetryLabel>
+                      </TelemetryBox>
+                    </TelemetryGrid>
+                  </motion.div>
+                )}
+
+                {activeTab === 'stack' && (
+                  <motion.div
+                    key="stack"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.16 }}>
+                    <SpecList>
+                      <SpecRow>
+                        <span className="key">Frontend</span>
+                        <span className="val">React 19 · TypeScript · Vite</span>
+                      </SpecRow>
+                      <SpecRow>
+                        <span className="key">Styling</span>
+                        <span className="val">Styled Components · Framer</span>
+                      </SpecRow>
+                      <SpecRow>
+                        <span className="key">Backend</span>
+                        <span className="val">Node.js · Express · REST APIs</span>
+                      </SpecRow>
+                      <SpecRow>
+                        <span className="key">Database</span>
+                        <span className="val">PostgreSQL · Prisma · Firestore</span>
+                      </SpecRow>
+                    </SpecList>
+                  </motion.div>
+                )}
+
+                {activeTab === 'node' && (
+                  <motion.div
+                    key="node"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.16 }}>
+                    <ClockDisplay>
+                      <ClockTime>{catTime || '12:00:00 CAT'}</ClockTime>
+                      <SpecList>
+                        <SpecRow>
+                          <span className="key">Base Node</span>
+                          <span className="val">Bulawayo, ZW (20.15° S, 28.58° E)</span>
+                        </SpecRow>
+                        <SpecRow>
+                          <span className="key">Sync Zone</span>
+                          <span className="val">UTC+2 (EU / UK / US-East Overlap)</span>
+                        </SpecRow>
+                      </SpecList>
+                    </ClockDisplay>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </ConsoleBody>
+
+            <SystemFooter>
+              <FooterSpecText>STATUS // {available ? 'READY FOR DISPATCH' : 'ENGAGED'}</FooterSpecText>
               {available && (
                 <AvailableDot>
                   <span />
-                  Open
+                  Open to Work
                 </AvailableDot>
               )}
-            </AvatarFooter>
-          </AvatarCard>
+            </SystemFooter>
+          </SystemCard>
 
-          {/* Sticker badges — physically draggable with elastic spring snap-back */}
+          {/* Draggable Stickers — Locked to Single-Accent + High-Contrast Monochrome */}
           <Sticker
             drag
             dragConstraints={{ top: -35, bottom: 35, left: -35, right: 35 }}
@@ -480,8 +876,10 @@ export default function Hero() {
             whileHover={{ scale: 1.08, rotate: 0 }}
             whileDrag={{ scale: 1.16, zIndex: 100 }}
             whileTap={{ scale: 0.95 }}
-            style={{ top: -16, right: -16, rotate: 4, background: s1.bg, color: s1.fg }}
-            title="Drag me!">
+            $bg={accent.primary}
+            $fg={accent.textColor}
+            style={{ top: -16, right: -14, rotate: 3 }}
+            title="Drag sticker">
             {stick1}
           </Sticker>
           <Sticker
@@ -492,8 +890,10 @@ export default function Hero() {
             whileHover={{ scale: 1.08, rotate: 0 }}
             whileDrag={{ scale: 1.16, zIndex: 100 }}
             whileTap={{ scale: 0.95 }}
-            style={{ bottom: 60, left: -20, rotate: -3, background: s2.bg, color: s2.fg }}
-            title="Drag me!">
+            $bg="#000000"
+            $fg="#ffffff"
+            style={{ bottom: 54, left: -18, rotate: -3 }}
+            title="Drag sticker">
             {stick2}
           </Sticker>
           <Sticker
@@ -504,8 +904,10 @@ export default function Hero() {
             whileHover={{ scale: 1.08, rotate: 0 }}
             whileDrag={{ scale: 1.16, zIndex: 100 }}
             whileTap={{ scale: 0.95 }}
-            style={{ bottom: -16, right: 20, rotate: 2, background: s3.bg, color: s3.fg }}
-            title="Drag me!">
+            $bg={accent.primary}
+            $fg={accent.textColor}
+            style={{ bottom: -16, right: 20, rotate: 2 }}
+            title="Drag sticker">
             {stick3}
           </Sticker>
         </HeroVisual>

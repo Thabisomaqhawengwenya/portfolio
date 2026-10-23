@@ -1,7 +1,15 @@
 import { useRef, useState, useEffect } from 'react'
 import styled from 'styled-components'
 import { motion, useInView, useMotionValue, useTransform, animate } from 'framer-motion'
-import { Container, Section, SectionHeader, SectionEyebrow, SectionTitle } from '../UI'
+import {
+  Container,
+  Section,
+  SectionTitle,
+  SwissHeaderGrid,
+  SwissIndexCell,
+  SwissTitleCell,
+  SwissMetaCell,
+} from '../UI'
 import { fadeUp, staggerContainer, staggerItem } from '../../styles/animations'
 import { usePublicData } from '../../styles/PublicDataContext'
 
@@ -42,6 +50,7 @@ const Paragraph = styled(motion.p)`
   line-height: ${({ theme }) => theme.typography.lineHeights.relaxed};
   font-weight: ${({ theme }) => theme.typography.weights.medium};
   margin-bottom: ${({ theme }) => theme.spacing['5']};
+  text-wrap: pretty;
 
   &:last-child { margin-bottom: 0; }
 
@@ -80,6 +89,7 @@ const StatValue = styled.p`
   line-height: 1;
   margin-bottom: ${({ theme }) => theme.spacing['1']};
   word-break: break-word;
+  font-variant-numeric: tabular-nums;
 `
 
 const StatLabel = styled.p`
@@ -106,6 +116,15 @@ const Quote = styled.blockquote`
   letter-spacing: -0.01em;
 `
 
+const MetaTag = styled.span`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.colors.textMuted};
+`
+
 /* ─── Count-up hook ─── */
 function useCountUp(target: number, duration: number, active: boolean) {
   const motionVal = useMotionValue(0)
@@ -128,7 +147,7 @@ function useCountUp(target: number, duration: number, active: boolean) {
 /* ─── Animated stat cell ─── */
 interface StatProps {
   label:    string
-  value:    string | number   // string = static (location, ∞), number = animates
+  value:    string | number
   suffix?:  string
   active:   boolean
 }
@@ -184,19 +203,31 @@ export default function About() {
   const inView = useInView(ref, { once: true, margin: '-80px' })
 
   const { settings, githubStats } = usePublicData()
-  const userLocation = settings.location || 'Zimbabwe'
+  const userLocation = settings.location || 'Bulawayo, Zimbabwe'
   const projectCount = githubStats?.projectCount || 94
   const commitCount  = githubStats?.commitCount || 312
 
   return (
     <Section id="about">
       <Container>
-        <motion.div ref={ref}
-          variants={fadeUp} initial="hidden" animate={inView ? 'visible' : 'hidden'}>
-          <SectionHeader>
-            <SectionEyebrow>About</SectionEyebrow>
-            <SectionTitle>A developer who cares about the craft.</SectionTitle>
-          </SectionHeader>
+        <motion.div
+          ref={ref}
+          variants={fadeUp}
+          initial="hidden"
+          animate={inView ? 'visible' : 'hidden'}>
+          <SwissHeaderGrid>
+            <SwissIndexCell>
+              01
+              <span>Profile</span>
+            </SwissIndexCell>
+            <SwissTitleCell>
+              <SectionTitle>A developer who cares about the craft.</SectionTitle>
+            </SwissTitleCell>
+            <SwissMetaCell>
+              <MetaTag>// DISCIPLINE: FRONT-END &amp; WEB</MetaTag>
+              <MetaTag>// BASE: {userLocation.toUpperCase()}</MetaTag>
+            </SwissMetaCell>
+          </SwissHeaderGrid>
         </motion.div>
 
         <AboutGrid>
@@ -205,13 +236,13 @@ export default function About() {
             <motion.div variants={staggerContainer} initial="hidden"
               animate={inView ? 'visible' : 'hidden'}>
               <Paragraph variants={staggerItem}>
-                I'm <strong>Maqhawe Thabiso Ngwenya</strong> (also known as <strong>Thabiso</strong> or <strong>thabisongwenya</strong>), a Front-End Software Developer based in <strong>Bulawayo, Zimbabwe</strong>. Currently advancing my craft through <strong>Uncommon.org</strong>, I build modern web applications, accessible user interfaces, and responsive digital products.
+                I'm <strong>Maqhawe Thabiso Ngwenya</strong> (also known as <strong>Thabiso</strong> or <strong>thabisongwenya</strong>), a Front-End Software Developer based in <strong>Bulawayo, Zimbabwe</strong>. Trained at <strong>Uncommon.org</strong>, I build modern web applications, accessible user interfaces, and responsive digital products.
               </Paragraph>
               <Paragraph variants={staggerItem}>
                 My primary technical focus is on <strong>React, TypeScript, JavaScript, and Node.js</strong>. From building fluid UI/UX layouts to architecting backend services with PostgreSQL and Cloud Firestore, I care deeply about clean code architecture, web performance, and delivering intuitive digital experiences.
               </Paragraph>
               <Paragraph variants={staggerItem}>
-                I focus on <strong>engineering fundamentals over shortcuts</strong> — continuous learning, deliberate problem-solving, and writing maintainable code that teammates and users enjoy working with.
+                I focus on <strong>engineering fundamentals over shortcuts</strong>: continuous learning, deliberate problem-solving, and writing maintainable code that teammates and users enjoy working with.
               </Paragraph>
             </motion.div>
           </AboutLeft>
@@ -221,7 +252,6 @@ export default function About() {
             <StatsGrid variants={staggerContainer} initial="hidden"
               animate={inView ? 'visible' : 'hidden'}>
 
-              {/* Projects — count up to real number of GitHub projects */}
               <AnimatedStat
                 label="Projects"
                 value={projectCount}
@@ -229,14 +259,12 @@ export default function About() {
                 active={inView}
               />
 
-              {/* Location — static string */}
               <AnimatedStat
                 label="Location"
                 value={userLocation}
                 active={inView}
               />
 
-              {/* Commits — count up to real number of GitHub commits */}
               <AnimatedStat
                 label="Commits"
                 value={commitCount}
@@ -244,10 +272,9 @@ export default function About() {
                 active={inView}
               />
 
-              {/* Started — count up to 2026 */}
               <AnimatedStat
                 label="Started"
-                value={2026}
+                value={2025}
                 active={inView}
               />
             </StatsGrid>
@@ -256,7 +283,7 @@ export default function About() {
               animate={inView ? 'visible' : 'hidden'}
               transition={{ delay: 0.3 }}>
               <Quote>
-                "Coding for a better tomorrow."
+                “Coding for a better tomorrow.”
               </Quote>
             </QuoteBlock>
 
@@ -273,4 +300,3 @@ export default function About() {
     </Section>
   )
 }
-

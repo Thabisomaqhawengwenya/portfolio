@@ -13,22 +13,11 @@ const HeroSection = styled.section`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding-top: 64px; /* nav height */
+  padding-top: 96px; /* floating nav clearance */
   background: ${({ theme }) => theme.colors.background};
   border-bottom: 3px solid ${({ theme }) => theme.colors.border};
   position: relative;
   overflow: hidden;
-
-  /* Decorative corner marks */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 80px;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: ${({ theme }) => theme.colors.primary};
-  }
 `
 
 const HeroInner = styled.div`

@@ -1,82 +1,70 @@
 import { useState, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiChevronDown, FiCheck } from 'react-icons/fi'
+import { FiCheck } from 'react-icons/fi'
 import { ACCENT_OPTIONS, useAccent } from '../../styles/ThemeContext'
 import type { AccentOption } from '../../styles/ThemeContext'
 import { recordThemeChange } from '../../services/analyticsService'
 
 /* ──────────────────────────────────────────────
-   NEO-BRUTALIST THEME DROPDOWN
-   Instant, crisp, high-contrast theme picker.
+   NEO-BRUTALIST THEME PICKER (MOON ICON BUTTON)
+   Matches reference sky-blue square icon button
+   while preserving full 5-theme switching.
 ────────────────────────────────────────────── */
 
 const DropdownWrapper = styled.div`
   position: relative;
-  display: inline-block;
+  display: inline-flex;
 `
 
-const TriggerBtn = styled(motion.button)<{ $isOpen: boolean }>`
+const TriggerBtn = styled(motion.button)<{ $isOpen: boolean; $mobile?: boolean }>`
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  background: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.text};
+  width: ${({ $mobile }) => ($mobile ? 'auto' : '42px')};
+  height: 42px;
+  padding: ${({ $mobile }) => ($mobile ? '0 0.9rem' : '0')};
+  background: #62D8F9;
+  color: #000000;
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 0.4rem 0.75rem;
-  border: 2.5px solid ${({ theme }) => theme.colors.border};
-  box-shadow: ${({ $isOpen, theme }) =>
-    $isOpen ? `1px 1px 0px ${theme.colors.border}` : `3px 3px 0px ${theme.colors.border}`};
+  border-radius: 6px;
+  border: 2.5px solid #000000;
+  box-shadow: ${({ $isOpen }) =>
+    $isOpen ? '1px 1px 0px #000000' : '3px 3px 0px #000000'};
   transform: ${({ $isOpen }) => ($isOpen ? 'translate(2px, 2px)' : 'none')};
   cursor: pointer;
   user-select: none;
-  transition: background 0.1s ease, color 0.1s ease, box-shadow 0.1s ease, transform 0.1s ease;
+  transition: background 0.12s ease, box-shadow 0.1s ease, transform 0.1s ease;
 
   &:hover {
-    transform: translate(-1px, -1px);
-    box-shadow: 4px 4px 0px ${({ theme }) => theme.colors.border};
-    background: ${({ theme }) => theme.colors.surfaceAlt};
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0px #000000;
+    background: #7ce3ff;
   }
 
   &:active {
     transform: translate(2px, 2px);
-    box-shadow: 1px 1px 0px ${({ theme }) => theme.colors.border};
+    box-shadow: 1px 1px 0px #000000;
   }
-`
-
-const SwatchPreview = styled.span<{ $color: string }>`
-  width: 14px;
-  height: 14px;
-  background: ${({ $color }) => $color};
-  border: 2px solid ${({ theme }) => theme.colors.border};
-  flex-shrink: 0;
-  display: inline-block;
-`
-
-const ChevronIcon = styled(motion.span)`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  margin-left: 0.15rem;
 `
 
 const DropdownMenu = styled(motion.div)`
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   right: 0;
   min-width: 170px;
   background: ${({ theme }) => theme.colors.surface};
   border: 3px solid ${({ theme }) => theme.colors.border};
+  border-radius: 6px;
   box-shadow: 5px 5px 0px ${({ theme }) => theme.colors.border};
   z-index: 500;
   padding: 0.35rem 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 `
 
 const DropdownItem = styled(motion.button)<{ $active: boolean }>`
@@ -115,6 +103,7 @@ const ItemSwatch = styled.span<{ $color: string }>`
   height: 14px;
   background: ${({ $color }) => $color};
   border: 2px solid ${({ theme }) => theme.colors.border};
+  border-radius: 3px;
   flex-shrink: 0;
 `
 
@@ -134,7 +123,6 @@ export default function ColorPicker({ mobile = false }: ColorPickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -163,26 +151,22 @@ export default function ColorPicker({ mobile = false }: ColorPickerProps) {
     setIsOpen(false)
   }
 
-  const activeColor = accent.label === 'Black' ? '#111111' : accent.primary
-
   return (
     <DropdownWrapper ref={dropdownRef}>
       <TriggerBtn
         type="button"
         $isOpen={isOpen}
+        $mobile={mobile}
         onClick={() => setIsOpen(v => !v)}
         aria-haspopup="true"
         aria-expanded={isOpen}
         aria-label={`Current Theme: ${accent.label}. Click to choose a theme.`}
+        title={`Theme: ${accent.label}`}
       >
-        <SwatchPreview $color={activeColor} />
-        <span>{accent.label}</span>
-        <ChevronIcon
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.15 }}
-        >
-          <FiChevronDown />
-        </ChevronIcon>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+        {mobile && <span>Theme: {accent.label}</span>}
       </TriggerBtn>
 
       <AnimatePresence>
@@ -193,7 +177,7 @@ export default function ColorPicker({ mobile = false }: ColorPickerProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -4, scale: 0.96 }}
             transition={{ duration: 0.1 }}
-            style={{ width: mobile ? '100%' : 'auto' }}
+            style={{ width: mobile ? '100%' : 'auto', left: mobile ? 0 : 'auto' }}
           >
             {ACCENT_OPTIONS.map((opt: AccentOption) => {
               const isSelected = accent.label === opt.label

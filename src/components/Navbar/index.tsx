@@ -34,6 +34,7 @@ const NavOuter = styled(motion.header)`
   z-index: ${({ theme }) => theme.zIndex.nav};
   padding: 0 1.5rem;
   pointer-events: none;
+  will-change: transform, opacity;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     top: 0.75rem;
@@ -41,8 +42,8 @@ const NavOuter = styled(motion.header)`
   }
 `
 
-const NavBar = styled.div<{ $hidden?: boolean }>`
-  pointer-events: ${({ $hidden }) => ($hidden ? 'none' : 'auto')};
+const NavBar = styled.div`
+  pointer-events: auto;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
@@ -70,8 +71,8 @@ const NavBar = styled.div<{ $hidden?: boolean }>`
     box-shadow: 4px 4px 0px ${({ theme }) => theme.colors.border};
 
     &:hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 5px 5px 0px ${({ theme }) => theme.colors.border};
+      transform: none;
+      box-shadow: 4px 4px 0px ${({ theme }) => theme.colors.border};
     }
   }
 `
@@ -393,16 +394,18 @@ export default function Navbar() {
   }, [visibleNavItems])
 
   useEffect(() => {
+    lastScrollY.current = window.scrollY
+
     const handleScroll = () => {
       const currentY = window.scrollY
       const delta = currentY - lastScrollY.current
 
-      // Hide when scrolling down past 60px; show immediately when scrolling up
-      if (currentY <= 60) {
+      // Hide when scrolling down past top threshold; show immediately when scrolling up
+      if (currentY <= 64) {
         setNavHidden(false)
       } else if (delta > 6) {
         setNavHidden(true)
-      } else if (delta < -6) {
+      } else if (delta < -4) {
         setNavHidden(false)
       }
       lastScrollY.current = currentY
@@ -411,8 +414,7 @@ export default function Navbar() {
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i])
         if (el && currentY >= el.offsetTop - 130) {
-          setActive(sections[i])
-          break
+          setActive(sections[i]); break
         }
       }
     }
@@ -444,11 +446,14 @@ export default function Navbar() {
       <NavOuter
         initial={{ y: 0, opacity: 1 }}
         animate={{
-          y: isHidden ? -115 : 0,
+          y: isHidden ? -110 : 0,
           opacity: isHidden ? 0 : 1,
         }}
-        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}>
-        <NavBar $hidden={isHidden}>
+        transition={{
+          duration: 0.28,
+          ease: [0.22, 1, 0.36, 1],
+        }}>
+        <NavBar>
           <ScrollProgress style={{ scaleX: scrollYProgress }} />
 
           <Logo

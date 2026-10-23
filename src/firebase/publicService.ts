@@ -7,7 +7,6 @@
 import {
   collection, doc,
   getDocs, getDoc,
-  query, orderBy,
 } from 'firebase/firestore'
 import { db } from './config'
 import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate, SectionVisibility } from '../types'
@@ -49,16 +48,28 @@ export async function publicGetSkills(): Promise<SkillGroup[]> {
   return tryFetch(async () => {
     const snap = await getDocs(collection(db, 'skills'))
     const list = snap.docs.map(d => d.data() as SkillGroup)
-    return list.length ? list : staticSkills
+    if (!list.length) return staticSkills
+    return list.sort((a, b) => {
+      const ordA = typeof a.order === 'number' ? a.order : 999999
+      const ordB = typeof b.order === 'number' ? b.order : 999999
+      return ordA - ordB
+    })
   }, staticSkills)
 }
 
 export async function publicGetJourney(): Promise<ExperienceItem[]> {
   return tryFetch(async () => {
-    const q    = query(collection(db, 'journey'), orderBy('startDate', 'desc'))
-    const snap = await getDocs(q)
+    const snap = await getDocs(collection(db, 'journey'))
     const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as ExperienceItem))
-    return list.length ? list : staticExperience
+    if (!list.length) return staticExperience
+    return list.sort((a, b) => {
+      const hasOrdA = typeof a.order === 'number'
+      const hasOrdB = typeof b.order === 'number'
+      if (hasOrdA && hasOrdB) return (a.order as number) - (b.order as number)
+      if (hasOrdA) return -1
+      if (hasOrdB) return 1
+      return (b.startDate || '').localeCompare(a.startDate || '')
+    })
   }, staticExperience)
 }
 
@@ -95,5 +106,3 @@ export async function publicGetSectionVisibility(): Promise<SectionVisibility> {
     return snap.exists() ? { ...DEFAULT_SECTION_VISIBILITY, ...snap.data() } as SectionVisibility : DEFAULT_SECTION_VISIBILITY
   }, DEFAULT_SECTION_VISIBILITY)
 }
-
-

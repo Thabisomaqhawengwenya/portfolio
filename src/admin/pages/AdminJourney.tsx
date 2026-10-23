@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiPlus, FiEdit2, FiTrash2, FiX, FiCheck,
-  FiAlertTriangle, FiAlertCircle,
+  FiAlertTriangle, FiAlertCircle, FiSearch, FiArrowUp, FiArrowDown,
 } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { ExperienceItem } from '../../types'
@@ -13,7 +13,7 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.25rem;
   flex-wrap: wrap;
   gap: 1rem;
 `
@@ -24,6 +24,63 @@ const PageTitle = styled.h1`
   font-weight: 700;
   color: ${({ theme }) => theme.colors.text};
   letter-spacing: -0.03em;
+`
+
+const Toolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+`
+
+const SearchWrap = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: ${({ theme }) => theme.colors.surface};
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  padding: 0.45rem 0.75rem;
+  min-width: 240px;
+  flex: 1;
+  max-width: 360px;
+
+  svg { color: ${({ theme }) => theme.colors.textFaint}; flex-shrink: 0; }
+`
+
+const SearchInput = styled.input`
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: ${({ theme }) => theme.typography.fontBody};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  color: ${({ theme }) => theme.colors.text};
+  width: 100%;
+  &::placeholder { color: ${({ theme }) => theme.colors.textFaint}; }
+`
+
+const FilterTabs = styled.div`
+  display: flex;
+  gap: 0.25rem;
+  border: 2px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  padding: 2px;
+  flex-wrap: wrap;
+`
+
+const FilterTab = styled.button<{ $active: boolean }>`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: ${({ $active, theme }) => $active ? theme.colors.primary : 'transparent'};
+  color: ${({ $active }) => $active ? '#000' : 'inherit'};
+  cursor: pointer;
+  transition: all 0.1s;
 `
 
 const Banner = styled(motion.div)<{ $type: 'success' | 'error' }>`
@@ -69,11 +126,14 @@ const Table = styled.div`
 
 const TableHead = styled.div`
   display: grid;
-  grid-template-columns: 1fr 100px 100px 90px;
+  grid-template-columns: 1fr 100px 100px 150px;
   background: ${({ theme }) => theme.colors.primary};
   border-bottom: 3px solid ${({ theme }) => theme.colors.border};
   padding: 0.6rem 1rem;
   gap: 1rem;
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr 80px 130px;
+  }
 `
 
 const TH = styled.span`
@@ -87,7 +147,7 @@ const TH = styled.span`
 
 const Row = styled(motion.div)`
   display: grid;
-  grid-template-columns: 1fr 100px 100px 90px;
+  grid-template-columns: 1fr 100px 100px 150px;
   padding: 0.875rem 1rem;
   border-bottom: 2px solid ${({ theme }) => theme.colors.borderSubtle};
   align-items: center;
@@ -99,6 +159,9 @@ const Row = styled(motion.div)`
   }
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceAlt};
+  }
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr 80px 130px;
   }
 `
 
@@ -127,16 +190,18 @@ const TypeBadge = styled.span<{ $type: string }>`
   background: ${({ $type }) =>
     $type === 'education' ? '#FFE500' : $type === 'work' ? '#0047FF' : $type === 'project' ? '#FF3C2F' : '#00C853'};
   color: ${({ $type }) => ($type === 'education' || $type === 'milestone' ? '#000' : '#fff')};
+  width: fit-content;
 `
 
 const Actions = styled.div`
   display: flex;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  align-items: center;
 `
 
 const IconBtn = styled(motion.button)<{ $danger?: boolean }>`
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,8 +209,12 @@ const IconBtn = styled(motion.button)<{ $danger?: boolean }>`
   border: 2px solid ${({ theme }) => theme.colors.border};
   color: ${({ $danger }) => ($danger ? '#fff' : 'inherit')};
   cursor: pointer;
-  font-size: 0.875rem;
-  &:hover {
+  font-size: 0.8rem;
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  &:hover:not(:disabled) {
     background: ${({ $danger, theme }) => ($danger ? '#cc2020' : theme.colors.primary)};
     color: #000;
   }
@@ -336,6 +405,17 @@ const ConfirmDeleteBtn = styled.button`
   }
 `
 
+const EmptyRow = styled.div`
+  padding: 2.5rem;
+  text-align: center;
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  color: ${({ theme }) => theme.colors.textFaint};
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: ${({ theme }) => theme.colors.surface};
+`
+
 const blank = (): Omit<ExperienceItem, 'id'> => ({
   type: 'education',
   title: '',
@@ -349,7 +429,7 @@ const blank = (): Omit<ExperienceItem, 'id'> => ({
 })
 
 export default function AdminJourney() {
-  const { journey, addJourneyItem, updateJourneyItem, deleteJourneyItem } = useAdmin()
+  const { journey, addJourneyItem, updateJourneyItem, deleteJourneyItem, reorderJourney } = useAdmin()
   const [editing, setEditing] = useState<ExperienceItem | null>(null)
   const [isNew, setIsNew] = useState(false)
   const [deletingItem, setDeletingItem] = useState<ExperienceItem | null>(null)
@@ -358,6 +438,8 @@ export default function AdminJourney() {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [search, setSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState<'all' | ExperienceItem['type']>('all')
 
   const showStatus = (type: 'success' | 'error', text: string) => {
     setStatusMsg({ type, text })
@@ -422,7 +504,7 @@ export default function AdminJourney() {
         await addJourneyItem(payload)
         showStatus('success', `✓ Successfully added "${payload.title}".`)
       } else if (editing) {
-        await updateJourneyItem({ ...payload, id: editing.id })
+        await updateJourneyItem({ ...payload, id: editing.id, order: editing.order })
         showStatus('success', `✓ Successfully updated "${payload.title}".`)
       }
       close()
@@ -453,16 +535,62 @@ export default function AdminJourney() {
     }
   }
 
+  const moveItem = async (id: string, direction: -1 | 1) => {
+    const idx = journey.findIndex(item => item.id === id)
+    if (idx === -1) return
+    const targetIdx = idx + direction
+    if (targetIdx < 0 || targetIdx >= journey.length) return
+    const nextIds = journey.map(item => item.id)
+    const [moved] = nextIds.splice(idx, 1)
+    nextIds.splice(targetIdx, 0, moved)
+    try {
+      await reorderJourney(nextIds)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      showStatus('error', `Failed to reorder: ${msg}`)
+    }
+  }
+
+  const filtered = journey.filter(item => {
+    if (typeFilter !== 'all' && item.type !== typeFilter) return false
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    return (
+      item.title.toLowerCase().includes(q) ||
+      item.organization.toLowerCase().includes(q) ||
+      (item.description || '').toLowerCase().includes(q)
+    )
+  })
+
   const set = (k: keyof typeof form, v: unknown) => setForm(f => ({ ...f, [k]: v }))
 
   return (
     <div>
       <Header>
-        <PageTitle>Journey</PageTitle>
+        <PageTitle>Journey ({journey.length})</PageTitle>
         <AddBtn onClick={openNew} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
           <FiPlus /> Add Entry
         </AddBtn>
       </Header>
+
+      <Toolbar>
+        <SearchWrap>
+          <FiSearch size={14} />
+          <SearchInput
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search role, organisation, description..."
+          />
+        </SearchWrap>
+
+        <FilterTabs>
+          {(['all', 'work', 'education', 'project', 'milestone'] as const).map(t => (
+            <FilterTab key={t} $active={typeFilter === t} onClick={() => setTypeFilter(t)}>
+              {t}
+            </FilterTab>
+          ))}
+        </FilterTabs>
+      </Toolbar>
 
       {statusMsg && (
         <Banner
@@ -480,43 +608,73 @@ export default function AdminJourney() {
           <TH>Entry</TH>
           <TH>Type</TH>
           <TH>Dates</TH>
-          <TH>Actions</TH>
+          <TH>Order & Actions</TH>
         </TableHead>
-        <AnimatePresence>
-          {journey.map((item, i) => (
-            <Row
-              key={item.id}
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 16 }}
-              transition={{ delay: i * 0.04 }}>
-              <div>
-                <Cell>{item.title}</Cell>
-                <CellSub>
-                  {item.organization}
-                  {item.location ? ` · ${item.location}` : ''}
-                </CellSub>
-              </div>
-              <TypeBadge $type={item.type}>{item.type}</TypeBadge>
-              <Cell style={{ fontFamily: 'Space Mono', fontSize: '0.7rem' }}>
-                {item.startDate}
-                {item.endDate ? `–${item.endDate}` : '–Now'}
-              </Cell>
-              <Actions>
-                <IconBtn onClick={() => openEdit(item)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                  <FiEdit2 />
-                </IconBtn>
-                <IconBtn
-                  $danger
-                  onClick={() => setDeletingItem(item)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}>
-                  <FiTrash2 />
-                </IconBtn>
-              </Actions>
-            </Row>
-          ))}
-        </AnimatePresence>
+        {filtered.length === 0 ? (
+          <EmptyRow>No matching journey entries found</EmptyRow>
+        ) : (
+          <AnimatePresence>
+            {filtered.map((item, i) => {
+              const fullIdx = journey.findIndex(j => j.id === item.id)
+              return (
+                <Row
+                  key={item.id}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 16 }}
+                  transition={{ delay: i * 0.04 }}>
+                  <div>
+                    <Cell>{item.title}</Cell>
+                    <CellSub>
+                      {item.organization}
+                      {item.location ? ` · ${item.location}` : ''}
+                    </CellSub>
+                  </div>
+                  <TypeBadge $type={item.type}>{item.type}</TypeBadge>
+                  <Cell style={{ fontFamily: 'Space Mono', fontSize: '0.7rem' }}>
+                    {item.startDate}
+                    {item.endDate ? `–${item.endDate}` : '–Now'}
+                  </Cell>
+                  <Actions>
+                    <IconBtn
+                      onClick={() => moveItem(item.id, -1)}
+                      disabled={fullIdx <= 0}
+                      title="Move up"
+                      aria-label="Move entry up"
+                      whileTap={{ scale: 0.9 }}>
+                      <FiArrowUp />
+                    </IconBtn>
+                    <IconBtn
+                      onClick={() => moveItem(item.id, 1)}
+                      disabled={fullIdx === -1 || fullIdx >= journey.length - 1}
+                      title="Move down"
+                      aria-label="Move entry down"
+                      whileTap={{ scale: 0.9 }}>
+                      <FiArrowDown />
+                    </IconBtn>
+                    <IconBtn
+                      onClick={() => openEdit(item)}
+                      title="Edit entry"
+                      aria-label="Edit entry"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}>
+                      <FiEdit2 />
+                    </IconBtn>
+                    <IconBtn
+                      $danger
+                      onClick={() => setDeletingItem(item)}
+                      title="Delete entry"
+                      aria-label="Delete entry"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}>
+                      <FiTrash2 />
+                    </IconBtn>
+                  </Actions>
+                </Row>
+              )
+            })}
+          </AnimatePresence>
+        )}
       </Table>
 
       {/* Delete Confirmation Modal */}
@@ -696,4 +854,3 @@ export default function AdminJourney() {
     </div>
   )
 }
-

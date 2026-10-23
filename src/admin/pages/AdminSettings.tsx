@@ -1,12 +1,13 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import styled from 'styled-components'
 import { motion } from 'framer-motion'
 import {
   FiSave, FiGithub, FiLinkedin, FiMail, FiMapPin,
-  FiAlertTriangle, FiDownload, FiCheck, FiDatabase, FiUploadCloud, FiRefreshCw,
+  FiAlertTriangle, FiDownload, FiCheck, FiDatabase, FiUploadCloud, FiRefreshCw, FiUpload,
 } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { AdminSettings } from '../context/AdminContext'
+import type { PortfolioBackupPayload } from '../../firebase/seedService'
 
 const PageTitle = styled.h1`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
@@ -164,18 +165,25 @@ export default function AdminSettings() {
     settings, updateSettings,
     projects, certificates, skillGroups, journey, messages, heroContent,
     sectionVisibility,
-    seedDatabase,
+    seedDatabase, restoreBackup,
   } = useAdmin()
-  const [form,  setForm]  = useState<AdminSettings>({ ...settings })
+  const [draft, setDraft] = useState<AdminSettings | null>(null)
   const [saved, setSaved] = useState(false)
   const [exported, setExported] = useState(false)
   const [seeding, setSeeding] = useState(false)
   const [seedMsg, setSeedMsg] = useState('')
+  const [restoring, setRestoring] = useState(false)
+  const [restoreMsg, setRestoreMsg] = useState('')
+  const importInputRef = useRef<HTMLInputElement | null>(null)
 
-  const set = (k: keyof AdminSettings, v: string) => setForm(f => ({ ...f, [k]: v }))
+  const form = draft ?? settings
 
-  const handleSave = () => {
-    updateSettings(form)
+  const set = (k: keyof AdminSettings, v: string) =>
+    setDraft(prev => ({ ...(prev ?? settings), [k]: v }))
+
+  const handleSave = async () => {
+    await updateSettings(form)
+    setDraft(null)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
   }
@@ -185,7 +193,8 @@ export default function AdminSettings() {
     setSeedMsg('')
     try {
       const res = await seedDatabase()
-      setSeedMsg(`✓ ${res.message} (${res.details.projects} projects, ${res.details.journey} journey items, ${res.details.skills} skill groups).`)
+      setDraft(null)
+      setSeedMsg(`✓ ${res.message} (${res.details.projects} projects, ${res.details.certificates} certificates, ${res.details.journey} journey items, ${res.details.skills} skill groups).`)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       setSeedMsg(`Error syncing to Firebase: ${msg}`)
@@ -221,10 +230,32 @@ export default function AdminSettings() {
     setTimeout(() => setExported(false), 3000)
   }
 
+  const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setRestoring(true)
+    setRestoreMsg('')
+    try {
+      const rawText = await file.text()
+      const parsed = JSON.parse(rawText) as PortfolioBackupPayload
+      const res = await restoreBackup(parsed)
+      setDraft(null)
+      setRestoreMsg(
+        `✓ ${res.message} (${res.details.projects} projects, ${res.details.certificates} certificates, ${res.details.journey} journey items, ${res.details.skills} skill groups).`
+      )
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setRestoreMsg(`Error restoring JSON backup: ${msg}`)
+    } finally {
+      setRestoring(false)
+      if (importInputRef.current) importInputRef.current.value = ''
+    }
+  }
+
   return (
     <div>
       <PageTitle>Settings</PageTitle>
-      <PageSub>Manage your portfolio information and social links.</PageSub>
+      <PageSub>Manage your portfolio information, social links, and database backups.</PageSub>
 
       <Notice>
         <FiAlertTriangle />
@@ -276,7 +307,7 @@ export default function AdminSettings() {
         <CardHeader><FiUploadCloud style={{ marginRight: 6, verticalAlign: 'middle' }} /> Firebase Database Sync</CardHeader>
         <CardBody>
           <BackupDesc>
-            Store / synchronize all portfolio data (12 Projects, 6 Certificates, 4 Journey milestones, 5 Skill groups, Hero content, Settings) into your live Firestore database collections.
+            Store / synchronize all default portfolio data ({projects.length} Projects, {certificates.length} Certificates, {journey.length} Journey milestones, {skillGroups.length} Skill groups, Hero content, Settings) into your live Firestore database collections and refresh Admin state.
           </BackupDesc>
           <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <ExportBtn
@@ -302,20 +333,48 @@ export default function AdminSettings() {
         </CardBody>
       </Card>
 
-      {/* Backup & Export Data */}
+      {/* Backup & Export / Import Data */}
       <Card>
-        <CardHeader><FiDatabase style={{ marginRight: 6, verticalAlign: 'middle' }} /> Data Backup & JSON Export</CardHeader>
+        <CardHeader><FiDatabase style={{ marginRight: 6, verticalAlign: 'middle' }} /> Data Backup: JSON Export & Restore</CardHeader>
         <CardBody>
           <BackupDesc>
-            Download an offline JSON snapshot of your entire portfolio database (Projects, Certificates, Journey, Skills, Settings, Hero Content).
+            Download an offline JSON snapshot of your entire portfolio database, or restore a previously exported JSON backup directly into Firestore.
           </BackupDesc>
-          <ExportBtn
-            onClick={handleExportJson}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}>
-            {exported ? <FiCheck color="#00C853" /> : <FiDownload />}
-            {exported ? 'Backup Downloaded!' : 'Export Portfolio Data (JSON)'}
-          </ExportBtn>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json,application/json"
+            style={{ display: 'none' }}
+            onChange={handleImportJson}
+          />
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <ExportBtn
+              onClick={handleExportJson}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}>
+              {exported ? <FiCheck color="#00C853" /> : <FiDownload />}
+              {exported ? 'Backup Downloaded!' : 'Export Portfolio Data (JSON)'}
+            </ExportBtn>
+            <ExportBtn
+              onClick={() => importInputRef.current?.click()}
+              disabled={restoring}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}>
+              {restoring ? <FiRefreshCw className="spin" /> : <FiUpload />}
+              {restoring ? 'Restoring Backup…' : 'Import / Restore JSON Backup'}
+            </ExportBtn>
+          </div>
+          {restoreMsg && (
+            <div style={{
+              fontFamily: 'Space Mono',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              color: restoreMsg.startsWith('✓') ? '#00C853' : '#FF3C2F',
+              marginTop: '0.5rem',
+            }}>
+              {restoreMsg}
+            </div>
+          )}
         </CardBody>
       </Card>
 
@@ -328,5 +387,3 @@ export default function AdminSettings() {
     </div>
   )
 }
-
-

@@ -1,7 +1,7 @@
 import {
   collection, doc,
   getDocs, getDoc, addDoc, setDoc, deleteDoc,
-  query, orderBy, serverTimestamp, Timestamp,
+  query, orderBy, serverTimestamp, Timestamp, onSnapshot,
 } from 'firebase/firestore'
 import { db } from './config'
 import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate, SectionVisibility } from '../types'
@@ -49,8 +49,29 @@ export async function fsGetMessages(): Promise<Message[]> {
     date: (d.data().createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
   }))
 }
-export async function fsMarkMessageRead(id: string)   { await setDoc(doc(db, COL.messages, id), { read: true }, { merge: true }) }
-export async function fsDeleteMessage(id: string)     { await deleteDoc(doc(db, COL.messages, id)) }
+export function fsSubscribeMessages(onUpdate: (messages: Message[]) => void): () => void {
+  const q = query(collection(db, COL.messages), orderBy('createdAt', 'desc'))
+  return onSnapshot(
+    q,
+    snap => {
+      const list = snap.docs.map(d => ({
+        id: d.id,
+        name: d.data().name ?? '',
+        email: d.data().email ?? '',
+        message: d.data().message ?? '',
+        read: d.data().read ?? false,
+        date: (d.data().createdAt as Timestamp)?.toDate().toISOString() ?? new Date().toISOString(),
+      }))
+      onUpdate(list)
+    },
+    err => {
+      console.warn('[Firestore] Real-time messages subscription warning:', err)
+    }
+  )
+}
+export async function fsMarkMessageRead(id: string)                  { await setDoc(doc(db, COL.messages, id), { read: true }, { merge: true }) }
+export async function fsSetMessageRead(id: string, read: boolean)    { await setDoc(doc(db, COL.messages, id), { read }, { merge: true }) }
+export async function fsDeleteMessage(id: string)                    { await deleteDoc(doc(db, COL.messages, id)) }
 
 /* ──────────────── PROJECTS ──────────────── */
 export async function fsGetProjects(): Promise<Project[]> {
@@ -151,22 +172,41 @@ export async function fsReorderCertificates(ids: string[]): Promise<void> {
 /* ──────────────── SKILLS ──────────────── */
 export async function fsGetSkills(): Promise<SkillGroup[]> {
   const snap = await getDocs(collection(db, COL.skills))
-  return snap.docs.map(d => d.data() as SkillGroup)
+  const list = snap.docs.map(d => d.data() as SkillGroup)
+  return list.sort((a, b) => {
+    const ordA = typeof a.order === 'number' ? a.order : 999999
+    const ordB = typeof b.order === 'number' ? b.order : 999999
+    return ordA - ordB
+  })
 }
 export async function fsSaveSkillGroups(groups: SkillGroup[]): Promise<void> {
   const snap = await getDocs(collection(db, COL.skills))
   await Promise.all(snap.docs.map(d => deleteDoc(d.ref)))
-  await Promise.all(groups.map(g => setDoc(doc(db, COL.skills, g.category), cleanFirestoreData(g))))
+  await Promise.all(
+    groups.map((g, index) =>
+      setDoc(doc(db, COL.skills, g.category), cleanFirestoreData({ ...g, order: index }))
+    )
+  )
 }
 
 /* ──────────────── JOURNEY ──────────────── */
 export async function fsGetJourney(): Promise<ExperienceItem[]> {
-  const q    = query(collection(db, COL.journey), orderBy('startDate','desc'))
-  const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() } as ExperienceItem))
+  const snap = await getDocs(collection(db, COL.journey))
+  const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as ExperienceItem))
+  return list.sort((a, b) => {
+    const hasOrdA = typeof a.order === 'number'
+    const hasOrdB = typeof b.order === 'number'
+    if (hasOrdA && hasOrdB) return (a.order as number) - (b.order as number)
+    if (hasOrdA) return -1
+    if (hasOrdB) return 1
+    return (b.startDate || '').localeCompare(a.startDate || '')
+  })
 }
 export async function fsAddJourneyItem(item: Omit<ExperienceItem,'id'>): Promise<string> {
-  const cleaned = cleanFirestoreData(item)
+  const cleaned = cleanFirestoreData({
+    ...item,
+    order: typeof item.order === 'number' ? item.order : 0,
+  })
   const ref = await addDoc(collection(db, COL.journey), cleaned)
   return ref.id
 }
@@ -177,6 +217,13 @@ export async function fsUpdateJourneyItem(item: ExperienceItem): Promise<void> {
 }
 export async function fsDeleteJourneyItem(id: string) {
   await deleteDoc(doc(db, COL.journey, id))
+}
+export async function fsReorderJourney(ids: string[]): Promise<void> {
+  await Promise.all(
+    ids.map((id, index) =>
+      setDoc(doc(db, COL.journey, id), { order: index }, { merge: true })
+    )
+  )
 }
 
 /* ──────────────── SETTINGS ──────────────── */
@@ -223,4 +270,3 @@ export async function fsGetSectionVisibility(): Promise<SectionVisibility> {
 export async function fsSaveSectionVisibility(v: SectionVisibility): Promise<void> {
   await setDoc(doc(db, COL.settings, SECTIONS_ID), cleanFirestoreData(v), { merge: true })
 }
-

@@ -4,13 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   FiMail, FiCheckCircle, FiTrash2,
   FiCalendar, FiAtSign, FiArrowRight,
-  FiCheckSquare, FiDelete, FiSearch,
+  FiCheckSquare, FiDelete, FiSearch, FiRotateCcw,
 } from 'react-icons/fi'
 import { useAdmin } from '../context/AdminContext'
 import type { Message } from '../context/AdminContext'
 
 const PageTitle = styled.h1`font-family:${({theme})=>theme.typography.fontDisplay};font-size:${({theme})=>theme.typography.sizes['2xl']};font-weight:700;color:${({theme})=>theme.colors.text};letter-spacing:-0.03em;margin-bottom:0.5rem;`
-const PageSub = styled.p`font-family:${({theme})=>theme.typography.fontMono};font-size:${({theme})=>theme.typography.sizes.xs};color:${({theme})=>theme.colors.textFaint};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1.5rem;`
+const PageSub = styled.p`font-family:${({theme})=>theme.typography.fontMono};font-size:${({theme})=>theme.typography.sizes.xs};color:${({theme})=>theme.colors.textFaint};text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;`
+const LiveBadge = styled.span`display:inline-flex;align-items:center;gap:0.35rem;font-family:${({theme})=>theme.typography.fontMono};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;background:#00C85320;color:#00C853;border:1.5px solid #00C853;padding:0.15rem 0.5rem;`
+const LiveDot = styled.span`width:6px;height:6px;border-radius:50%;background:#00C853;display:inline-block;`
 const Toolbar = styled.div`display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:1.25rem;flex-wrap:wrap;`
 const ToolbarLeft = styled.div`display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;flex:1;`
 const SearchWrap = styled.div`
@@ -72,7 +74,7 @@ const EmptyText = styled.p`font-family:${({theme})=>theme.typography.fontMono};f
 const UnreadBadge = styled.span`font-family:'Space Mono',monospace;font-size:0.65rem;background:#FF3C2F;color:#fff;padding:0.1rem 0.45rem;border:1.5px solid #fff;vertical-align:middle;margin-left:0.625rem;`
 
 export default function AdminMessages() {
-  const { messages, markRead, deleteMessage, markAllRead, deleteReadMessages } = useAdmin()
+  const { messages, toggleMessageRead, deleteMessage, markAllRead, deleteReadMessages } = useAdmin()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
 
@@ -93,7 +95,10 @@ export default function AdminMessages() {
   return (
     <div>
       <PageTitle>Messages{unread>0&&<UnreadBadge>{unread} unread</UnreadBadge>}</PageTitle>
-      <PageSub>Contact form submissions from your portfolio.</PageSub>
+      <PageSub>
+        <span>Contact form submissions from your portfolio.</span>
+        <LiveBadge><LiveDot /> Live Firestore Sync</LiveBadge>
+      </PageSub>
 
       {messages.length > 0 && (
         <Toolbar>
@@ -157,13 +162,17 @@ export default function AdminMessages() {
                       whileHover={{scale:1.05}}>
                       <FiArrowRight size={10}/> Reply
                     </ReplyBtn>
-                    {!m.read&&(
-                      <IconBtn $primary onClick={()=>markRead(m.id)} title="Mark as read"
-                        whileHover={{scale:1.1}} whileTap={{scale:0.9}}>
-                        <FiCheckCircle size={13}/>
-                      </IconBtn>
-                    )}
+                    <IconBtn
+                      $primary={!m.read}
+                      onClick={() => toggleMessageRead(m.id, !m.read)}
+                      title={m.read ? 'Mark as unread' : 'Mark as read'}
+                      aria-label={m.read ? 'Mark as unread' : 'Mark as read'}
+                      whileHover={{scale:1.1}}
+                      whileTap={{scale:0.9}}>
+                      {m.read ? <FiRotateCcw size={13}/> : <FiCheckCircle size={13}/>}
+                    </IconBtn>
                     <IconBtn $danger onClick={()=>deleteMessage(m.id)} title="Delete"
+                      aria-label="Delete message"
                       whileHover={{scale:1.1}} whileTap={{scale:0.9}}>
                       <FiTrash2 size={13}/>
                     </IconBtn>
@@ -178,4 +187,3 @@ export default function AdminMessages() {
     </div>
   )
 }
-

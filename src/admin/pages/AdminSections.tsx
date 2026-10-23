@@ -384,8 +384,10 @@ const SECTION_DEFINITIONS: SectionItemDef[] = [
 
 export default function AdminSections() {
   const { sectionVisibility, updateSectionVisibility } = useAdmin()
-  const [form, setForm] = useState<SectionVisibility>(() => ({ ...sectionVisibility }))
+  const [draft, setDraft] = useState<SectionVisibility | null>(null)
   const [saved, setSaved] = useState(false)
+
+  const form = useMemo(() => draft ?? sectionVisibility, [draft, sectionVisibility])
 
   // Track if there are unsaved local edits
   const hasChanges = useMemo(() => {
@@ -398,7 +400,10 @@ export default function AdminSections() {
   }, [form])
 
   const toggleSection = (key: keyof SectionVisibility) => {
-    setForm(prev => ({ ...prev, [key]: !prev[key] }))
+    setDraft(prev => {
+      const current = prev ?? sectionVisibility
+      return { ...current, [key]: !current[key] }
+    })
   }
 
   const handleEnableAll = () => {
@@ -413,15 +418,16 @@ export default function AdminSections() {
       faq: true,
       contact: true,
     }
-    setForm(allOn)
+    setDraft(allOn)
   }
 
   const handleResetDefaults = () => {
-    setForm({ ...DEFAULT_SECTION_VISIBILITY })
+    setDraft({ ...DEFAULT_SECTION_VISIBILITY })
   }
 
   const handleSave = async () => {
     await updateSectionVisibility(form)
+    setDraft(null)
     setSaved(true)
     setTimeout(() => setSaved(false), 2500)
   }

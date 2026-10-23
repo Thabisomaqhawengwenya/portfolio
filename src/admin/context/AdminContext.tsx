@@ -4,11 +4,11 @@ import type { ReactNode } from 'react'
 import { useToast } from '../../context/ToastContext'
 import { loginWithEmail, logout as fbLogout, onAuthChange } from '../../firebase/authService'
 import {
-  fsGetMessages, fsAddMessage, fsMarkMessageRead, fsDeleteMessage,
+  fsGetMessages, fsSubscribeMessages, fsAddMessage, fsMarkMessageRead, fsSetMessageRead, fsDeleteMessage,
   fsGetProjects, fsAddProject, fsUpdateProject, fsDeleteProject, fsReorderProjects,
   fsGetCertificates, fsAddCertificate, fsUpdateCertificate, fsDeleteCertificate, fsReorderCertificates,
   fsGetSkills, fsSaveSkillGroups,
-  fsGetJourney, fsAddJourneyItem, fsUpdateJourneyItem, fsDeleteJourneyItem,
+  fsGetJourney, fsAddJourneyItem, fsUpdateJourneyItem, fsDeleteJourneyItem, fsReorderJourney,
   fsGetSettings, fsSaveSettings,
   fsGetHeroContent, fsSaveHeroContent, HERO_DEFAULTS,
   fsGetSectionVisibility, fsSaveSectionVisibility,
@@ -17,7 +17,12 @@ import { projects as defaultProjects } from '../../data/projects'
 import { certificates as defaultCertificates } from '../../data/certificates'
 import { skillGroups as defaultSkills }  from '../../data/skills'
 import { experience as defaultExperience } from '../../data/experience'
-import { seedAllDataToFirestore, type SeedResult } from '../../firebase/seedService'
+import {
+  seedAllDataToFirestore,
+  restoreBackupToFirestore,
+  type SeedResult,
+  type PortfolioBackupPayload,
+} from '../../firebase/seedService'
 import type { Project, SkillGroup, ExperienceItem, HeroContent, Certificate, SectionVisibility } from '../../types'
 import { DEFAULT_SECTION_VISIBILITY } from '../../types'
 
@@ -52,13 +57,15 @@ interface AdminCtx {
   addJourneyItem:   (i: Omit<ExperienceItem,'id'>) => Promise<void>
   updateJourneyItem:(i: ExperienceItem) => Promise<void>
   deleteJourneyItem:(id: string) => Promise<void>
+  reorderJourney:   (ids: string[]) => Promise<void>
 
-  messages:     Message[]
-  addMessage:   (m: Omit<Message,'id'|'date'|'read'>) => Promise<void>
-  markRead:     (id: string) => Promise<void>
-  deleteMessage:(id: string) => Promise<void>
-  markAllRead:  () => Promise<void>
-  deleteReadMessages: () => Promise<void>
+  messages:          Message[]
+  addMessage:        (m: Omit<Message,'id'|'date'|'read'>) => Promise<void>
+  markRead:          (id: string) => Promise<void>
+  toggleMessageRead: (id: string, read: boolean) => Promise<void>
+  deleteMessage:     (id: string) => Promise<void>
+  markAllRead:       () => Promise<void>
+  deleteReadMessages:() => Promise<void>
 
   settings:       AdminSettings
   updateSettings: (s: AdminSettings) => Promise<void>
@@ -69,7 +76,8 @@ interface AdminCtx {
   sectionVisibility:       SectionVisibility
   updateSectionVisibility: (v: SectionVisibility) => Promise<void>
 
-  seedDatabase: () => Promise<SeedResult>
+  seedDatabase:  () => Promise<SeedResult>
+  restoreBackup: (payload: PortfolioBackupPayload) => Promise<SeedResult>
 }
 
 const DEFAULT_SETTINGS: AdminSettings = {
@@ -109,6 +117,30 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     return onAuthChange(u => { setAuthed(!!u); setAuthLoad(false) })
   }, [])
 
+  const reloadAllFromFirestore = useCallback(async () => {
+    const [p, c, s, j, st, hero, sec] = await Promise.all([
+      fsGetProjects(),
+      fsGetCertificates(),
+      fsGetSkills(),
+      fsGetJourney(),
+      fsGetSettings(),
+      fsGetHeroContent(),
+      fsGetSectionVisibility(),
+    ])
+    if (p.length) setProjects(p)
+    if (c.length) setCertificates(c)
+    if (s.length) setSkills(s)
+    if (j.length) setJourney(j)
+    if (st) setSettings(st)
+    setHero(hero)
+    setSectionVisibility(sec)
+    try {
+      localStorage.setItem('portfolio_section_visibility', JSON.stringify(sec))
+    } catch (err) {
+      console.debug('[Admin] LocalStorage cache warning:', err)
+    }
+  }, [])
+
   useEffect(() => {
     if (!isAuthed) return
     fsGetProjects().then(p => setProjects(p.length ? p : defaultProjects)).catch(console.error)
@@ -126,6 +158,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         console.debug('[Admin] LocalStorage cache warning:', err)
       }
     }).catch(console.error)
+
+    // Real-time live subscription for incoming contact form messages
+    const unsubMessages = fsSubscribeMessages(liveMsgs => {
+      setMessages(liveMsgs)
+    })
+    return () => unsubMessages()
   }, [isAuthed])
 
   const login  = useCallback(async (email: string, pw: string) => { 
@@ -196,7 +234,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, [toast])
 
   const reorderProjects = useCallback(async (ids: string[]) => {
-    // Optimistic update so UI responds immediately
     setProjects(prev => {
       const idMap = new Map(prev.map(p => [p.id, p]))
       const ordered = ids.map(id => idMap.get(id)!).filter(Boolean)
@@ -215,7 +252,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       )
     } catch (err) {
       console.error('Failed to reorder projects on Firebase:', err)
-      // Rollback on error from Firestore
       fsGetProjects().then(setProjects).catch(console.error)
       throw err
     }
@@ -273,7 +309,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }, [toast])
 
   const reorderCertificates = useCallback(async (ids: string[]) => {
-    // Optimistic update
     setCertificates(prev => {
       const idMap = new Map(prev.map(c => [c.id, c]))
       const ordered = ids.map(id => idMap.get(id)!).filter(Boolean)
@@ -365,6 +400,30 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }, [toast])
 
+  const reorderJourney = useCallback(async (ids: string[]) => {
+    setJourney(prev => {
+      const idMap = new Map(prev.map(j => [j.id, j]))
+      const ordered = ids.map(id => idMap.get(id)!).filter(Boolean)
+      const remaining = prev.filter(j => !ids.includes(j.id))
+      return [...ordered, ...remaining]
+    })
+
+    try {
+      await toast.promise(
+        fsReorderJourney(ids),
+        {
+          loading: 'Updating journey order on Firebase…',
+          success: 'Journey order saved to Firebase!',
+          error: (err) => `Failed to save journey order: ${(err as Error)?.message || 'Permission denied'}`,
+        }
+      )
+    } catch (err) {
+      console.error('Failed to reorder journey on Firebase:', err)
+      fsGetJourney().then(setJourney).catch(console.error)
+      throw err
+    }
+  }, [toast])
+
   const addMessage = useCallback(async (m: Omit<Message,'id'|'date'|'read'>) => {
     try {
       const id = await toast.promise(
@@ -387,6 +446,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       await fsMarkMessageRead(id)
       setMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m))
       toast.info('Message marked as read')
+    } catch (err) {
+      toast.error('Failed to update message', (err as Error)?.message)
+    }
+  }, [toast])
+
+  const toggleMessageRead = useCallback(async (id: string, read: boolean) => {
+    try {
+      await fsSetMessageRead(id, read)
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, read } : m))
+      toast.info(read ? 'Marked as read' : 'Marked as unread')
     } catch (err) {
       toast.error('Failed to update message', (err as Error)?.message)
     }
@@ -510,34 +579,31 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           error: (err) => `Sync failed: ${(err as Error)?.message || 'Check Firestore connection'}`,
         }
       )
-      // Refresh local states
-      const [p, c, s, j, st, hero, sec] = await Promise.all([
-        fsGetProjects(),
-        fsGetCertificates(),
-        fsGetSkills(),
-        fsGetJourney(),
-        fsGetSettings(),
-        fsGetHeroContent(),
-        fsGetSectionVisibility(),
-      ])
-      if (p.length) setProjects(p)
-      if (c.length) setCertificates(c)
-      if (s.length) setSkills(s)
-      if (j.length) setJourney(j)
-      if (st) setSettings(st)
-      setHero(hero)
-      setSectionVisibility(sec)
-      try {
-        localStorage.setItem('portfolio_section_visibility', JSON.stringify(sec))
-      } catch (err) {
-        console.debug('[Admin] LocalStorage cache warning:', err)
-      }
+      await reloadAllFromFirestore()
       return res
     } catch (err) {
       console.error(err)
       throw err
     }
-  }, [toast])
+  }, [toast, reloadAllFromFirestore])
+
+  const restoreBackup = useCallback(async (payload: PortfolioBackupPayload) => {
+    try {
+      const res = await toast.promise(
+        restoreBackupToFirestore(payload),
+        {
+          loading: 'Restoring backup to Firebase…',
+          success: 'Backup restored to Firebase!',
+          error: (err) => `Restore failed: ${(err as Error)?.message || 'Invalid backup file'}`,
+        }
+      )
+      await reloadAllFromFirestore()
+      return res
+    } catch (err) {
+      console.error(err)
+      throw err
+    }
+  }, [toast, reloadAllFromFirestore])
 
   return (
     <Ctx.Provider value={{
@@ -545,12 +611,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       projects, addProject, updateProject, deleteProject, reorderProjects,
       certificates, addCertificate, updateCertificate, deleteCertificate, reorderCertificates,
       skillGroups, updateSkillGroups,
-      journey, addJourneyItem, updateJourneyItem, deleteJourneyItem,
-      messages, addMessage, markRead, deleteMessage, markAllRead, deleteReadMessages,
+      journey, addJourneyItem, updateJourneyItem, deleteJourneyItem, reorderJourney,
+      messages, addMessage, markRead, toggleMessageRead, deleteMessage, markAllRead, deleteReadMessages,
       settings, updateSettings,
       heroContent, updateHeroContent,
       sectionVisibility, updateSectionVisibility,
-      seedDatabase,
+      seedDatabase, restoreBackup,
     }}>
       {children}
     </Ctx.Provider>

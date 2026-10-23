@@ -42,6 +42,7 @@ export interface ExperienceItem {
   highlights?:  string[]
   technologies?: string[]
   url?:         string
+  order?:       number
 }
 
 /* ─── Skill ─── */
@@ -62,6 +63,7 @@ export type SkillCategory =
 export interface SkillGroup {
   category: SkillCategory
   skills:   Skill[]
+  order?:   number
 }
 
 /* ─── Education ─── */

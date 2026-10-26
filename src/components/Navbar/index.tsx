@@ -429,11 +429,8 @@ export default function Navbar() {
       const sections = visibleNavItems.map(n => n.href.slice(1))
       for (let i = sections.length - 1; i >= 0; i--) {
         const el = document.getElementById(sections[i])
-        if (el) {
-          const elTop = el.getBoundingClientRect().top + currentY
-          if (currentY >= elTop - 150) {
-            setActive(sections[i]); break
-          }
+        if (el && currentY >= el.offsetTop - 130) {
+          setActive(sections[i]); break
         }
       }
     }

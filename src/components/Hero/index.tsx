@@ -31,7 +31,7 @@ const HeroInner = styled.div`
   align-items: center;
 
   @media (max-width: ${({ theme }) => theme.breakpoints.xl}) {
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 350px;
   }
   @media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
     grid-template-columns: 1fr;
@@ -76,7 +76,6 @@ const HeroTitle = styled(motion.h1)`
     font-style: normal;
     display: block;
     color: ${({ theme }) => theme.colors.text};
-    /* underlined with yellow */
     text-decoration: underline;
     text-decoration-color: ${({ theme }) => theme.colors.primary};
     text-decoration-thickness: 6px;
@@ -116,6 +115,7 @@ const PrimaryBtn = styled(motion.a)`
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
   box-shadow: ${({ theme }) => theme.shadows.md};
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 
@@ -147,6 +147,7 @@ const SecondaryBtn = styled(motion.a)`
   text-decoration: none;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap;
   box-shadow: ${({ theme }) => theme.shadows.md};
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 
@@ -184,7 +185,7 @@ const AvatarCard = styled(motion.div)`
 const AvatarBody = styled.div`
   flex: 1;
   background: ${({ theme }) => theme.colors.surfaceAlt};
-  border-bottom: 3px solid ${({ theme }) => theme.colors.border};
+  border-bottom: 3px solid #000000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -198,83 +199,111 @@ const AvatarBody = styled.div`
     inset: 0;
     background-image: radial-gradient(
       circle,
-      ${({ theme }) => theme.colors.border} 1px,
-      transparent 1px
+      ${({ theme }) => theme.colors.border} 1.25px,
+      transparent 1.25px
     );
     background-size: 20px 20px;
-    opacity: 0.18;
+    opacity: 0.22;
   }
 `
 
-const AvatarMonogram = styled.div`
+const AvatarMonogram = styled.div<{ $isMono: boolean }>`
   position: relative;
   z-index: 1;
   font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: 8rem;
+  font-size: 7.5rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  color: ${({ theme }) => theme.accentText ?? '#000000'};
   letter-spacing: -0.05em;
   line-height: 1;
   background: ${({ theme }) => theme.colors.primary};
-  border: 3px solid ${({ theme }) => theme.colors.border};
+  /* Always keep a crisp #000000 inner frame so white-on-white never blobs into its offset shadow */
+  border: 3px solid #000000;
   padding: 1rem 1.5rem;
-  box-shadow: ${({ theme }) => theme.shadows.lg};
+  box-shadow: ${({ $isMono }) => ($isMono ? '7px 7px 0px #62D8F9' : '7px 7px 0px #000000')};
+  user-select: none;
 `
 
 /* AvatarFooter background is theme.primary so text uses accentText for contrast */
 const AvatarFooter = styled.div`
-  padding: ${({ theme }) => theme.spacing['4']};
+  padding: 0.9rem 1.15rem;
   background: ${({ theme }) => theme.colors.primary};
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 3px solid ${({ theme }) => theme.colors.border};
+  gap: 0.75rem;
+  border-top: 3px solid #000000;
+`
+
+const AvatarIdentity = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+`
+
+const AvatarMetaLabel = styled.span`
+  font-family: ${({ theme }) => theme.typography.fontMono};
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: ${({ theme }) => theme.accentText ?? '#000000'};
+  opacity: 0.72;
 `
 
 const AvatarNameText = styled.p`
   font-family: ${({ theme }) => theme.typography.fontDisplay};
-  font-size: ${({ theme }) => theme.typography.sizes.lg};
+  font-size: clamp(0.95rem, 1.15vw, 1.08rem);
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  color: ${({ theme }) => theme.accentText ?? '#000000'};
   letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `
 
 const AvailableDot = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
-  font-size: ${({ theme }) => theme.typography.sizes.xs};
+  font-size: 0.68rem;
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
+  color: #FFFFFF;
+  background: #000000;
+  padding: 0.3rem 0.65rem;
+  border: 2px solid #000000;
+  border-radius: 999px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  flex-shrink: 0;
 
   span {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: ${({ theme }) => theme.accentText ?? theme.colors.text};
+    background: #00E676;
+    box-shadow: 0 0 6px #00E676;
     animation: pulse 2s infinite;
 
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
+      50%       { opacity: 0.35; }
     }
   }
 `
 
-/* Floating sticker badges */
-const Sticker = styled(motion.div)`
+/* Floating sticker badges — crisp black borders and distinct offset shadows in all themes */
+const Sticker = styled(motion.div)<{ $isMono: boolean }>`
   position: absolute;
-  background: ${({ theme }) => theme.colors.primary};
-  border: 3px solid ${({ theme }) => theme.colors.border};
-  box-shadow: ${({ theme }) => theme.shadows.sm};
-  padding: 0.4rem 0.875rem;
+  border: 2.5px solid #000000;
+  border-radius: 4px;
+  box-shadow: ${({ $isMono }) => ($isMono ? '4px 4px 0px #FFFFFF' : '4px 4px 0px #000000')};
+  padding: 0.42rem 0.9rem;
   font-family: ${({ theme }) => theme.typography.fontMono};
   font-size: ${({ theme }) => theme.typography.sizes.xs};
   font-weight: ${({ theme }) => theme.typography.weights.bold};
-  color: ${({ theme }) => theme.accentText ?? theme.colors.text};
   text-transform: uppercase;
   letter-spacing: 0.06em;
   white-space: nowrap;
@@ -295,7 +324,7 @@ export default function Hero() {
   const scrollToContact = () =>
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
 
-  const { isMonoTheme, accent } = useAccent()
+  const { isMonoTheme } = useAccent()
   const { heroContent, settings, sectionVisibility } = usePublicData()
 
   /* Use admin-managed content with sensible fallbacks */
@@ -305,15 +334,12 @@ export default function Hero() {
   const available = heroContent.available !== false
   const stick1    = heroContent.sticker1  || 'React + TS'
   const stick2    = heroContent.sticker2  || 'Node.js'
-  const stick3    = heroContent.sticker3  || 'Front-End'
+  const stick3    = heroContent.sticker3  || 'Full-Stack'
 
-  /* Sticker colours: vivid in normal themes, mono in Black */
-  const s1 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
-                         : { bg: '#FFE500', fg: '#000000' }
-  const s2 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
-                         : { bg: '#FF3C2F', fg: '#ffffff' }
-  const s3 = isMonoTheme ? { bg: accent.primary, fg: accent.textColor }
-                         : { bg: '#0047FF', fg: '#ffffff' }
+  /* Cohesive Neo-Brutalist sticker palette (matches Navbar & About marker highlights) */
+  const s1 = { bg: '#FFDC26', fg: '#000000' }
+  const s2 = { bg: '#62D8F9', fg: '#000000' }
+  const s3 = { bg: '#A6ECD3', fg: '#000000' }
 
   return (
     <HeroSection id="home">
@@ -386,10 +412,13 @@ export default function Hero() {
 
           <AvatarCard>
             <AvatarBody>
-              <AvatarMonogram>MN</AvatarMonogram>
+              <AvatarMonogram $isMono={isMonoTheme}>MN</AvatarMonogram>
             </AvatarBody>
             <AvatarFooter>
-              <AvatarNameText>Maqhawe Thabiso Ngwenya</AvatarNameText>
+              <AvatarIdentity>
+                <AvatarMetaLabel>Software Developer</AvatarMetaLabel>
+                <AvatarNameText>Maqhawe Thabiso Ngwenya</AvatarNameText>
+              </AvatarIdentity>
               {available && (
                 <AvailableDot>
                   <span />
@@ -399,8 +428,9 @@ export default function Hero() {
             </AvatarFooter>
           </AvatarCard>
 
-          {/* Sticker badges — physically draggable with elastic spring snap-back */}
+          {/* Sticker badges — positioned around the canvas so they never collide with footer text */}
           <Sticker
+            $isMono={isMonoTheme}
             drag
             dragConstraints={{ top: -35, bottom: 35, left: -35, right: 35 }}
             dragElastic={0.35}
@@ -413,6 +443,7 @@ export default function Hero() {
             {stick1}
           </Sticker>
           <Sticker
+            $isMono={isMonoTheme}
             drag
             dragConstraints={{ top: -35, bottom: 35, left: -35, right: 35 }}
             dragElastic={0.35}
@@ -420,11 +451,12 @@ export default function Hero() {
             whileHover={{ scale: 1.08, rotate: 0 }}
             whileDrag={{ scale: 1.16, zIndex: 100 }}
             whileTap={{ scale: 0.95 }}
-            style={{ bottom: 60, left: -20, rotate: -3, background: s2.bg, color: s2.fg }}
+            style={{ top: '44%', left: -22, rotate: -4, background: s2.bg, color: s2.fg }}
             title="Drag me!">
             {stick2}
           </Sticker>
           <Sticker
+            $isMono={isMonoTheme}
             drag
             dragConstraints={{ top: -35, bottom: 35, left: -35, right: 35 }}
             dragElastic={0.35}
@@ -432,7 +464,7 @@ export default function Hero() {
             whileHover={{ scale: 1.08, rotate: 0 }}
             whileDrag={{ scale: 1.16, zIndex: 100 }}
             whileTap={{ scale: 0.95 }}
-            style={{ bottom: -16, right: 20, rotate: 2, background: s3.bg, color: s3.fg }}
+            style={{ bottom: 84, right: -18, rotate: -2, background: s3.bg, color: s3.fg }}
             title="Drag me!">
             {stick3}
           </Sticker>

@@ -10,6 +10,7 @@ import { ThemeAccentProvider, useAccent } from './styles/ThemeContext'
 import { PublicDataProvider, usePublicData } from './styles/PublicDataContext'
 import { recordPageView } from './services/analyticsService'
 import Navbar   from './components/Navbar'
+import TVFrame  from './components/TVFrame'
 import Hero     from './components/Hero'
 import Marquee  from './components/Marquee'
 import About    from './components/About'
@@ -119,15 +120,17 @@ function PortfolioApp() {
       </a>
       <Navbar />
       <main id="main-content">
-        {sectionVisibility.hero && <Hero />}
-        {sectionVisibility.marquee && <Marquee />}
-        {sectionVisibility.about && <About />}
-        {sectionVisibility.journey && <Journey />}
-        {sectionVisibility.skills && <Skills />}
-        {sectionVisibility.projects && <Projects />}
-        {sectionVisibility.certificates && <Certificates />}
-        {sectionVisibility.faq && <FAQ />}
-        {sectionVisibility.contact && <Contact />}
+        <TVFrame channel="AV-1">
+          {sectionVisibility.hero && <Hero />}
+          {sectionVisibility.marquee && <Marquee />}
+          {sectionVisibility.about && <About />}
+          {sectionVisibility.journey && <Journey />}
+          {sectionVisibility.skills && <Skills />}
+          {sectionVisibility.projects && <Projects />}
+          {sectionVisibility.certificates && <Certificates />}
+          {sectionVisibility.faq && <FAQ />}
+          {sectionVisibility.contact && <Contact />}
+        </TVFrame>
       </main>
       <Footer />
     </ThemeProvider>
